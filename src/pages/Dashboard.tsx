@@ -363,7 +363,7 @@ export default function Dashboard() {
                         {usage.notesCount} / {limits.maxNotes === -1 ? "∞" : limits.maxNotes}
                       </span>
                     </div>
-                    <Progress value={limits.maxNotes === -1 ? "0" : Math.min((usage.notesCount / limits.maxNotes) * 100, 100)} className="h-1 bg-white/5" />
+                    <Progress value={limits.maxNotes === -1 ? 0 : Math.min((usage.notesCount / limits.maxNotes) * 100, 100)} className="h-1 bg-white/5" />
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
@@ -372,14 +372,14 @@ export default function Dashboard() {
                         {usage.entitiesCount} / {limits.maxEntities === -1 ? "∞" : limits.maxEntities}
                       </span>
                     </div>
-                    <Progress value={limits.maxEntities === -1 ? "0" : Math.min((usage.entitiesCount / limits.maxEntities) * 100, 100)} className="h-1 bg-white/5" />
+                    <Progress value={limits.maxEntities === -1 ? 0 : Math.min((usage.entitiesCount / limits.maxEntities) * 100, 100)} className="h-1 bg-white/5" />
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-neutral-400">Vault storage</span>
                       <span className="text-neutral-200 font-mono tabular-nums">{storageUsed} / {storageLimit}</span>
                     </div>
-                    <Progress value={limits.maxVaultSizeMB === -1 ? "0" : Math.min((usage.vaultSizeMB / limits.maxVaultSizeMB) * 100, 100)} className="h-1 bg-white/5" />
+                    <Progress value={limits.maxVaultSizeMB === -1 ? 0 : Math.min((usage.vaultSizeMB / limits.maxVaultSizeMB) * 100, 100)} className="h-1 bg-white/5" />
                   </div>
                 </div>
               ) : (

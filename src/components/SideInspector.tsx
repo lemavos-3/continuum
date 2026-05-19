@@ -99,7 +99,7 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
             createdAt: noteData.createdAt || "",
             updatedAt: noteData.updatedAt || noteData.createdAt || "",
             // preserve custom note type for inspector UI
-            noteType: typeof noteData.type === "string" ? noteData.type : "",
+            noteType: typeof (noteData as { type?: unknown }).type === "string" ? (noteData as { type: string }).type : "",
           } satisfies InspectableNote);
           setResolvedFromApi(true);
           return;
