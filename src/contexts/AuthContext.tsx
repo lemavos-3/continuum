@@ -1,59 +1,141 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { api } from "@/lib/api";
+import { authApi } from "@/lib/api";
+import type { Plan, User as AppUser } from "@/types";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  plan: string;
-}
+// Lê em tempo de execução, não de build
+const getAPIBaseURL = () => {
+  return (
+    import.meta.env.VITE_API_BASE_URL ||
+    (typeof window !== "undefined" ? `${window.location.protocol}//${window.location.host}` : "http://localhost:8080")
+  );
+};
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
-  isAuthenticated: boolean;
+  loginWithGoogle: () => Promise<void>;
+  register: (username: string, email: string, password: string) => Promise<void>;
+  logout: () => Promise<void>;
+  setTokens: (accessToken: string, refreshToken: string) => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(() => {
+    try {
+      if (!localStorage.getItem("access_token")) {
+        localStorage.removeItem("auth_user");
+        return null;
+      }
+      const cached = localStorage.getItem("auth_user");
+      return cached ? JSON.parse(cached) : null;
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("continuum_user");
-    const token = localStorage.getItem("continuum_token");
-    if (stored && token) {
-      try { setUser(JSON.parse(stored)); } catch { /* ignore */ }
+  const fetchUser = async (opts: { silent?: boolean } = {}) => {
+    try {
+      const { data } = await authApi.me();
+      if (data) {
+        // Derive a sensible username fallback from the email if backend didn't return one
+        const emailLocal = typeof data.email === "string" ? data.email.split("@")[0] : "";
+        const next: AppUser = {
+          id: data.id ?? data.userId,
+          username: data.username ?? data.name ?? data.displayName ?? emailLocal ?? "",
+          email: data.email ?? "",
+          plan: data.plan ?? data.effectivePlan ?? "FREE",
+          emailVerified: data.emailVerified ?? true,
+          createdAt: data.createdAt ?? data.created_at ?? data.memberSince,
+          maxEntities: typeof data.maxEntities === "number" ? data.maxEntities : Number(data.maxEntities ?? -1),
+          maxNotes: typeof data.maxNotes === "number" ? data.maxNotes : Number(data.maxNotes ?? -1),
+          historyDays: typeof data.historyDays === "number" ? data.historyDays : Number(data.historyDays ?? -1),
+          maxVaultSizeMB: typeof data.maxVaultSizeMB === "number" ? data.maxVaultSizeMB : Number(data.maxVaultSizeMB ?? -1),
+          maxMetadataSizeKb: typeof data.maxMetadataSizeKb === "number" ? data.maxMetadataSizeKb : Number(data.maxMetadataSizeKb ?? -1),
+          advancedMetrics: Boolean(data.advancedMetrics),
+          dataExport: Boolean(data.dataExport),
+          calendarSync: Boolean(data.calendarSync),
+        };
+        setUser(next);
+        try { localStorage.setItem("auth_user", JSON.stringify(next)); } catch {}
+      }
+    } catch (error: unknown) {
+      const status = (error as any)?.response?.status;
+      // Only 401 means the session is truly invalid. 403 = business rule (plan limits etc).
+      // Network errors / 5xx / 403 must NOT clear the session — keep cached user.
+      if (status === 401) {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("auth_user");
+        setUser(null);
+      }
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      fetchUser();
+    } else {
+      localStorage.removeItem("auth_user");
+      setUser(null);
+      setLoading(false);
+    }
+
+    const onLogout = () => {
+      localStorage.removeItem("access_token");
+      localStorage.removeItem("refresh_token");
+      localStorage.removeItem("auth_user");
+      setUser(null);
+    };
+    window.addEventListener("auth:logout", onLogout);
+    return () => window.removeEventListener("auth:logout", onLogout);
   }, []);
 
+  const setTokens = (accessToken: string, refreshToken: string) => {
+    localStorage.setItem("access_token", accessToken);
+    localStorage.setItem("refresh_token", refreshToken);
+  };
+
   const login = async (email: string, password: string) => {
-    const data = await api.post<{ token: string; user: User }>("/auth/login", { email, password });
-    localStorage.setItem("continuum_token", data.token);
-    localStorage.setItem("continuum_user", JSON.stringify(data.user));
-    setUser(data.user);
+    const { data } = await authApi.login(email, password);
+    setTokens(data.accessToken ?? data.token, data.refreshToken ?? "");
+    await fetchUser();
   };
 
-  const register = async (name: string, email: string, password: string) => {
-    const data = await api.post<{ token: string; user: User }>("/auth/register", { name, email, password });
-    localStorage.setItem("continuum_token", data.token);
-    localStorage.setItem("continuum_user", JSON.stringify(data.user));
-    setUser(data.user);
+  const loginWithGoogle = async () => {
+    const { data } = await authApi.googleStart();
+    window.location.href = data.authorizationUrl;
   };
 
-  const logout = () => {
-    localStorage.removeItem("continuum_token");
-    localStorage.removeItem("continuum_user");
+  const register = async (username: string, email: string, password: string) => {
+    const { data } = await authApi.register(username, email, password);
+    if (data?.accessToken || data?.token) {
+      setTokens(data.accessToken ?? data.token, data.refreshToken ?? "");
+      await fetchUser();
+    }
+  };
+
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // ignore
+    }
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("auth_user");
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, setTokens, refreshUser: fetchUser }}>
       {children}
     </AuthContext.Provider>
   );

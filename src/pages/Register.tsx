@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { BookOpen, Loader2 } from "lucide-react";
+import AuthShell from "@/components/auth/AuthShell";
 
 export default function Register() {
-  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -20,53 +18,78 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     try {
-      await register(name, email, password);
-      navigate("/");
+      await register(username, email, password);
+      toast({ title: "Account created", description: "Check your email to activate." });
+      navigate("/login");
     } catch (err: any) {
-      toast({ title: "Erro ao criar conta", description: err.message, variant: "destructive" });
+      toast({
+        title: "Could not create account",
+        description: err?.response?.data?.message || "Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/10 blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
-      </div>
-
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
-            <BookOpen className="w-7 h-7 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">Continuum</h1>
-          <p className="text-muted-foreground mt-1">Crie sua conta</p>
+    <AuthShell
+      title="Create account."
+      subtitle="Three fields. Forever yours."
+      footer={
+        <>
+          Already with us?{" "}
+          <Link to="/login" className="text-white underline underline-offset-4 hover:opacity-80">
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-1.5">
+          <label htmlFor="username" className="label-caps">Username</label>
+          <input
+            id="username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="johndoe"
+            required
+            className="w-full bg-transparent border-0 border-b border-white/15 focus:border-white pb-2 text-base outline-none transition-colors"
+          />
         </div>
 
-        <form onSubmit={handleSubmit} className="glass rounded-2xl p-8 space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input id="name" placeholder="Seu nome" value={name} onChange={(e) => setName(e.target.value)} required className="h-11" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="seu@email.com" value={email} onChange={(e) => setEmail(e.target.value)} required className="h-11" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-11" />
-          </div>
-          <Button type="submit" className="w-full h-11" disabled={loading}>
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Criar conta"}
-          </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            Já tem conta?{" "}
-            <Link to="/login" className="text-primary hover:underline font-medium">Entrar</Link>
-          </p>
-        </form>
-      </div>
-    </div>
+        <div className="space-y-1.5">
+          <label htmlFor="email" className="label-caps">Email</label>
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            required
+            className="w-full bg-transparent border-0 border-b border-white/15 focus:border-white pb-2 text-base outline-none transition-colors"
+          />
+        </div>
+
+        <div className="space-y-1.5">
+          <label htmlFor="password" className="label-caps">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="At least 8 characters"
+            required
+            minLength={8}
+            className="w-full bg-transparent border-0 border-b border-white/15 focus:border-white pb-2 text-base outline-none transition-colors"
+          />
+        </div>
+
+        <button type="submit" disabled={loading} className="btn-primary w-full justify-center">
+          {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+          {loading ? "Creating…" : "Create account"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }
