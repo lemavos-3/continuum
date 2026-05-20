@@ -71,16 +71,16 @@ const formatDays = (d: number) => {
 
 const badgeStyle = (badge: string) => {
   const b = badge?.toLowerCase() || "";
-  if (b.includes("hot")) return "bg-orange-500/15 text-orange-300 border-orange-500/30";
-  if (b.includes("forgotten") || b.includes("gem")) return "bg-violet-500/15 text-violet-300 border-violet-500/30";
-  if (b.includes("key")) return "bg-blue-500/15 text-blue-300 border-blue-500/30";
-  if (b.includes("high")) return "bg-emerald-500/15 text-emerald-300 border-emerald-500/30";
-  return "bg-white/5 text-zinc-300 border-white/10";
+  if (b.includes("hot")) return "bg-orange-500/10 text-orange-400 border-orange-500/20";
+  if (b.includes("forgotten") || b.includes("gem")) return "bg-violet-500/10 text-violet-400 border-violet-500/20";
+  if (b.includes("key")) return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+  if (b.includes("high")) return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+  return "bg-white/5 text-neutral-300 border-white/10";
 };
 
 function StatChip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-white/[0.04] px-1.5 py-0.5 text-[10.5px] text-zinc-400">
+    <span className="inline-flex items-center gap-1 rounded-md bg-white/5 border border-white/5 px-1.5 py-0.5 text-[10px] text-neutral-400 font-medium">
       {children}
     </span>
   );
@@ -93,25 +93,25 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
       whileTap={{ scale: 0.98 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-[260px] shrink-0 flex-col gap-3 overflow-hidden rounded-xl border border-white/8 bg-white/[0.03] p-4 text-left",
-        "backdrop-blur-xl transition-colors hover:border-white/15 hover:bg-white/[0.05]",
+        "group relative flex w-[260px] shrink-0 flex-col gap-3 overflow-hidden rounded-2xl border border-white/5 bg-neutral-900/20 p-4 text-left shadow-inner",
+        "backdrop-blur-md transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/40 hover:shadow-xl",
       )}
     >
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-br from-white/[0.04] to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-
       <div className="flex items-start justify-between gap-2">
-        <Badge variant="outline" className={cn("border text-[10px] font-medium", badgeStyle(item.badge))}>
+        <Badge variant="outline" className={cn("border text-[10px] font-medium shadow-sm", badgeStyle(item.badge))}>
           {item.badge}
         </Badge>
-        <span className="font-mono text-[10px] text-zinc-500">{item.score.toFixed(1)}</span>
+        <span className="font-mono text-[10px] text-neutral-500">{item.score.toFixed(1)}</span>
       </div>
 
       <div className="flex items-start gap-2">
-        <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-500" />
-        <h3 className="line-clamp-2 text-sm font-semibold text-white">{item.note.title || "Untitled"}</h3>
+        <div className="mt-0.5 rounded-lg bg-white/5 p-1 border border-white/5 shrink-0">
+          <StickyNote className="h-3.5 w-3.5 text-neutral-400" />
+        </div>
+        <h3 className="line-clamp-2 text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{item.note.title || "Untitled"}</h3>
       </div>
 
-      <div className="mt-auto flex flex-wrap gap-1.5">
+      <div className="mt-auto flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
         {item.mentionCount > 0 && <StatChip>{item.mentionCount} mentions</StatChip>}
         {item.entityConnections > 0 && <StatChip>{item.entityConnections} links</StatChip>}
         {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)} tracked</StatChip>}
@@ -128,28 +128,30 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
       whileTap={{ scale: 0.98 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-[260px] shrink-0 flex-col gap-3 overflow-hidden rounded-xl border border-white/8 bg-white/[0.03] p-4 text-left",
-        "backdrop-blur-xl transition-colors hover:border-white/15 hover:bg-white/[0.05]",
+        "group relative flex w-[260px] shrink-0 flex-col gap-3 overflow-hidden rounded-2xl border border-white/5 bg-neutral-900/20 p-4 text-left shadow-inner",
+        "backdrop-blur-md transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/40 hover:shadow-xl",
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <Badge variant="outline" className={cn("border text-[10px] font-medium", badgeStyle(item.badge))}>
+        <Badge variant="outline" className={cn("border text-[10px] font-medium shadow-sm", badgeStyle(item.badge))}>
           {item.badge}
         </Badge>
-        <span className="font-mono text-[10px] text-zinc-500">{item.score.toFixed(1)}</span>
+        <span className="font-mono text-[10px] text-neutral-500">{item.score.toFixed(1)}</span>
       </div>
 
       <div className="flex items-start gap-2">
-        <Network className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-500" />
+        <div className="mt-0.5 rounded-lg bg-white/5 p-1 border border-white/5 shrink-0">
+          <Network className="h-3.5 w-3.5 text-neutral-400" />
+        </div>
         <div className="min-w-0">
-          <h3 className="line-clamp-2 text-sm font-semibold text-white">{item.entity.title}</h3>
+          <h3 className="line-clamp-2 text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{item.entity.title}</h3>
           {item.entity.type && (
-            <p className="mt-0.5 text-[10px] uppercase tracking-wider text-zinc-500">{item.entity.type}</p>
+            <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-neutral-500">{item.entity.type}</p>
           )}
         </div>
       </div>
 
-      <div className="mt-auto flex flex-wrap gap-1.5">
+      <div className="mt-auto flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
         {item.mentionCount > 0 && <StatChip>{item.mentionCount} mentions</StatChip>}
         {item.relationsCount > 0 && <StatChip>{item.relationsCount} relations</StatChip>}
         {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)} tracked</StatChip>}
@@ -177,34 +179,34 @@ function Section({
   loading: boolean;
 }) {
   return (
-    <section className="space-y-3">
+    <section className="space-y-4">
       <div className="flex items-center gap-3 px-1">
-        <div className={cn("grid h-9 w-9 place-items-center rounded-lg border", accent)}>
+        <div className={cn("grid h-10 w-10 place-items-center rounded-xl border shadow-inner", accent)}>
           <Icon className="h-4 w-4" />
         </div>
         <div className="min-w-0">
-          <h2 className="text-base font-semibold text-white">{title}</h2>
-          <p className="text-xs text-zinc-500">{subtitle}</p>
+          <h2 className="text-sm font-semibold text-neutral-200">{title}</h2>
+          <p className="text-xs text-neutral-500">{subtitle}</p>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex gap-3 overflow-hidden px-1">
+        <div className="flex gap-4 overflow-hidden px-1 py-1">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="h-[148px] w-[260px] shrink-0 animate-pulse rounded-xl border border-white/8 bg-white/[0.03]"
+              className="h-[148px] w-[260px] shrink-0 animate-pulse rounded-2xl border border-white/5 bg-neutral-900/20 backdrop-blur-md"
             />
           ))}
         </div>
       ) : empty ? (
-        <div className="mx-1 rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-6 text-center text-xs text-zinc-500">
+        <div className="mx-1 rounded-2xl border border-dashed border-white/5 bg-neutral-900/5 p-8 text-center text-xs text-neutral-500 backdrop-blur-sm">
           Nothing here yet — keep journaling and connecting entities.
         </div>
       ) : (
         <ScrollArea className="w-full">
-          <div className="flex gap-3 px-1 pb-3">{children}</div>
-          <ScrollBar orientation="horizontal" />
+          <div className="flex gap-4 px-1 pb-4">{children}</div>
+          <ScrollBar orientation="horizontal" className="h-1.5" />
         </ScrollArea>
       )}
     </section>
@@ -257,60 +259,56 @@ export default function Insights() {
 
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-5xl px-4 pb-24 pt-6 lg:pb-10">
-        {/* Header */}
-        <header className="mb-6 space-y-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-violet-300" />
-                <span className="text-[11px] uppercase tracking-[0.18em] text-zinc-500">
-                  Insights
-                </span>
-              </div>
-              <h1 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-                What's worth your attention
-              </h1>
-              <p className="max-w-xl text-sm text-zinc-400">
-                Surface notes and entities that matter most — so nothing important gets buried.
-              </p>
+      <div className="px-6 lg:px-12 py-10 max-w-6xl mx-auto space-y-8">
+        
+        {/* HEADER */}
+        <header className="border-b border-white/5 pb-6 flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <Sparkles className="h-3 w-3 text-violet-400" />
+              <p className="text-[10px] tracking-wider uppercase text-neutral-500 font-semibold">Signals</p>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => load(true)}
-              disabled={refreshing}
-              className="h-9 w-9 shrink-0 text-zinc-400 hover:bg-white/5 hover:text-white"
-            >
-              <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
-            </Button>
+            <h1 className="font-serif text-4xl tracking-tight text-neutral-100">Insights</h1>
+            <p className="text-xs text-neutral-500 mt-1">
+              Surface notes and entities that matter most — so nothing important gets buried.
+            </p>
           </div>
-
-          {/* Quick stats */}
-          <div className="grid grid-cols-3 gap-2">
-            <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3 backdrop-blur-xl">
-              <div className="text-[10px] uppercase tracking-wider text-zinc-500">Signals</div>
-              <div className="mt-1 text-lg font-semibold text-white">{totalSignal}</div>
-            </div>
-            <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3 backdrop-blur-xl">
-              <div className="text-[10px] uppercase tracking-wider text-zinc-500">Top score</div>
-              <div className="mt-1 text-lg font-semibold text-white">{topScore.toFixed(1)}</div>
-            </div>
-            <div className="rounded-xl border border-white/8 bg-white/[0.03] p-3 backdrop-blur-xl">
-              <div className="text-[10px] uppercase tracking-wider text-zinc-500">Revisit</div>
-              <div className="mt-1 text-lg font-semibold text-white">
-                {forgottenNotes.length + forgottenEntities.length}
-              </div>
-            </div>
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => load(true)}
+            disabled={refreshing}
+            className="h-9 border-white/5 bg-neutral-900/40 text-neutral-300 hover:bg-neutral-900/80 hover:text-white rounded-xl shadow-md transition-all gap-2"
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
+            <span className="hidden sm:inline text-xs font-medium">Refresh</span>
+          </Button>
         </header>
 
-        <div className="space-y-8">
+        {/* QUICK STATS */}
+        <div className="grid grid-cols-3 gap-4 mb-2">
+          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-4 shadow-inner flex flex-col gap-1 transition-colors hover:border-white/10">
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-neutral-500">Signals</span>
+            <span className="text-2xl font-semibold text-neutral-100 tabular-nums">{totalSignal}</span>
+          </div>
+          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-4 shadow-inner flex flex-col gap-1 transition-colors hover:border-white/10">
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-neutral-500">Top score</span>
+            <span className="text-2xl font-semibold text-neutral-100 tabular-nums">{topScore.toFixed(1)}</span>
+          </div>
+          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-4 shadow-inner flex flex-col gap-1 transition-colors hover:border-white/10">
+            <span className="text-[10px] uppercase tracking-wider font-semibold text-neutral-500">Revisit</span>
+            <span className="text-2xl font-semibold text-neutral-100 tabular-nums">
+              {forgottenNotes.length + forgottenEntities.length}
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-10">
           <Section
             title="Hot right now"
             subtitle="Notes with the strongest recent gravity"
             icon={Flame}
-            accent="border-orange-500/30 bg-orange-500/10 text-orange-300"
+            accent="border-orange-500/20 bg-orange-500/10 text-orange-400"
             loading={loading}
             empty={hotNotes.length === 0}
           >
@@ -323,7 +321,7 @@ export default function Insights() {
             title="Key people & projects"
             subtitle="Entities that show up everywhere lately"
             icon={Users}
-            accent="border-blue-500/30 bg-blue-500/10 text-blue-300"
+            accent="border-blue-500/20 bg-blue-500/10 text-blue-400"
             loading={loading}
             empty={hotEntities.length === 0}
           >
@@ -336,7 +334,7 @@ export default function Insights() {
             title="Worth revisiting"
             subtitle="High-value notes you haven't touched in a while"
             icon={Clock}
-            accent="border-violet-500/30 bg-violet-500/10 text-violet-300"
+            accent="border-violet-500/20 bg-violet-500/10 text-violet-400"
             loading={loading}
             empty={forgottenNotes.length === 0}
           >
@@ -349,7 +347,7 @@ export default function Insights() {
             title="Forgotten gems"
             subtitle="Entities that once mattered — bring them back"
             icon={TrendingUp}
-            accent="border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+            accent="border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
             loading={loading}
             empty={forgottenEntities.length === 0}
           >
@@ -359,15 +357,18 @@ export default function Insights() {
           </Section>
 
           {!loading && totalSignal === 0 && (
-            <div className="rounded-2xl border border-white/8 bg-white/[0.03] p-8 text-center backdrop-blur-xl">
-              <Sparkles className="mx-auto h-6 w-6 text-zinc-500" />
-              <h3 className="mt-3 text-base font-semibold text-white">No insights yet</h3>
-              <p className="mx-auto mt-1 max-w-sm text-sm text-zinc-400">
-                Insights appear as you create notes, mention people/projects, and track time.
+            <div className="rounded-3xl border border-dashed border-white/5 bg-neutral-900/5 p-12 text-center backdrop-blur-sm">
+              <div className="h-12 w-12 bg-white/5 border border-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Sparkles className="h-5 w-5 text-neutral-500" />
+              </div>
+              <h3 className="text-sm font-semibold text-neutral-200">No insights yet</h3>
+              <p className="mx-auto mt-1.5 max-w-sm text-xs text-neutral-500 leading-relaxed">
+                Insights automatically appear as you create notes, mention people and projects, and track time inside the network.
               </p>
               <Button
+                variant="outline"
                 onClick={() => navigate("/notes")}
-                className="mt-4 bg-white text-black hover:bg-white/90"
+                className="mt-6 border-white/5 bg-neutral-900/40 text-neutral-200 hover:bg-neutral-900/80 hover:text-white rounded-xl h-9 transition-all shadow-md"
               >
                 Open Notes <ArrowRight className="ml-2 h-3.5 w-3.5" />
               </Button>
