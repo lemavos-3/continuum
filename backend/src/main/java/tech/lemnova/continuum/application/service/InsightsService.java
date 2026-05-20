@@ -50,9 +50,29 @@ public class InsightsService {
 
     // Thresholds
     private static final double HIGH_RELEVANCE_THRESHOLD = 40.0;
-    private static final long FORGOTTEN_DAYS_THRESHOLD = 30;
-    private static final double FORGOTTEN_MIN_SCORE = 8.0;
+    private static final long FORGOTTEN_DAYS_THRESHOLD = 20;
+    private static final double FORGOTTEN_MIN_SCORE = 6.0;
     private static final int DEFAULT_LIMIT = 10;
+
+    // Note weights (v2 — boosted for sparse early data)
+    private static final double W_NOTE_MENTIONS = 2.5;
+    private static final double W_NOTE_RECENT = 5.5;
+    private static final double W_NOTE_HOURS = 1.8;
+    private static final double W_NOTE_ENTITIES = 3.2;
+    private static final double W_NOTE_DAYS = 1.1;
+
+    // Entity weights (unchanged)
+    private static final double W_ENT_MENTIONS = 1.6;
+    private static final double W_ENT_RECENT = 4.5;
+    private static final double W_ENT_HOURS = 3.8;
+    private static final double W_ENT_RELATIONS = 2.8;
+    private static final double W_ENT_DAYS = 1.0;
+
+    // Softer decay (v2)
+    private static final double NOTE_DECAY_PER_DAY = 0.012;
+    private static final double NOTE_DECAY_FLOOR = 0.20;
+    private static final double ENT_DECAY_PER_DAY = 0.010;
+    private static final double ENT_DECAY_FLOOR = 0.25;
 
     public InsightsService(NoteRepository noteRepo,
                            NoteLinkRepository noteLinkRepo,
