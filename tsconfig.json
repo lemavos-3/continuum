@@ -8,6 +8,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "lucide-react": [
+        "./src/lib/heroicons.tsx"
       ]
     },
     "skipLibCheck": true,
