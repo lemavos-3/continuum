@@ -464,14 +464,6 @@ export default function Dashboard() {
               Here's what's happening across your knowledge graph.
             </p>
           </div>
-          <Button 
-            onClick={() => navigate("/notes")} 
-            size="sm"
-            variant="outline"
-            className="gap-2 border-white/5 bg-neutral-900/40 text-neutral-200 hover:bg-neutral-900/80 hover:text-white rounded-xl self-start sm:self-auto transition-all shadow-md h-9"
-          >
-            <Plus className="h-4 w-4" /> New note
-          </Button>
         </header>
 
         {/* CONTADORES / CARDS KPI */}
