@@ -10,7 +10,7 @@
         "./src/*"
       ],
       "lucide-react": [
-        "./src/lib/heroicons.tsx"
+        "./src/lib/heroicons.ts"
       ]
     },
     "skipLibCheck": true,
