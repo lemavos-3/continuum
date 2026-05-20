@@ -18,7 +18,6 @@ import {
   ChevronDown,
   ChevronRight,
   SlidersHorizontal,
-  ArrowUpDown,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -262,7 +261,6 @@ export default function Notes() {
   const grouped = useMemo(() => {
     const map = new Map<string, NoteSummary[]>();
     for (const n of filtered) {
-      // Agrupa com base na data atualmente selecionada para ordenação
       const targetDate = sortBy === "createdAt" ? n.createdAt : n.updatedAt;
       const key = monthKey(new Date(targetDate));
       if (!map.has(key)) map.set(key, []);
@@ -450,7 +448,6 @@ export default function Notes() {
                 Showing {filtered.length} {filtered.length === 1 ? "entry" : "entries"}
               </div>
               <div className="flex items-center gap-4 font-mono">
-                {/* Tipo de Filtro (Criação ou Modificação) */}
                 <div className="flex items-center gap-1.5">
                   <span>Sort by:</span>
                   <button 
@@ -460,12 +457,14 @@ export default function Notes() {
                     [{sortBy === "createdAt" ? "Creation" : "Modification"}]
                   </button>
                 </div>
-                {/* Sentido da Ordenação (Mais Recente ou Mais Antigo) */}
                 <button 
                   onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-                  className="flex items-center gap-1 text-white/70 hover:text-white transition-colors"
+                  className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors"
                 >
-                  <ArrowUpDown className="h-3 w-3" />
+                  {/* Ícone customizado em SVG puro para evitar problemas de re-export de bundles */}
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m3 16 4 4 4-4" /><path d="M7 20V4" /><path d="m21 8-4-4-4 4" /><path d="M17 4v16" />
+                  </svg>
                   {sortOrder === "desc" ? "Recent" : "Oldest"}
                 </button>
               </div>
@@ -521,20 +520,17 @@ export default function Notes() {
                                   onClick={() => navigate(`/notes/${note.id}`)}
                                   className="group relative flex w-full items-start gap-4 py-5 text-left transition-colors hover:bg-white/[0.02]"
                                 >
-                                  {/* Hover accent line */}
                                   <span
                                     aria-hidden
                                     className="absolute left-0 top-1/2 h-8 w-px -translate-x-3 -translate-y-1/2 bg-white opacity-0 transition-opacity group-hover:opacity-100"
                                   />
 
-                                  {/* Date column */}
                                   <div className="hidden w-20 shrink-0 pt-1 sm:block">
                                     <p className="font-mono text-[10px] uppercase tracking-wider text-white/30">
                                       {relativeDate(targetDate)}
                                     </p>
                                   </div>
 
-                                  {/* Content */}
                                   <div className="min-w-0 flex-1">
                                     <h3 className="font-serif text-xl leading-snug text-white/90 transition-colors group-hover:text-white">
                                       {note.title || "Untitled"}
@@ -550,7 +546,6 @@ export default function Notes() {
                                     </div>
                                   </div>
 
-                                  {/* Actions */}
                                   <div className="flex shrink-0 items-center gap-1 pt-1">
                                     <span
                                       role="button"

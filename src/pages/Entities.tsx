@@ -12,7 +12,6 @@ import {
   Loader2,
   Trash2,
   SlidersHorizontal,
-  ArrowUpDown,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -313,9 +312,12 @@ export default function Entities() {
                 {/* Direção da Ordenação */}
                 <button 
                   onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-                  className="flex items-center gap-1 text-white/70 hover:text-white transition-colors"
+                  className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors"
                 >
-                  <ArrowUpDown className="h-3 w-3" />
+                  {/* SVG no lugar do ArrowUpDown */}
+                  <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="m3 16 4 4 4-4" /><path d="M7 20V4" /><path d="m21 8-4-4-4 4" /><path d="M17 4v16" />
+                  </svg>
                   {sortOrder === "desc" ? "Recent" : "Oldest"}
                 </button>
               </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { entitiesApi, notesApi } from "@/lib/api";
@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { 
   ArrowLeft, Save, Loader2, Check, PanelRight, 
   Settings2, ImageIcon, FileText, X, Clock,
-  MoreVertical
+  Link2, AtSign
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { TiptapEditor, type TiptapEditorHandle } from "@/components/TiptapEditor";
@@ -39,6 +39,14 @@ interface NoteData {
   updatedAt: string;
 }
 
+const typeLabels: Record<string, string> = {
+  PERSON: "Person",
+  PROJECT: "Project",
+  TOPIC: "Topic",
+  ORGANIZATION: "Organization",
+  ACTIVITY: "Activity",
+};
+
 export default function NoteEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -49,6 +57,7 @@ export default function NoteEditor() {
   const [title, setTitle] = useState("");
   const [type, setType] = useState<string>("");
   const [availableTypes, setAvailableTypes] = useState<string[]>([]);
+  const [allEntities, setAllEntities] = useState<any[]>([]); // Armazena todas as entidades do usuário
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [showBacklinks, setShowBacklinks] = useState(false);
@@ -59,6 +68,12 @@ export default function NoteEditor() {
   const lastSavedTitle = useRef<string>("");
   const lastSavedType = useRef<string>("");
   const currentJSON = useRef<any>(null);
+
+  // Mapeia e filtra quais entidades estão atualmente mencionadas nesta nota
+  const mentionedEntities = useMemo(() => {
+    if (!note?.entityIds || !allEntities.length) return [];
+    return allEntities.filter((e) => note.entityIds.includes(e.id));
+  }, [note?.entityIds, allEntities]);
 
   // Load note
   useEffect(() => {
@@ -76,9 +91,11 @@ export default function NoteEditor() {
         const userEntities =
           entitiesResult.status === "fulfilled" && Array.isArray(entitiesResult.value.data)
             ? entitiesResult.value.data
-            : null;
+            : [];
         
-        const sanitized = userEntities
+        setAllEntities(userEntities);
+
+        const sanitized = userEntities.length > 0
           ? sanitizeTiptapMentions(parsedContent, userEntities)
           : { doc: parsedContent, entityIds: extractMentionIds(parsedContent), changed: false, removedIds: [] };
         
@@ -137,6 +154,10 @@ export default function NoteEditor() {
         entityIds,
         type: newType,
       });
+
+      // Atualiza o estado local da nota para sincronizar as entidades no painel lateral
+      setNote((prev) => prev ? { ...prev, title: t, content: json, entityIds, type: newType } : null);
+
       lastSavedTitle.current = t;
       lastSavedJSON.current = jsonStr;
       lastSavedType.current = newType;
@@ -177,7 +198,7 @@ export default function NoteEditor() {
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     const json = editorRef.current?.getJSON() || currentJSON.current;
     await doSave(title, json, type);
-    toast({ title: "Note saved!" });
+    toast({ title: "Note saved successfully!" });
   };
 
   if (loading) {
@@ -215,6 +236,20 @@ export default function NoteEditor() {
             </div>
 
             <div className="flex items-center gap-1.5">
+              {/* Botão de Salvar Manual */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleManualSave}
+                disabled={saveStatus === "saving"}
+                className="h-8 gap-1.5 text-xs border-white/10 bg-white/5 hover:bg-white/10 text-white"
+              >
+                <Save className="w-3.5 h-3.5" />
+                Save
+              </Button>
+
+              <div className="h-4 w-[1px] bg-white/10 mx-1" />
+
               <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground" onClick={() => editorRef.current?.triggerUpload()} title="Attach Media">
                 <ImageIcon className="w-4 h-4" />
               </Button>
@@ -311,20 +346,63 @@ export default function NoteEditor() {
           )}
         </div>
 
-        {/* Backlinks Sidebar */}
+        {/* Combined Context Sidebar */}
         <aside className={`shrink-0 border-l border-white/5 bg-black/40 backdrop-blur-xl transition-all duration-300 ease-in-out overflow-hidden flex flex-col
           ${showBacklinks ? "w-80 opacity-100" : "w-0 opacity-0 border-none"}`}>
+          
           <div className="flex items-center justify-between border-b border-white/5 px-5 py-4 shrink-0">
             <div>
               <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-muted-foreground">Context</p>
-              <h3 className="mt-0.5 text-sm font-medium text-foreground">Linked Mentions</h3>
+              <h3 className="mt-0.5 text-sm font-medium text-foreground">Note Connections</h3>
             </div>
             <Button variant="ghost" size="icon" className="w-6 h-6 text-muted-foreground hover:text-foreground" onClick={() => setShowBacklinks(false)}>
               <X className="w-3 h-3" />
             </Button>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            {id && <BacklinksPanel noteId={id} />}
+
+          <div className="flex-1 overflow-y-auto p-5 space-y-6">
+            {/* Seção 1: Entidades Mencionadas na Nota atual */}
+            <div>
+              <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                <AtSign className="w-3 h-3" />
+                <span>Mentioned Entities</span>
+              </div>
+              
+              {mentionedEntities.length === 0 ? (
+                <p className="text-xs italic text-muted-foreground/60 pl-1">
+                  Type @ inside the editor to link entities.
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {mentionedEntities.map((entity) => (
+                    <li key={entity.id}>
+                      <button
+                        onClick={() => navigate(`/entities/${entity.id}`)}
+                        className="w-full flex flex-col gap-0.5 rounded-sm border border-white/5 bg-white/[0.02] p-2 text-left transition-colors hover:bg-white/[0.06] hover:border-white/10"
+                      >
+                        <span className="text-xs font-medium text-white/90 line-clamp-1">
+                          {entity.title || "Untitled Entity"}
+                        </span>
+                        {entity.type && (
+                          <span className="text-[9px] uppercase tracking-wider text-white/35">
+                            {typeLabels[entity.type] || entity.type}
+                          </span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+
+            <div className="border-t border-white/5 pt-4">
+              {/* Seção 2: Notas que linkam para esta nota (Backlinks) */}
+              <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                <Link2 className="w-3 h-3" />
+                <span>Linked Mentions (Backlinks)</span>
+              </div>
+              {id && <BacklinksPanel noteId={id} />}
+            </div>
           </div>
         </aside>
 
