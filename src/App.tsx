@@ -27,6 +27,7 @@ import Privacy from "./pages/Privacy";
 import Subscription from "./pages/Subscription";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import Insights from "./pages/Insights";
 import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
