@@ -18,6 +18,7 @@ import {
   ChevronDown,
   ChevronRight,
   SlidersHorizontal,
+  ArrowUpDown,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -132,6 +133,10 @@ export default function Notes() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
+  // Estados de Ordenação Dinâmica
+  const [sortBy, setSortBy] = useState<"createdAt" | "updatedAt">("updatedAt");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+
   // Drag-drop upload to vault
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -140,7 +145,7 @@ export default function Notes() {
   const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const onSwipeStart = (e: React.TouchEvent) => {
     const t = e.touches[0];
-    if (t.clientX > 32) return; // only left edge
+    if (t.clientX > 32) return;
     swipeRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
   };
   const onSwipeEnd = (e: React.TouchEvent) => {
@@ -247,18 +252,24 @@ export default function Notes() {
         }
         return true;
       })
-      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-  }, [notes, view, selectedType, search]);
+      .sort((a, b) => {
+        const dateA = new Date(sortBy === "createdAt" ? a.createdAt : a.updatedAt).getTime();
+        const dateB = new Date(sortBy === "createdAt" ? b.createdAt : b.updatedAt).getTime();
+        return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+      });
+  }, [notes, view, selectedType, search, sortBy, sortOrder]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, NoteSummary[]>();
     for (const n of filtered) {
-      const key = monthKey(new Date(n.updatedAt));
+      // Agrupa com base na data atualmente selecionada para ordenação
+      const targetDate = sortBy === "createdAt" ? n.createdAt : n.updatedAt;
+      const key = monthKey(new Date(targetDate));
       if (!map.has(key)) map.set(key, []);
       map.get(key)!.push(n);
     }
     return Array.from(map.entries());
-  }, [filtered]);
+  }, [filtered, sortBy]);
 
   const toggleMonth = (key: string) => {
     setCollapsedMonths((prev) => {
@@ -421,7 +432,7 @@ export default function Notes() {
             </header>
 
             {/* Sticky search */}
-            <div className="sticky top-14 z-10 -mx-4 mb-10 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
+            <div className="sticky top-14 z-10 -mx-4 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
                 <input
@@ -430,6 +441,33 @@ export default function Notes() {
                   placeholder="Navigate your memory…"
                   className="w-full border-0 bg-transparent pl-6 text-sm text-white placeholder:italic placeholder:text-white/30 focus:outline-none focus:ring-0"
                 />
+              </div>
+            </div>
+
+            {/* Toolbar de Contagem e Controles de Ordenação */}
+            <div className="flex items-center justify-between border-b border-white/5 pb-3 pt-4 mb-6 text-[11px] text-white/40">
+              <div>
+                Showing {filtered.length} {filtered.length === 1 ? "entry" : "entries"}
+              </div>
+              <div className="flex items-center gap-4 font-mono">
+                {/* Tipo de Filtro (Criação ou Modificação) */}
+                <div className="flex items-center gap-1.5">
+                  <span>Sort by:</span>
+                  <button 
+                    onClick={() => setSortBy(sortBy === "createdAt" ? "updatedAt" : "createdAt")}
+                    className="text-white/70 hover:text-white transition-colors"
+                  >
+                    [{sortBy === "createdAt" ? "Creation" : "Modification"}]
+                  </button>
+                </div>
+                {/* Sentido da Ordenação (Mais Recente ou Mais Antigo) */}
+                <button 
+                  onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
+                  className="flex items-center gap-1 text-white/70 hover:text-white transition-colors"
+                >
+                  <ArrowUpDown className="h-3 w-3" />
+                  {sortOrder === "desc" ? "Recent" : "Oldest"}
+                </button>
               </div>
             </div>
 
@@ -475,6 +513,8 @@ export default function Notes() {
                         <ul className="divide-y divide-white/[0.06]">
                           {items.map((note) => {
                             const preview = extractPreview(note.content);
+                            const targetDate = sortBy === "createdAt" ? note.createdAt : note.updatedAt;
+
                             return (
                               <li key={note.id}>
                                 <button
@@ -490,7 +530,7 @@ export default function Notes() {
                                   {/* Date column */}
                                   <div className="hidden w-20 shrink-0 pt-1 sm:block">
                                     <p className="font-mono text-[10px] uppercase tracking-wider text-white/30">
-                                      {relativeDate(note.updatedAt)}
+                                      {relativeDate(targetDate)}
                                     </p>
                                   </div>
 
@@ -506,7 +546,7 @@ export default function Notes() {
                                       {note.type && (
                                         <span className="uppercase tracking-[0.18em]">{note.type}</span>
                                       )}
-                                      <span className="sm:hidden">{relativeDate(note.updatedAt)}</span>
+                                      <span className="sm:hidden">{relativeDate(targetDate)}</span>
                                     </div>
                                   </div>
 

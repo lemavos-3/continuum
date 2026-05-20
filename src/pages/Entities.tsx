@@ -11,9 +11,8 @@ import {
   Search,
   Loader2,
   Trash2,
-  ChevronDown,
-  ChevronRight,
   SlidersHorizontal,
+  ArrowUpDown,
 } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -26,6 +25,7 @@ interface Entity {
   type: EntityType;
   description?: string;
   createdAt: string;
+  updatedAt?: string; // Adicionado para suportar ordenação por modificação
   trackingDates?: string[];
 }
 
@@ -40,16 +40,6 @@ const typeLabels: Record<string, string> = {
 const types = ["PERSON", "PROJECT", "TOPIC", "ORGANIZATION", "ACTIVITY"];
 
 /* ── Helpers ──────────────────────────────────────────────────────────── */
-
-function monthKey(d: Date) {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-}
-
-function formatMonth(key: string) {
-  const [y, m] = key.split("-").map(Number);
-  const d = new Date(y, m - 1, 1);
-  return d.toLocaleString("en-US", { month: "long", year: "numeric" }).toUpperCase();
-}
 
 function relativeDate(iso: string): string {
   const d = new Date(iso);
@@ -108,7 +98,10 @@ export default function Entities() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
-  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+  
+  // Estados de Ordenação
+  const [sortBy, setSortBy] = useState<"createdAt" | "updatedAt">("createdAt");
+  const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   
   const [createOpen, setCreateOpen] = useState(false);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
@@ -182,8 +175,8 @@ export default function Entities() {
     };
   }, [entities]);
 
-  /* Filtragem e Ordenação */
-  const filtered = useMemo(() => {
+  /* Filtragem e Ordenação Dinâmica */
+  const filteredAndSorted = useMemo(() => {
     const q = search.trim().toLowerCase();
     return entities
       .filter((e) => {
@@ -194,28 +187,12 @@ export default function Entities() {
         }
         return true;
       })
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  }, [entities, selectedType, search]);
-
-  /* Agrupamento Mensal */
-  const grouped = useMemo(() => {
-    const map = new Map<string, Entity[]>();
-    for (const e of filtered) {
-      const key = monthKey(new Date(e.createdAt));
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(e);
-    }
-    return Array.from(map.entries());
-  }, [filtered]);
-
-  const toggleMonth = (key: string) => {
-    setCollapsedMonths((prev) => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
-    });
-  };
+      .sort((a, b) => {
+        const dateA = new Date(sortBy === "updatedAt" ? (a.updatedAt || a.createdAt) : a.createdAt).getTime();
+        const dateB = new Date(sortBy === "updatedAt" ? (b.updatedAt || b.createdAt) : b.createdAt).getTime();
+        return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+      });
+  }, [entities, selectedType, search, sortBy, sortOrder]);
 
   const viewLabel = selectedType ? typeLabels[selectedType] : "All Atoms";
 
@@ -305,7 +282,7 @@ export default function Entities() {
             </header>
 
             {/* Input de Busca Fixo */}
-            <div className="sticky top-14 z-10 -mx-4 mb-10 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
+            <div className="sticky top-14 z-10 -mx-4 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
                 <input
@@ -317,100 +294,106 @@ export default function Entities() {
               </div>
             </div>
 
-            {/* Listagem */}
+            {/* Barra de ferramentas: Contagem e Controles de Ordenação */}
+            <div className="flex items-center justify-between border-b border-white/5 pb-3 pt-4 mb-6 text-[11px] text-white/40">
+              <div>
+                Showing {filteredAndSorted.length} {filteredAndSorted.length === 1 ? "atom" : "atoms"}
+              </div>
+              <div className="flex items-center gap-4 font-mono">
+                {/* Tipo de Ordenação */}
+                <div className="flex items-center gap-1.5">
+                  <span>Sort by:</span>
+                  <button 
+                    onClick={() => setSortBy(sortBy === "createdAt" ? "updatedAt" : "createdAt")}
+                    className="text-white/70 hover:text-white transition-colors"
+                  >
+                    [{sortBy === "createdAt" ? "Creation" : "Modification"}]
+                  </button>
+                </div>
+                {/* Direção da Ordenação */}
+                <button 
+                  onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
+                  className="flex items-center gap-1 text-white/70 hover:text-white transition-colors"
+                >
+                  <ArrowUpDown className="h-3 w-3" />
+                  {sortOrder === "desc" ? "Recent" : "Oldest"}
+                </button>
+              </div>
+            </div>
+
+            {/* Listagem Contínua */}
             {loading ? (
               <div className="flex justify-center py-24">
                 <Loader2 className="h-5 w-5 animate-spin text-white/30" />
               </div>
-            ) : grouped.length === 0 ? (
+            ) : filteredAndSorted.length === 0 ? (
               <div className="py-24 text-center">
                 <p className="font-serif text-2xl italic text-white/40">
                   {search ? "Nothing matches that search." : "No entities yet. Create your first one."}
                 </p>
               </div>
             ) : (
-              <div className="space-y-12">
-                {grouped.map(([key, items]) => {
-                  const collapsed = collapsedMonths.has(key);
+              <ul className="divide-y divide-white/[0.06]">
+                {filteredAndSorted.map((entity) => {
+                  const targetDate = sortBy === "updatedAt" ? (entity.updatedAt || entity.createdAt) : entity.createdAt;
                   return (
-                    <section key={key}>
+                    <li key={entity.id}>
                       <button
-                        onClick={() => toggleMonth(key)}
-                        className="group mb-5 flex w-full items-center justify-between border-b border-white/10 pb-2 text-left"
+                        onClick={() => navigate(`/entities/${entity.id}`)}
+                        className="group relative flex w-full items-start gap-4 py-5 text-left transition-colors hover:bg-white/[0.02]"
                       >
-                        <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-white/40 group-hover:text-white/70">
-                          {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
-                          {formatMonth(key)}
-                        </span>
-                        <span className="font-mono text-[10px] text-white/30 tabular-nums">
-                          {items.length} {items.length === 1 ? "atom" : "atoms"}
-                        </span>
+                        {/* Linha de realce no Hover */}
+                        <span
+                          aria-hidden
+                          className="absolute left-0 top-1/2 h-8 w-px -translate-x-3 -translate-y-1/2 bg-white opacity-0 transition-opacity group-hover:opacity-100"
+                        />
+
+                        {/* Coluna da Data Relativa */}
+                        <div className="hidden w-20 shrink-0 pt-1 sm:block">
+                          <p className="font-mono text-[10px] uppercase tracking-wider text-white/30">
+                            {relativeDate(targetDate)}
+                          </p>
+                        </div>
+
+                        {/* Conteúdo da Entidade */}
+                        <div className="min-w-0 flex-1">
+                          <h3 className="font-serif text-xl leading-snug text-white/90 transition-colors group-hover:text-white">
+                            {entity.title || "Untitled"}
+                          </h3>
+                          {entity.description && (
+                            <p className="mt-1 line-clamp-1 text-sm text-white/45">{entity.description}</p>
+                          )}
+                          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/35">
+                            <span className="uppercase tracking-[0.18em]">
+                              {typeLabels[entity.type] ?? entity.type}
+                            </span>
+                            <span className="sm:hidden">{relativeDate(targetDate)}</span>
+                          </div>
+                        </div>
+
+                        {/* Ações de Deleção no Hover */}
+                        <div className="flex shrink-0 items-center gap-1 pt-1">
+                          <span
+                            role="button"
+                            tabIndex={0}
+                            onClick={(e) => handleDelete(e, entity)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                handleDelete(e as unknown as React.MouseEvent, entity);
+                              }
+                            }}
+                            className="cursor-pointer rounded-sm p-1.5 text-white/20 opacity-0 transition hover:text-white/70 group-hover:opacity-100"
+                            aria-label="Delete entity"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </span>
+                        </div>
                       </button>
-
-                      {!collapsed && (
-                        <ul className="divide-y divide-white/[0.06]">
-                          {items.map((entity) => (
-                            <li key={entity.id}>
-                              <button
-                                onClick={() => navigate(`/entities/${entity.id}`)}
-                                className="group relative flex w-full items-start gap-4 py-5 text-left transition-colors hover:bg-white/[0.02]"
-                              >
-                                {/* Linha de realce no Hover */}
-                                <span
-                                  aria-hidden
-                                  className="absolute left-0 top-1/2 h-8 w-px -translate-x-3 -translate-y-1/2 bg-white opacity-0 transition-opacity group-hover:opacity-100"
-                                />
-
-                                {/* Coluna da Data */}
-                                <div className="hidden w-20 shrink-0 pt-1 sm:block">
-                                  <p className="font-mono text-[10px] uppercase tracking-wider text-white/30">
-                                    {relativeDate(entity.createdAt)}
-                                  </p>
-                                </div>
-
-                                {/* Conteúdo da Entidade */}
-                                <div className="min-w-0 flex-1">
-                                  <h3 className="font-serif text-xl leading-snug text-white/90 transition-colors group-hover:text-white">
-                                    {entity.title || "Untitled"}
-                                  </h3>
-                                  {entity.description && (
-                                    <p className="mt-1 line-clamp-1 text-sm text-white/45">{entity.description}</p>
-                                  )}
-                                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/35">
-                                    <span className="uppercase tracking-[0.18em]">
-                                      {typeLabels[entity.type] ?? entity.type}
-                                    </span>
-                                    <span className="sm:hidden">{relativeDate(entity.createdAt)}</span>
-                                  </div>
-                                </div>
-
-                                {/* Ações de Deleção no Hover */}
-                                <div className="flex shrink-0 items-center gap-1 pt-1">
-                                  <span
-                                    role="button"
-                                    tabIndex={0}
-                                    onClick={(e) => handleDelete(e, entity)}
-                                    onKeyDown={(e) => {
-                                      if (e.key === "Enter" || e.key === " ") {
-                                        e.preventDefault();
-                                        handleDelete(e as unknown as React.MouseEvent, entity);
-                                      }
-                                    }}
-                                    className="cursor-pointer rounded-sm p-1.5 text-white/20 opacity-0 transition hover:text-white/70 group-hover:opacity-100"
-                                    aria-label="Delete entity"
-                                  >
-                                    <Trash2 className="h-3.5 w-3.5" />
-                                  </span>
-                                </div>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </section>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             )}
           </main>
         </div>
