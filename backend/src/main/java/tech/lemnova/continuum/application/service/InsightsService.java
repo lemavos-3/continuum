@@ -152,8 +152,18 @@ public class InsightsService {
         Map<String, List<NoteLink>> linksByTarget = allLinks.stream()
                 .collect(Collectors.groupingBy(NoteLink::getTargetNoteId));
 
+        // Pre-load hours-per-entity so Notes can inherit hours from connected entities
+        Map<String, Double> hoursByEntity = timeEntryRepo.findByUserIdAndArchivedAtIsNull(userId).stream()
+                .collect(Collectors.groupingBy(
+                        TimeEntry::getEntityId,
+                        Collectors.summingDouble(TimeEntry::getDurationHours)));
+
         return notes.stream()
-                .map(note -> buildNoteInsight(note, linksByTarget.getOrDefault(note.getId(), Collections.emptyList()), now, today))
+                .map(note -> buildNoteInsight(
+                        note,
+                        linksByTarget.getOrDefault(note.getId(), Collections.emptyList()),
+                        hoursByEntity,
+                        now, today))
                 .collect(Collectors.toList());
     }
 
@@ -210,7 +220,9 @@ public class InsightsService {
     // FORMULAS
     // ─────────────────────────────────────────────────────────────
 
-    private NoteInsightDTO buildNoteInsight(Note note, List<NoteLink> backlinks, LocalDateTime now, LocalDate today) {
+    private NoteInsightDTO buildNoteInsight(Note note, List<NoteLink> backlinks,
+                                            Map<String, Double> hoursByEntity,
+                                            LocalDateTime now, LocalDate today) {
         long mentionCount = backlinks.size();
 
         Instant cutoff30 = now.minusDays(30).atZone(ZoneId.systemDefault()).toInstant();
@@ -218,8 +230,13 @@ public class InsightsService {
                 .filter(l -> l.getCreatedAt() != null && l.getCreatedAt().isAfter(cutoff30))
                 .count();
 
-        // hoursTracked: notes don't directly track time → sum time of connected entities (proxy)
+        // hoursTracked: sum hours from connected entities (proxy)
         double hoursTracked = 0.0;
+        if (note.getEntityIds() != null) {
+            for (String eid : note.getEntityIds()) {
+                hoursTracked += hoursByEntity.getOrDefault(eid, 0.0);
+            }
+        }
         int entityConnections = note.getEntityIds() != null ? note.getEntityIds().size() : 0;
 
         int uniqueDaysReferenced = (int) backlinks.stream()
@@ -235,20 +252,20 @@ public class InsightsService {
         long daysSinceLastInteraction = ChronoUnit.DAYS.between(
                 lastInteraction.atZone(ZoneId.systemDefault()).toLocalDate(), today);
 
-        double base = (mentionCount * 1.8)
-                + (recentMentions * 4.8)
-                + (hoursTracked * 3.5)
-                + (entityConnections * 2.6)
-                + (uniqueDaysReferenced * 1.1);
+        double base = (mentionCount * W_NOTE_MENTIONS)
+                + (recentMentions * W_NOTE_RECENT)
+                + (hoursTracked * W_NOTE_HOURS)
+                + (entityConnections * W_NOTE_ENTITIES)
+                + (uniqueDaysReferenced * W_NOTE_DAYS);
 
-        double decay = Math.max(0.12, 1.0 - (daysSinceLastInteraction * 0.023));
+        double decay = Math.max(NOTE_DECAY_FLOOR, 1.0 - (daysSinceLastInteraction * NOTE_DECAY_PER_DAY));
         double score = base * decay;
 
         String badge = pickNoteBadge(score, daysSinceLastInteraction, recentMentions);
 
         return new NoteInsightDTO(
                 NoteSummaryDTO.from(note), round(score), badge,
-                mentionCount, recentMentions, hoursTracked,
+                mentionCount, recentMentions, round(hoursTracked),
                 entityConnections, uniqueDaysReferenced, daysSinceLastInteraction);
     }
 
