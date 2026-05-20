@@ -13,6 +13,7 @@ import {
   Network,
   Search,
   Settings,
+  Sparkles,
   StickyNote,
   Timer,
   UserCircle,
