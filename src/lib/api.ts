@@ -311,4 +311,11 @@ export const timeTrackingApi = {
   recoverSession: (entityId: string) => api.post(`/api/time-tracking/${entityId}/recover`),
 };
 
+export const insightsApi = {
+  hotNotes: (limit = 10) => api.get("/api/insights/notes/hot", { params: { limit } }),
+  forgottenNotes: (limit = 10) => api.get("/api/insights/notes/forgotten", { params: { limit } }),
+  hotEntities: (limit = 10) => api.get("/api/insights/entities/hot", { params: { limit } }),
+  forgottenEntities: (limit = 10) => api.get("/api/insights/entities/forgotten", { params: { limit } }),
+};
+
 export default api;
