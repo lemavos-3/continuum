@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { TimeTrackingList } from "@/components/TimeTrackingList";
-import { Search } from "lucide-react";
+import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/24/outline"; // Importados do Heroicons
 
 export default function TimeTracking() {
   const location = useLocation();
@@ -38,16 +38,28 @@ export default function TimeTracking() {
             </p>
           </header>
 
-          {/* Única barra Sticky Search com Blur do Notes */}
+          {/* Barra Sticky Search com Botão Novo ao lado */}
           <div className="sticky top-14 z-10 -mx-4 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Navigate your timeline…"
-                className="w-full border-0 bg-transparent pl-6 text-sm text-white placeholder:italic placeholder:text-white/30 focus:outline-none focus:ring-0"
-              />
+            <div className="flex items-center gap-4">
+              {/* Container do Input */}
+              <div className="relative flex-1">
+                <MagnifyingGlassIcon className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Navigate your timeline…"
+                  className="w-full border-0 bg-transparent pl-6 text-sm text-white placeholder:italic placeholder:text-white/30 focus:outline-none focus:ring-0"
+                />
+              </div>
+
+              {/* Botão Novo */}
+              <button
+                onClick={() => console.log("New action triggered")}
+                className="flex items-center gap-1.5 rounded border border-white/15 bg-white/5 px-3 py-1.5 font-mono text-[11px] text-white/80 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
+              >
+                <PlusIcon className="h-3.5 w-3.5" />
+                <span>New</span>
+              </button>
             </div>
           </div>
 
@@ -81,7 +93,7 @@ export default function TimeTracking() {
             search={search}
             sortBy={sortBy}
             sortOrder={sortOrder}
-            hideInternalSearch={true} // Se a sua lista aceitar essa prop para sumir com a busca antiga interna dela
+            hideInternalSearch={true} 
           />
 
         </main>
