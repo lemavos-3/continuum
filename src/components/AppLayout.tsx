@@ -16,6 +16,7 @@ import {
   Timer,
   Activity,
   HardDrive,
+  Sparkles,
   X,
 } from "lucide-react";
 import {
@@ -33,11 +34,13 @@ const mobileItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/notes", icon: StickyNote, label: "Notes" },
   { to: "/entities", icon: Network, label: "Entities" },
+  { to: "/insights", icon: Sparkles, label: "Insights" },
   { to: "/vault", icon: HardDrive, label: "Vault" },
   { to: "/projects", icon: Timer, label: "Projects" },
   { to: "/activities", icon: Activity, label: "Activities" },
   { to: "/graph", icon: GitGraph, label: "Graph" },
 ];
+
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
