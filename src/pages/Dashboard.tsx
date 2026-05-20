@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { Children, ComponentType, ReactNode, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { ChartContainer } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
@@ -114,7 +115,7 @@ const DashboardSkeleton = () => (
   </AppLayout>
 );
 
-function StatCard({ icon: Icon, label, value, hint }: { icon: React.ComponentType<{ className?: string }>; label: string; value: string | number; hint?: string; }) {
+function StatCard({ icon: Icon, label, value, hint }: { icon: ComponentType<{ className?: string }>; label: string; value: string | number; hint?: string; }) {
   return (
     <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 flex flex-col gap-1.5 min-w-0 shadow-inner transition-all duration-300 hover:border-white/10">
       <div className="flex items-center gap-2 text-neutral-500">
@@ -127,7 +128,7 @@ function StatCard({ icon: Icon, label, value, hint }: { icon: React.ComponentTyp
   );
 }
 
-function StatChip({ children }: { children: React.ReactNode }) {
+function StatChip({ children }: { children: ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1 rounded-md bg-white/5 border border-white/5 px-1.5 py-0.5 text-[10px] text-neutral-400 font-medium">
       {children}
@@ -205,10 +206,18 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
 }
 
 function DashboardInsightSection({
-  title, subtitle, icon: Icon, children, empty, loading, className, onRefresh, refreshing
+  title, subtitle, icon: Icon, children, empty, loading, className, onRefresh, refreshing, viewMoreHref, viewMoreLabel
 }: {
-  title: string; subtitle?: string; icon: React.ComponentType<{ className?: string }>; children: React.ReactNode; empty: boolean; loading: boolean; className?: string; onRefresh?: () => void; refreshing?: boolean;
+  title: string; subtitle?: string; icon: ComponentType<{ className?: string }>; children: ReactNode; empty: boolean; loading: boolean; className?: string; onRefresh?: () => void; refreshing?: boolean; viewMoreHref?: string; viewMoreLabel?: string;
 }) {
+  const navigate = useNavigate();
+  const items = Children.toArray(children);
+  const previewItems = items.slice(0, 3);
+  const expandedItems = items.slice(3, 10);
+  const totalCount = items.length;
+  const visibleCount = Math.min(10, totalCount);
+  const showAccordion = !loading && !empty && items.length > 3;
+
   return (
     <div className={cn("border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 flex flex-col shadow-inner", className)}>
       <div className="flex items-center justify-between gap-3 mb-5">
@@ -221,17 +230,28 @@ function DashboardInsightSection({
             {subtitle && <p className="text-xs text-neutral-500">{subtitle}</p>}
           </div>
         </div>
-        {onRefresh && (
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={refreshing}
-            className="text-xs text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5"
-          >
-            <RefreshCw className={cn("h-3 w-3", refreshing && "animate-spin")} />
-            <span className="hidden sm:inline">Refresh</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {onRefresh && (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={refreshing}
+              className="text-xs text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5"
+            >
+              <RefreshCw className={cn("h-3 w-3", refreshing && "animate-spin")} />
+              <span className="hidden sm:inline">Refresh</span>
+            </button>
+          )}
+          {viewMoreHref && (
+            <button
+              type="button"
+              onClick={() => navigate(viewMoreHref)}
+              className="text-xs text-neutral-400 hover:text-white transition-colors"
+            >
+              {viewMoreLabel || "View all"}
+            </button>
+          )}
+        </div>
       </div>
       <div className="flex-1 min-h-0">
         {loading ? (
@@ -245,7 +265,38 @@ function DashboardInsightSection({
             Nothing to show yet.
           </div>
         ) : (
-          <div className="space-y-3">{children}</div>
+          <>
+            <div className="space-y-3">{previewItems}</div>
+            {showAccordion ? (
+              <Accordion type="single" collapsible className="mt-4">
+                <AccordionItem value={title}>
+                  <AccordionTrigger className="px-0">
+                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-xs font-medium text-neutral-300 hover:bg-white/10 transition-colors">
+                      <span>Show {visibleCount - previewItems.length} more</span>
+                      <span>{visibleCount} of {totalCount}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-0">
+                    <div className="space-y-3">
+                      {expandedItems}
+                    </div>
+                    <div className="mt-4 flex items-center justify-between gap-3 text-xs text-neutral-400">
+                      <span>{totalCount > visibleCount ? `Showing ${visibleCount} of ${totalCount}` : `Showing all ${visibleCount}`}</span>
+                      {viewMoreHref && (
+                        <button
+                          type="button"
+                          onClick={() => navigate(viewMoreHref)}
+                          className="text-xs text-neutral-400 hover:text-white transition-colors"
+                        >
+                          {viewMoreLabel || "View all"}
+                        </button>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            ) : null}
+          </>
         )}
       </div>
     </div>
@@ -609,6 +660,8 @@ export default function Dashboard() {
             className="lg:col-span-7"
             onRefresh={() => loadInsights(true)}
             refreshing={refreshingInsights}
+            viewMoreHref="/notes"
+            viewMoreLabel="View all notes"
           >
             {hotNotes.map((n) => (
               <NoteCard key={n.note.id} item={n} onOpen={() => navigate(`/notes/${n.note.id}`)} />
@@ -623,6 +676,8 @@ export default function Dashboard() {
             loading={insightsLoading}
             empty={hotEntities.length === 0}
             className="lg:col-span-6"
+            viewMoreHref="/entities"
+            viewMoreLabel="View all entities"
           >
             {hotEntities.map((e) => (
               <EntityCard key={e.entity.id} item={e} onOpen={() => navigate(`/entities/${e.entity.id}`)} />
@@ -637,6 +692,8 @@ export default function Dashboard() {
             loading={insightsLoading}
             empty={forgottenNotes.length === 0}
             className="lg:col-span-6"
+            viewMoreHref="/notes"
+            viewMoreLabel="View all notes"
           >
             {forgottenNotes.map((n) => (
               <NoteCard key={n.note.id} item={n} onOpen={() => navigate(`/notes/${n.note.id}`)} />
@@ -651,6 +708,8 @@ export default function Dashboard() {
             loading={insightsLoading}
             empty={forgottenEntities.length === 0}
             className="lg:col-span-12"
+            viewMoreHref="/entities"
+            viewMoreLabel="View all entities"
           >
             {forgottenEntities.map((e) => (
               <EntityCard key={e.entity.id} item={e} onOpen={() => navigate(`/entities/${e.entity.id}`)} />
