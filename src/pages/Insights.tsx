@@ -16,7 +16,6 @@ import {
 import AppLayout from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { insightsApi } from "@/lib/api";
 import { toast } from "@/hooks/use-toast";
@@ -93,7 +92,7 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
       whileTap={{ scale: 0.98 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-[260px] shrink-0 flex-col gap-3 overflow-hidden rounded-2xl border border-white/5 bg-neutral-900/20 p-4 text-left shadow-inner",
+        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-2xl border border-white/5 bg-neutral-900/20 p-4 text-left shadow-inner",
         "backdrop-blur-md transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/40 hover:shadow-xl",
       )}
     >
@@ -128,7 +127,7 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
       whileTap={{ scale: 0.98 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-[260px] shrink-0 flex-col gap-3 overflow-hidden rounded-2xl border border-white/5 bg-neutral-900/20 p-4 text-left shadow-inner",
+        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-2xl border border-white/5 bg-neutral-900/20 p-4 text-left shadow-inner",
         "backdrop-blur-md transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/40 hover:shadow-xl",
       )}
     >
@@ -191,11 +190,11 @@ function Section({
       </div>
 
       {loading ? (
-        <div className="flex gap-4 overflow-hidden px-1 py-1">
+        <div className="space-y-4 px-1 py-1">
           {[0, 1, 2].map((i) => (
             <div
               key={i}
-              className="h-[148px] w-[260px] shrink-0 animate-pulse rounded-2xl border border-white/5 bg-neutral-900/20 backdrop-blur-md"
+              className="h-[148px] w-full animate-pulse rounded-2xl border border-white/5 bg-neutral-900/20 backdrop-blur-md"
             />
           ))}
         </div>
@@ -204,10 +203,7 @@ function Section({
           Nothing here yet — keep journaling and connecting entities.
         </div>
       ) : (
-        <ScrollArea className="w-full">
-          <div className="flex gap-4 px-1 pb-4">{children}</div>
-          <ScrollBar orientation="horizontal" className="h-1.5" />
-        </ScrollArea>
+        <div className="space-y-4 px-1 pb-4">{children}</div>
       )}
     </section>
   );

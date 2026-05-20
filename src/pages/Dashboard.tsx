@@ -11,7 +11,6 @@ import { Progress } from "@/components/ui/progress";
 import { ChartContainer } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
@@ -143,7 +142,7 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
       whileTap={{ scale: 0.98 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-[240px] shrink-0 flex-col gap-3 overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 p-4 text-left shadow-sm",
+        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 p-4 text-left shadow-sm",
         "transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/60 hover:shadow-md",
       )}
     >
@@ -175,7 +174,7 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
       whileTap={{ scale: 0.98 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-[240px] shrink-0 flex-col gap-3 overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 p-4 text-left shadow-sm",
+        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 p-4 text-left shadow-sm",
         "transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/60 hover:shadow-md",
       )}
     >
@@ -236,9 +235,9 @@ function DashboardInsightSection({
       </div>
       <div className="flex-1 min-h-0">
         {loading ? (
-          <div className="flex gap-4 overflow-hidden">
+          <div className="space-y-3">
             {[0, 1].map((i) => (
-              <div key={i} className="h-[140px] w-[240px] shrink-0 animate-pulse rounded-xl border border-white/5 bg-neutral-900/30" />
+              <div key={i} className="h-[140px] w-full animate-pulse rounded-xl border border-white/5 bg-neutral-900/30" />
             ))}
           </div>
         ) : empty ? (
@@ -246,10 +245,7 @@ function DashboardInsightSection({
             Nothing to show yet.
           </div>
         ) : (
-          <ScrollArea className="w-full pb-3 -mx-1 px-1">
-            <div className="flex gap-3">{children}</div>
-            <ScrollBar orientation="horizontal" className="h-1.5" />
-          </ScrollArea>
+          <div className="space-y-3">{children}</div>
         )}
       </div>
     </div>
