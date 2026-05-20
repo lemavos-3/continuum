@@ -13,7 +13,7 @@ export default function TimeTracking() {
     ? 'Track your project activities and milestones.'
     : 'Track your daily activities and task history.';
 
-  // Estados de busca e ordenação idênticos ao Notes
+  // Estados de busca e ordenação controlados
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"createdAt" | "updatedAt">("updatedAt");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
@@ -38,7 +38,7 @@ export default function TimeTracking() {
             </p>
           </header>
 
-          {/* Sticky Search idêntico ao do Notes */}
+          {/* Único Sticky Search — idêntico ao do Notes */}
           <div className="sticky top-14 z-10 -mx-4 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
             <div className="relative">
               <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
@@ -51,7 +51,7 @@ export default function TimeTracking() {
             </div>
           </div>
 
-          {/* Toolbar de Controles de Ordenação idêntica ao do Notes */}
+          {/* Toolbar de Controles de Ordenação */}
           <div className="flex items-center justify-end border-b border-white/5 pb-3 pt-4 mb-6 text-[11px] text-white/40">
             <div className="flex items-center gap-4 font-mono">
               <div className="flex items-center gap-1.5">
@@ -75,7 +75,7 @@ export default function TimeTracking() {
             </div>
           </div>
 
-          {/* Lista limpa: sem bordas ou fundo "striped/container" aqui */}
+          {/* Lista limpa recebendo os filtros */}
           <TimeTrackingList 
             filterType={isProjectsPage ? 'PROJECT' : 'ACTIVITY'} 
             search={search}
