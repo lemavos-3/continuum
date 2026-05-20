@@ -298,13 +298,13 @@ public class InsightsService {
         long daysSinceLast = ChronoUnit.DAYS.between(
                 lastMention.atZone(ZoneId.systemDefault()).toLocalDate(), today);
 
-        double base = (mentionCount * 1.6)
-                + (recentMentions * 4.5)
-                + (hoursTracked * 3.8)
-                + (relationsCount * 2.8)
-                + (uniqueDaysMentioned * 1.0);
+        double base = (mentionCount * W_ENT_MENTIONS)
+                + (recentMentions * W_ENT_RECENT)
+                + (hoursTracked * W_ENT_HOURS)
+                + (relationsCount * W_ENT_RELATIONS)
+                + (uniqueDaysMentioned * W_ENT_DAYS);
 
-        double decay = Math.max(0.15, 1.0 - (daysSinceLast * 0.020));
+        double decay = Math.max(ENT_DECAY_FLOOR, 1.0 - (daysSinceLast * ENT_DECAY_PER_DAY));
         double score = base * decay;
 
         String badge = pickEntityBadge(score, daysSinceLast, recentMentions);
