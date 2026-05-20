@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import {
   CommandLineIcon,
   SparklesIcon,
-  CheckIcon,
   ArrowPathIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
@@ -17,12 +16,12 @@ const planMeta: Record<Plan, { icon: typeof CommandLineIcon; color: string; desc
   FREE: { 
     icon: CommandLineIcon, 
     color: "text-white/40", 
-    desc: "Essential local features for basic graph modeling." 
+    desc: "Essential features for mapping and managing your local knowledge graph." 
   },
   VISION: { 
     icon: SparklesIcon, 
     color: "text-white", 
-    desc: "Full computing autonomy, specialized intelligence, and unbounded limits." 
+    desc: "Complete access, dedicated intelligence models, and unrestricted system limits." 
   },
   PLUS: { icon: CommandLineIcon, color: "text-white/40", desc: "" },
   PRO: { icon: CommandLineIcon, color: "text-white/40", desc: "" },
@@ -56,7 +55,6 @@ export default function Subscription() {
     plansApi.list()
       .then(({ data }) => { 
         if (active) {
-          // Filtra a API para renderizar estritamente FREE e VISION
           const filtered = (data || []).filter(
             (p: any) => p.plan === "FREE" || p.plan === "VISION"
           );
@@ -76,7 +74,7 @@ export default function Subscription() {
         window.location.href = data.url;
       }
     } catch (err: any) {
-      toast({ title: "Error", description: err.response?.data?.message || "Try again", variant: "destructive" });
+      toast({ title: "Error", description: err.response?.data?.message || "Please try again", variant: "destructive" });
     } finally {
       setCheckoutLoading(null);
     }
@@ -102,12 +100,12 @@ export default function Subscription() {
         
         {/* HEADER */}
         <header>
-          <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">Billing Engine</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">Plans & Billing</p>
           <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">Subscription</h1>
-          <p className="mt-2 text-sm text-white/50">Configure your system resource compute allocations.</p>
+          <p className="mt-2 text-sm text-white/50">Manage your subscription and choose the ideal plan for your notes.</p>
         </header>
 
-        {/* STATUS CARD ATUAL (Substituindo o antigo bento-card por um layout retangular estrito) */}
+        {/* CURRENT STATUS CARD */}
         {!loading && sub && (
           <div className="border border-white/10 bg-white/[0.01] p-5 rounded-sm flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="flex items-start gap-3.5">
@@ -118,25 +116,25 @@ export default function Subscription() {
               })()}
               <div>
                 <p className="text-sm font-medium text-white/90">
-                  Current Session Allocation: <span className="font-mono text-xs uppercase tracking-wider text-white bg-white/[0.08] px-1.5 py-0.5 rounded-sm ml-1">{currentPlan}</span>
+                  You are currently on the: <span className="text-xs uppercase bg-white/[0.08] px-1.5 py-0.5 rounded-sm ml-1 text-white font-medium">{currentPlan} plan</span>
                 </p>
-                <p className="mt-1 font-mono text-[10px] text-white/30 uppercase tracking-wide">
-                  Status: {sub.status} {sub.currentPeriodEnd && `// Renews ${new Date(sub.currentPeriodEnd).toLocaleDateString("en-US")}`}
+                <p className="mt-1 text-xs text-white/30">
+                  Status: {sub.status} {sub.currentPeriodEnd && `• Renews on ${new Date(sub.currentPeriodEnd).toLocaleDateString("en-US")}`}
                 </p>
               </div>
             </div>
             {currentPlan !== "FREE" && (
               <button 
                 onClick={handleCancel} 
-                className="text-left font-mono text-[11px] text-white/40 hover:text-white underline underline-offset-4 transition-colors"
+                className="text-left text-xs text-white/40 hover:text-white underline underline-offset-4 transition-colors"
               >
-                Halt current subscription
+                Cancel active subscription
               </button>
             )}
           </div>
         )}
 
-        {/* GRID DE PLANOS FILTRADO (Apenas Free e Vision) */}
+        {/* PLANS GRID */}
         {planLoading ? (
           <div className="flex justify-center py-24">
             <ArrowPathIcon className="h-5 w-5 animate-spin text-white/20" />
@@ -160,19 +158,18 @@ export default function Subscription() {
                   )}
                 >
                   {isCurrent && (
-                    <span className="absolute top-0 right-0 -translate-y-1/2 translate-x-0 font-mono text-[9px] uppercase tracking-wider bg-white text-black px-1.5 py-0.5 rounded-sm">
-                      Active tier
+                    <span className="absolute top-0 right-0 -translate-y-1/2 text-[9px] uppercase tracking-wider bg-white text-black px-1.5 py-0.5 rounded-sm font-medium">
+                      Current Tier
                     </span>
                   )}
 
                   <div className="space-y-6">
-                    {/* Top Tier Info */}
                     <div className="flex items-center gap-3">
                       <Icon className={cn("h-4 w-4 shrink-0", meta.color)} />
                       <div>
                         <h3 className="font-serif text-2xl tracking-tight text-white">{p.plan}</h3>
-                        <p className="mt-1 font-mono text-[10px] text-white/40 uppercase tracking-widest">
-                          {isVision ? "$49.00 / month" : "No charge"}
+                        <p className="mt-1 text-xs text-white/40 font-medium">
+                          {isVision ? "$49.00 / mo" : "Free of charge"}
                         </p>
                       </div>
                     </div>
@@ -181,28 +178,28 @@ export default function Subscription() {
                       {meta.desc}
                     </p>
 
-                    {/* Especificações de Recursos (Estilo Terminal / Código) */}
+                    {/* Feature Details */}
                     <div className="pt-4 border-t border-white/[0.04] space-y-2.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-white/40 font-mono text-[10px] uppercase">Notes Quota</span>
-                        <span className="font-mono text-white/70 tabular-nums">{formatLimit(p.limits.maxNotes)}</span>
+                        <span className="text-white/40 text-xs">Notes Quota</span>
+                        <span className="text-white/70 tabular-nums">{formatLimit(p.limits.maxNotes)}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-white/40 font-mono text-[10px] uppercase">Entities Limit</span>
-                        <span className="font-mono text-white/70 tabular-nums">{formatLimit(p.limits.maxEntities)}</span>
+                        <span className="text-white/40 text-xs">Entities Limit</span>
+                        <span className="text-white/70 tabular-nums">{formatLimit(p.limits.maxEntities)}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-white/40 font-mono text-[10px] uppercase">Vault Size</span>
-                        <span className="font-mono text-white/70 tabular-nums">{formatLimit(p.limits.maxVaultSizeMB, " MB")}</span>
+                        <span className="text-white/40 text-xs">Vault Storage</span>
+                        <span className="text-white/70 tabular-nums">{formatLimit(p.limits.maxVaultSizeMB, " MB")}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-white/40 font-mono text-[10px] uppercase">Retention Layer</span>
-                        <span className="font-mono text-white/70 tabular-nums">{formatLimit(p.limits.historyDays, " days")}</span>
+                        <span className="text-white/40 text-xs">Version History</span>
+                        <span className="text-white/70 tabular-nums">{formatLimit(p.limits.historyDays, " days")}</span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Call to Action Retangular */}
+                  {/* Actions */}
                   <div className="mt-8 pt-4">
                     {isVision ? (
                       <button
@@ -218,17 +215,17 @@ export default function Subscription() {
                         {checkoutLoading === p.priceId ? (
                           <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />
                         ) : isCurrent ? (
-                          "Currently Armed"
+                          "Active Plan"
                         ) : (
                           <>
-                            Provision Vision Tier
+                            Upgrade to Vision
                             <ArrowRightIcon className="h-3.5 w-3.5" />
                           </>
                         )}
                       </button>
                     ) : (
-                      <div className="h-9 flex items-center justify-center font-mono text-[10px] uppercase tracking-wider text-white/20 border border-dashed border-white/5 rounded-sm">
-                        {isCurrent ? "Base System Active" : "Default fallback tier"}
+                      <div className="h-9 flex items-center justify-center text-xs text-white/20 border border-dashed border-white/5 rounded-sm">
+                        {isCurrent ? "Base Plan Active" : "Default fallback tier"}
                       </div>
                     )}
                   </div>
