@@ -68,6 +68,7 @@ const trackingNav: NavItem[] = [
 ];
 
 const exploreNav: NavItem[] = [
+  { to: "/insights", label: "Insights", icon: Sparkles },
   { to: "/graph", label: "Graph", icon: GitGraph },
 ];
 
