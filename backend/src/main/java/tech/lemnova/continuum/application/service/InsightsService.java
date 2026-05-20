@@ -339,19 +339,19 @@ public class InsightsService {
 
     /** Recompute the raw base (without decay) — used to rank forgotten items by their true past importance. */
     private static double baseScoreOf(NoteInsightDTO n) {
-        return (n.mentionCount() * 1.8)
-                + (n.recentMentions() * 4.8)
-                + (n.hoursTracked() * 3.5)
-                + (n.entityConnections() * 2.6)
-                + (n.uniqueDaysReferenced() * 1.1);
+        return (n.mentionCount() * W_NOTE_MENTIONS)
+                + (n.recentMentions() * W_NOTE_RECENT)
+                + (n.hoursTracked() * W_NOTE_HOURS)
+                + (n.entityConnections() * W_NOTE_ENTITIES)
+                + (n.uniqueDaysReferenced() * W_NOTE_DAYS);
     }
 
     private static double baseScoreOf(EntityInsightDTO e) {
-        return (e.mentionCount() * 1.6)
-                + (e.recentMentions() * 4.5)
-                + (e.hoursTracked() * 3.8)
-                + (e.relationsCount() * 2.8)
-                + (e.uniqueDaysMentioned() * 1.0);
+        return (e.mentionCount() * W_ENT_MENTIONS)
+                + (e.recentMentions() * W_ENT_RECENT)
+                + (e.hoursTracked() * W_ENT_HOURS)
+                + (e.relationsCount() * W_ENT_RELATIONS)
+                + (e.uniqueDaysMentioned() * W_ENT_DAYS);
     }
 
     public String cacheKey() {
