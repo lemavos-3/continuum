@@ -3,10 +3,12 @@ package tech.lemnova.continuum.application.service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestTemplate;
 import tech.lemnova.continuum.controller.dto.subscription.CheckoutResponse;
 
 import java.util.Map;
@@ -16,7 +18,8 @@ public class LemonSqueezyService {
 
     private static final Logger log = LoggerFactory.getLogger(LemonSqueezyService.class);
 
-    private final WebClient webClient;
+    private final RestTemplate restTemplate;
+    private final String apiKey;
     private final String storeId;
     private final String successUrl;
     private final String cancelUrl;
@@ -28,15 +31,12 @@ public class LemonSqueezyService {
             @Value("${lemonsqueezy.checkout.success.url}") String successUrl,
             @Value("${lemonsqueezy.checkout.cancel.url}") String cancelUrl,
             @Value("${lemonsqueezy.variant.vision}") String variantVision) {
+        this.apiKey = apiKey;
         this.storeId = storeId;
         this.successUrl = successUrl;
         this.cancelUrl = cancelUrl;
         this.variantVision = variantVision;
-        this.webClient = WebClient.builder()
-                .baseUrl("https://api.lemonsqueezy.com/v1")
-                .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + apiKey)
-                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .build();
+        this.restTemplate = new RestTemplate();
     }
 
     public CheckoutResponse createCheckout(String userId, String email, String priceOrPlan) {
@@ -59,14 +59,18 @@ public class LemonSqueezyService {
                 )
         );
 
-        LemonSqueezyCheckoutResponse response = webClient.post()
-                .uri("/checkouts")
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .bodyValue(body)
-                .retrieve()
-                .bodyToMono(LemonSqueezyCheckoutResponse.class)
-                .block();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setBearerAuth(apiKey);
+        HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
+        ResponseEntity<LemonSqueezyCheckoutResponse> responseEntity = restTemplate.postForEntity(
+                "https://api.lemonsqueezy.com/v1/checkouts",
+                request,
+                LemonSqueezyCheckoutResponse.class
+        );
+
+        LemonSqueezyCheckoutResponse response = responseEntity.getBody();
         if (response == null || response.getData() == null || response.getData().getAttributes() == null
                 || response.getData().getAttributes().getUrl() == null) {
             log.error("Lemon Squeezy checkout creation returned invalid response");
