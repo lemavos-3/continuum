@@ -39,10 +39,8 @@ public class SubscriptionService {
     private final PlanConfiguration planConfig;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Value("${stripe.price-id-plus:}")   private String priceIdPlus;
-    @Value("${stripe.price-id-pro:}")    private String priceIdPro;
-    @Value("${stripe.price-id-vision:}") private String priceIdVision;
-    @Value("${app.url}")                 private String appUrl;
+    @Value("${stripe.price.vision:}") private String priceIdVision;
+    @Value("${app.url}")              private String appUrl;
 
     public SubscriptionService(SubscriptionRepository subRepo,
                                 UserRepository userRepo,
@@ -229,9 +227,7 @@ public class SubscriptionService {
     }
 
     private PlanType determinePlan(String priceId) {
-        if (priceId.equals(priceIdVision)) return PlanType.VISION;
-        if (priceId.equals(priceIdPro))    return PlanType.PRO;
-        if (priceId.equals(priceIdPlus))   return PlanType.PLUS;
+        if (priceId != null && priceId.equals(priceIdVision)) return PlanType.VISION;
         return PlanType.FREE;
     }
 
