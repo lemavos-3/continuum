@@ -18,7 +18,13 @@ const formatDate = (iso?: string) => {
  * Premium striped table with inline accordion rows. Mirrors the
  * `/entities` aesthetic: serif header, hairline borders, monochrome.
  */
-export function TimeTrackingList({ filterType }: { filterType?: string }) {
+export function TimeTrackingList({ filterType }: {
+  filterType?: string;
+  search?: string;
+  sortBy?: "createdAt" | "updatedAt";
+  sortOrder?: "asc" | "desc";
+  hideInternalSearch?: boolean;
+}) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
