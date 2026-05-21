@@ -1,14 +1,18 @@
 package tech.lemnova.continuum.application.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import tech.lemnova.continuum.application.exception.BadRequestException;
 import tech.lemnova.continuum.controller.dto.subscription.CheckoutResponse;
 
 import java.util.Map;
@@ -19,6 +23,7 @@ public class LemonSqueezyService {
     private static final Logger log = LoggerFactory.getLogger(LemonSqueezyService.class);
 
     private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final String apiKey;
     private final String storeId;
     private final String successUrl;
@@ -42,7 +47,7 @@ public class LemonSqueezyService {
     public CheckoutResponse createCheckout(String userId, String email, String priceOrPlan) {
         String variantId = resolveVariantId(priceOrPlan);
         if (variantId == null || variantId.isBlank()) {
-            throw new IllegalArgumentException("Unknown Lemon Squeezy variant or plan: " + priceOrPlan);
+            throw new BadRequestException("Invalid Lemon Squeezy plan or variant: " + priceOrPlan);
         }
 
         Map<String, Object> body = Map.of(
@@ -64,20 +69,41 @@ public class LemonSqueezyService {
         headers.setBearerAuth(apiKey);
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-        ResponseEntity<LemonSqueezyCheckoutResponse> responseEntity = restTemplate.postForEntity(
+        ResponseEntity<String> responseEntity = restTemplate.postForEntity(
                 "https://api.lemonsqueezy.com/v1/checkouts",
                 request,
-                LemonSqueezyCheckoutResponse.class
+                String.class
         );
 
-        LemonSqueezyCheckoutResponse response = responseEntity.getBody();
-        if (response == null || response.getData() == null || response.getData().getAttributes() == null
-                || response.getData().getAttributes().getUrl() == null) {
-            log.error("Lemon Squeezy checkout creation returned invalid response");
+        String responseBody = responseEntity.getBody();
+        if (!responseEntity.getStatusCode().is2xxSuccessful()) {
+            log.error("Lemon Squeezy checkout failed: status={} body={}", responseEntity.getStatusCode(), responseBody);
             throw new RuntimeException("Failed to create Lemon Squeezy checkout");
         }
 
-        return new CheckoutResponse(null, response.getData().getAttributes().getUrl());
+        try {
+            JsonNode root = objectMapper.readTree(responseBody);
+            JsonNode attributes = root.path("data").path("attributes");
+            String url = firstNonBlank(
+                    attributes.path("url").asText(null),
+                    attributes.path("checkout_url").asText(null)
+            );
+            if (url == null || url.isBlank()) {
+                log.error("Lemon Squeezy checkout creation returned invalid response: {}", responseBody);
+                throw new RuntimeException("Failed to create Lemon Squeezy checkout");
+            }
+            return new CheckoutResponse(null, url);
+        } catch (Exception e) {
+            log.error("Failed to parse Lemon Squeezy checkout response", e);
+            throw new RuntimeException("Failed to create Lemon Squeezy checkout", e);
+        }
+    }
+
+    private String firstNonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) return value;
+        }
+        return null;
     }
 
     private String resolveVariantId(String value) {

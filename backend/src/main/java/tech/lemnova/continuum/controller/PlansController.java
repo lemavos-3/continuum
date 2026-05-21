@@ -15,7 +15,7 @@ import java.util.List;
 @RequestMapping("/api/plans")
 public class PlansController {
 
-    @Value("${stripe.price.vision:}") private String priceIdVision;
+    @Value("${lemonsqueezy.variant.vision:}") private String variantIdVision;
 
     private final PlanConfiguration planConfig;
 
@@ -25,7 +25,7 @@ public class PlansController {
     public ResponseEntity<List<PlanInfo>> list() {
         return ResponseEntity.ok(List.of(
                 new PlanInfo(PlanType.FREE,   planConfig.getLimits(PlanType.FREE),   ""),
-                new PlanInfo(PlanType.VISION, planConfig.getLimits(PlanType.VISION), priceIdVision)
+                new PlanInfo(PlanType.VISION, planConfig.getLimits(PlanType.VISION), variantIdVision)
         ));
     }
 }
