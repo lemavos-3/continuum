@@ -52,12 +52,15 @@ public class SubscriptionService {
         this.planConfig = planConfig;
     }
 
-    public CheckoutResponse createCheckout(String userId, String email, String priceId) {
+    public CheckoutResponse createCheckout(String userId, String email, String priceOrPlan) {
+        String priceId = resolvePriceId(priceOrPlan);
+        if (priceId == null || priceId.isBlank())
+            throw new BadRequestException("Unknown plan or priceId: " + priceOrPlan);
         try {
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
-                    .setSuccessUrl(appUrl + "/dashboard?upgraded=true")
-                    .setCancelUrl(appUrl + "/pricing")
+                    .setSuccessUrl(appUrl + "/#/subscription?status=success")
+                    .setCancelUrl(appUrl + "/#/subscription?status=cancelled")
                     .setCustomerEmail(email)
                     .putMetadata("userId", userId)
                     .addLineItem(SessionCreateParams.LineItem.builder()
@@ -69,6 +72,16 @@ public class SubscriptionService {
             log.error("Stripe checkout failed: {}", e.getMessage());
             throw new RuntimeException("Could not create checkout session: " + e.getMessage());
         }
+    }
+
+    /** Accepts a raw Stripe price id (price_xxx) or a plan code ("VISION") and returns a price id. */
+    private String resolvePriceId(String value) {
+        if (value == null) return null;
+        if (value.startsWith("price_")) return value;
+        return switch (value.toUpperCase()) {
+            case "VISION" -> priceIdVision;
+            default -> null;
+        };
     }
 
     public SubscriptionDTO getSubscription(String userId) {
