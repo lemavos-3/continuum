@@ -201,7 +201,7 @@ export default function Subscription() {
                   <div className="mt-8 pt-4">
                     {isVision ? (
                       <button
-                        onClick={() => p.priceId && handleCheckout(p.priceId)}
+                        onClick={() => handleCheckout(p.priceId || "VISION")}
                         disabled={isCurrent || checkoutLoading !== null}
                         className={cn(
                           "flex items-center justify-center gap-2 w-full h-9 rounded-sm text-sm font-medium transition-colors border",
