@@ -21,7 +21,8 @@ import EntityDetail from "./pages/EntityDetail";
 import KnowledgeGraph from "./pages/KnowledgeGraph";
 import Vault from "./pages/Vault";
 import VaultDownload from "./pages/VaultDownload";
-import TimeTracking from "./pages/TimeTracking";
+import Activities from "./pages/Activities";
+import Projects from "./pages/Projects";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
 import Subscription from "./pages/Subscription";
@@ -110,8 +111,8 @@ const AppRoutes = () => (
     <Route path="/entities/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
     {/* Activity Routes */}
     <Route path="/tracking" element={<Navigate to="/activities" replace />} />
-    <Route path="/activities" element={<ProtectedRoute><TimeTracking /></ProtectedRoute>} />
-    <Route path="/projects" element={<ProtectedRoute><TimeTracking /></ProtectedRoute>} />
+    <Route path="/activities" element={<ProtectedRoute><Activities /></ProtectedRoute>} />
+    <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
     {/* Analytics Routes */}
     <Route path="/tracking/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
     <Route path="/activities/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
