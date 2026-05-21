@@ -13,18 +13,16 @@ import {
 } from "@heroicons/react/24/outline";
 
 const planMeta: Record<Plan, { icon: typeof CommandLineIcon; color: string; desc: string }> = {
-  FREE: { 
-    icon: CommandLineIcon, 
-    color: "text-white/40", 
-    desc: "Essential features for mapping and managing your local knowledge graph." 
+  FREE: {
+    icon: CommandLineIcon,
+    color: "text-white/40",
+    desc: "Essential features for mapping and managing your local knowledge graph.",
   },
-  VISION: { 
-    icon: SparklesIcon, 
-    color: "text-white", 
-    desc: "Complete access, dedicated intelligence models, and unrestricted system limits." 
+  VISION: {
+    icon: SparklesIcon,
+    color: "text-white",
+    desc: "Complete access, dedicated intelligence models, and unrestricted system limits.",
   },
-  PLUS: { icon: CommandLineIcon, color: "text-white/40", desc: "" },
-  PRO: { icon: CommandLineIcon, color: "text-white/40", desc: "" },
 };
 
 interface SubInfo { 

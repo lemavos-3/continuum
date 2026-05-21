@@ -276,7 +276,9 @@ export const trackingApi = {
 
 export const subscriptionApi = {
   me: () => api.get("/api/subscriptions/me"),
-  checkout: (planId: string) => api.post("/api/subscriptions/checkout", { planId }),
+  // Accepts either a Stripe priceId (price_xxx) or a plan code ("VISION").
+  checkout: (priceOrPlan: string) =>
+    api.post("/api/subscriptions/checkout", { priceId: priceOrPlan, planId: priceOrPlan }),
   cancel: () => api.post("/api/subscriptions/cancel"),
 };
 
