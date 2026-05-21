@@ -39,10 +39,8 @@ public class SubscriptionService {
     private final PlanConfiguration planConfig;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    @Value("${stripe.price-id-plus:}")   private String priceIdPlus;
-    @Value("${stripe.price-id-pro:}")    private String priceIdPro;
-    @Value("${stripe.price-id-vision:}") private String priceIdVision;
-    @Value("${app.url}")                 private String appUrl;
+    @Value("${stripe.price.vision:}") private String priceIdVision;
+    @Value("${app.url}")              private String appUrl;
 
     public SubscriptionService(SubscriptionRepository subRepo,
                                 UserRepository userRepo,
@@ -54,12 +52,15 @@ public class SubscriptionService {
         this.planConfig = planConfig;
     }
 
-    public CheckoutResponse createCheckout(String userId, String email, String priceId) {
+    public CheckoutResponse createCheckout(String userId, String email, String priceOrPlan) {
+        String priceId = resolvePriceId(priceOrPlan);
+        if (priceId == null || priceId.isBlank())
+            throw new BadRequestException("Unknown plan or priceId: " + priceOrPlan);
         try {
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
-                    .setSuccessUrl(appUrl + "/dashboard?upgraded=true")
-                    .setCancelUrl(appUrl + "/pricing")
+                    .setSuccessUrl(appUrl + "/#/subscription?status=success")
+                    .setCancelUrl(appUrl + "/#/subscription?status=cancelled")
                     .setCustomerEmail(email)
                     .putMetadata("userId", userId)
                     .addLineItem(SessionCreateParams.LineItem.builder()
@@ -71,6 +72,16 @@ public class SubscriptionService {
             log.error("Stripe checkout failed: {}", e.getMessage());
             throw new RuntimeException("Could not create checkout session: " + e.getMessage());
         }
+    }
+
+    /** Accepts a raw Stripe price id (price_xxx) or a plan code ("VISION") and returns a price id. */
+    private String resolvePriceId(String value) {
+        if (value == null) return null;
+        if (value.startsWith("price_")) return value;
+        return switch (value.toUpperCase()) {
+            case "VISION" -> priceIdVision;
+            default -> null;
+        };
     }
 
     public SubscriptionDTO getSubscription(String userId) {
@@ -229,9 +240,7 @@ public class SubscriptionService {
     }
 
     private PlanType determinePlan(String priceId) {
-        if (priceId.equals(priceIdVision)) return PlanType.VISION;
-        if (priceId.equals(priceIdPro))    return PlanType.PRO;
-        if (priceId.equals(priceIdPlus))   return PlanType.PLUS;
+        if (priceId != null && priceId.equals(priceIdVision)) return PlanType.VISION;
         return PlanType.FREE;
     }
 

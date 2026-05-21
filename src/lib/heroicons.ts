@@ -44,7 +44,7 @@ import {
   BoltIcon,
   Squares2X2Icon,
   ViewColumnsIcon,
-  GaugeIcon,
+  ChartBarSquareIcon as GaugeIcon,
   CheckBadgeIcon,
   TrophyIcon,
   RocketLaunchIcon,

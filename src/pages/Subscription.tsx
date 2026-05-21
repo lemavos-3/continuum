@@ -13,18 +13,16 @@ import {
 } from "@heroicons/react/24/outline";
 
 const planMeta: Record<Plan, { icon: typeof CommandLineIcon; color: string; desc: string }> = {
-  FREE: { 
-    icon: CommandLineIcon, 
-    color: "text-white/40", 
-    desc: "Essential features for mapping and managing your local knowledge graph." 
+  FREE: {
+    icon: CommandLineIcon,
+    color: "text-white/40",
+    desc: "Essential features for mapping and managing your local knowledge graph.",
   },
-  VISION: { 
-    icon: SparklesIcon, 
-    color: "text-white", 
-    desc: "Complete access, dedicated intelligence models, and unrestricted system limits." 
+  VISION: {
+    icon: SparklesIcon,
+    color: "text-white",
+    desc: "Complete access, dedicated intelligence models, and unrestricted system limits.",
   },
-  PLUS: { icon: CommandLineIcon, color: "text-white/40", desc: "" },
-  PRO: { icon: CommandLineIcon, color: "text-white/40", desc: "" },
 };
 
 interface SubInfo { 
@@ -203,7 +201,7 @@ export default function Subscription() {
                   <div className="mt-8 pt-4">
                     {isVision ? (
                       <button
-                        onClick={() => p.priceId && handleCheckout(p.priceId)}
+                        onClick={() => handleCheckout(p.priceId || "VISION")}
                         disabled={isCurrent || checkoutLoading !== null}
                         className={cn(
                           "flex items-center justify-center gap-2 w-full h-9 rounded-sm text-sm font-medium transition-colors border",
