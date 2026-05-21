@@ -16,7 +16,7 @@ public class StripeWebhookController {
 
     private static final Logger log = LoggerFactory.getLogger(StripeWebhookController.class);
 
-    @Value("${stripe.webhook-secret}")
+    @Value("${stripe.webhook.secret}")
     private String webhookSecret;
 
     private final SubscriptionService subscriptionService;
