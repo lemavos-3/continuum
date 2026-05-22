@@ -39,7 +39,7 @@ import {
   RefreshCw
 } from "@/lib/heroicons";
 
-// --- TYPES & HELPERS FROM INSIGHTS ---
+// --- TYPES & HELPERS ---
 interface NoteInsight {
   note: { id: string; title: string; type?: string; entityIds?: string[]; updatedAt?: string; };
   score: number;
@@ -63,6 +63,17 @@ interface EntityInsight {
   uniqueDaysMentioned: number;
   daysSinceLastMention: number;
 }
+
+const rangeDaysMap = {
+  "14d": 14,
+  "1mo": 30,
+  "3mo": 90,
+  "6mo": 180,
+  "1y": 365,
+  "total": 3650, // Representando tempo total por um limite alto reconhecido pela API
+};
+
+type TimeRange = keyof typeof rangeDaysMap;
 
 const formatHours = (h: number) => {
   if (!h) return null;
@@ -95,9 +106,9 @@ const formatNoteDate = (timestamp?: number) => {
 // --- SUB-COMPONENTS ---
 const DashboardSkeleton = () => (
   <AppLayout>
-    <div className="px-6 lg:px-12 py-10 max-w-7xl mx-auto space-y-6">
+    <div className="px-4 sm:px-6 lg:px-12 py-6 sm:py-10 max-w-7xl mx-auto space-y-6">
       <div className="h-16 rounded-2xl bg-neutral-900/40 border border-white/5 animate-pulse" />
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="h-24 rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
         ))}
@@ -105,8 +116,6 @@ const DashboardSkeleton = () => (
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-8 h-[360px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
         <div className="lg:col-span-4 h-[360px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
-        <div className="lg:col-span-4 h-[320px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
-        <div className="lg:col-span-8 h-[320px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
       </div>
     </div>
   </AppLayout>
@@ -114,20 +123,20 @@ const DashboardSkeleton = () => (
 
 function StatCard({ icon: Icon, label, value, hint }: { icon: ComponentType<{ className?: string }>; label: string; value: string | number; hint?: string; }) {
   return (
-    <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 flex flex-col gap-1.5 min-w-0 shadow-inner transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/30">
-      <div className="flex items-center gap-2 text-neutral-500">
+    <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-4 sm:p-5 flex flex-col gap-1 min-w-0 shadow-inner transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/30">
+      <div className="flex items-center gap-1.5 text-neutral-500">
         <Icon className="h-3.5 w-3.5 shrink-0" />
-        <span className="text-[10px] uppercase tracking-wider font-semibold">{label}</span>
+        <span className="text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold truncate">{label}</span>
       </div>
-      <p className="text-2xl sm:text-3xl font-medium tracking-tight text-neutral-100 tabular-nums leading-none mt-1">{value}</p>
-      {hint && <p className="text-[11px] text-neutral-500 truncate mt-0.5">{hint}</p>}
+      <p className="text-xl sm:text-2xl md:text-3xl font-medium tracking-tight text-neutral-100 tabular-nums leading-none mt-1 truncate">{value}</p>
+      {hint && <p className="text-[10px] sm:text-[11px] text-neutral-500 truncate mt-0.5">{hint}</p>}
     </div>
   );
 }
 
 function StatChip({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-md bg-white/5 border border-white/5 px-1.5 py-0.5 text-[10px] text-neutral-400 font-medium">
+    <span className="inline-flex items-center gap-1 rounded-md bg-white/5 border border-white/5 px-1.5 py-0.5 text-[9px] sm:text-[10px] text-neutral-400 font-medium">
       {children}
     </span>
   );
@@ -136,27 +145,27 @@ function StatChip({ children }: { children: ReactNode }) {
 function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
   return (
     <motion.button
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 p-4 text-left shadow-sm",
-        "transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/60 hover:shadow-md",
+        "group relative flex w-full flex-col gap-2.5 overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 p-3.5 text-left shadow-sm",
+        "transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/60",
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <Badge variant="outline" className={cn("border text-[10px] font-medium shadow-sm", badgeStyle(item.badge))}>
+      <div className="flex items-center justify-between gap-2">
+        <Badge variant="outline" className={cn("border text-[9px] font-medium px-1.5 py-0 shadow-sm", badgeStyle(item.badge))}>
           {item.badge}
         </Badge>
-        <span className="font-mono text-[10px] text-neutral-500">{item.score.toFixed(1)}</span>
+        <span className="font-mono text-[9px] text-neutral-500">{item.score.toFixed(1)}</span>
       </div>
-      <div className="flex items-start gap-2 flex-1">
+      <div className="flex items-start gap-2 flex-1 min-w-0">
         <div className="mt-0.5 rounded-lg bg-white/5 p-1 border border-white/5 shrink-0">
           <StickyNote className="h-3.5 w-3.5 text-neutral-400" />
         </div>
-        <h3 className="line-clamp-2 text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{item.note.title || "Untitled"}</h3>
+        <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{item.note.title || "Untitled"}</h3>
       </div>
-      <div className="mt-auto flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
+      <div className="mt-auto flex flex-wrap gap-1 pt-2 border-t border-white/5">
         {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
         {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)}</StatChip>}
         <StatChip>{formatDays(item.daysSinceLastInteraction)}</StatChip>
@@ -168,32 +177,32 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
 function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void }) {
   return (
     <motion.button
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -1 }}
+      whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 p-4 text-left shadow-sm",
-        "transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/60 hover:shadow-md",
+        "group relative flex w-full flex-col gap-2.5 overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 p-3.5 text-left shadow-sm",
+        "transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/60",
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <Badge variant="outline" className={cn("border text-[10px] font-medium shadow-sm", badgeStyle(item.badge))}>
+      <div className="flex items-center justify-between gap-2">
+        <Badge variant="outline" className={cn("border text-[9px] font-medium px-1.5 py-0 shadow-sm", badgeStyle(item.badge))}>
           {item.badge}
         </Badge>
-        <span className="font-mono text-[10px] text-neutral-500">{item.score.toFixed(1)}</span>
+        <span className="font-mono text-[9px] text-neutral-500">{item.score.toFixed(1)}</span>
       </div>
-      <div className="flex items-start gap-2 flex-1">
+      <div className="flex items-start gap-2 flex-1 min-w-0">
         <div className="mt-0.5 rounded-lg bg-white/5 p-1 border border-white/5 shrink-0">
           <Network className="h-3.5 w-3.5 text-neutral-400" />
         </div>
         <div className="min-w-0">
-          <h3 className="line-clamp-2 text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{item.entity.title}</h3>
+          <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{item.entity.title}</h3>
           {item.entity.type && (
-            <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-neutral-500">{item.entity.type}</p>
+            <p className="mt-0.5 text-[8px] font-semibold uppercase tracking-wider text-neutral-500 truncate">{item.entity.type}</p>
           )}
         </div>
       </div>
-      <div className="mt-auto flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
+      <div className="mt-auto flex flex-wrap gap-1 pt-2 border-t border-white/5">
         {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
         {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)}</StatChip>}
         <StatChip>{formatDays(item.daysSinceLastMention)}</StatChip>
@@ -209,41 +218,41 @@ function DashboardInsightSection({
 }) {
   const navigate = useNavigate();
   const items = Children.toArray(children);
-  const previewItems = items.slice(0, 4); // Alterado para max 4 para encaixar melhor em grids de 2 colunas
+  const previewItems = items.slice(0, 4);
   const expandedItems = items.slice(4, 10);
   const totalCount = items.length;
   const visibleCount = Math.min(10, totalCount);
   const showAccordion = !loading && !empty && items.length > 4;
 
   return (
-    <div className={cn("border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 flex flex-col shadow-inner", className)}>
-      <div className="flex items-center justify-between gap-3 mb-5">
-        <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-            <Icon className="h-4 w-4 text-neutral-400" />
+    <div className={cn("border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-4 sm:p-6 flex flex-col shadow-inner", className)}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
+        <div className="flex items-center gap-2.5">
+          <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+            <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-neutral-400" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-neutral-200">{title}</h2>
-            {subtitle && <p className="text-xs text-neutral-500">{subtitle}</p>}
+            <h2 className="text-xs sm:text-sm font-semibold text-neutral-200">{title}</h2>
+            {subtitle && <p className="text-[11px] text-neutral-500">{subtitle}</p>}
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between sm:justify-end gap-4 mt-1 sm:mt-0 border-t border-white/5 sm:border-none pt-2 sm:pt-0">
           {onRefresh && (
             <button
               type="button"
               onClick={onRefresh}
               disabled={refreshing}
-              className="text-xs text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5"
+              className="text-[11px] sm:text-xs text-neutral-400 hover:text-white transition-colors flex items-center gap-1.5"
             >
               <RefreshCw className={cn("h-3 w-3", refreshing && "animate-spin")} />
-              <span className="hidden sm:inline">Refresh</span>
+              <span>Refresh</span>
             </button>
           )}
           {viewMoreHref && (
             <button
               type="button"
               onClick={() => navigate(viewMoreHref)}
-              className="text-xs text-neutral-400 hover:text-white transition-colors"
+              className="text-[11px] sm:text-xs text-neutral-400 hover:text-white transition-colors"
             >
               {viewMoreLabel || "View all"}
             </button>
@@ -254,21 +263,21 @@ function DashboardInsightSection({
         {loading ? (
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             {[0, 1].map((i) => (
-              <div key={i} className="h-[130px] w-full animate-pulse rounded-xl border border-white/5 bg-neutral-900/30" />
+              <div key={i} className="h-[120px] w-full animate-pulse rounded-xl border border-white/5 bg-neutral-900/30" />
             ))}
           </div>
         ) : empty ? (
-          <div className="rounded-xl border border-dashed border-white/5 bg-neutral-900/5 p-6 text-center text-xs text-neutral-500 h-full flex flex-col items-center justify-center min-h-[140px]">
+          <div className="rounded-xl border border-dashed border-white/5 bg-neutral-900/5 p-6 text-center text-xs text-neutral-500 h-full flex flex-col items-center justify-center min-h-[120px]">
             Nothing to show yet.
           </div>
         ) : (
           <>
             <div className={cn("grid gap-3", gridColsClass)}>{previewItems}</div>
             {showAccordion ? (
-              <Accordion type="single" collapsible className="mt-4">
+              <Accordion type="single" collapsible className="mt-3">
                 <AccordionItem value={title} className="border-none">
                   <AccordionTrigger className="px-0 py-0 hover:no-underline">
-                    <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-2.5 text-xs font-medium text-neutral-400 hover:bg-white/5 transition-colors">
+                    <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.01] px-3 py-2 text-xs font-medium text-neutral-400 hover:bg-white/5 transition-colors">
                       <span>Show {visibleCount - previewItems.length} more</span>
                       <span>{visibleCount} of {totalCount}</span>
                     </div>
@@ -277,7 +286,7 @@ function DashboardInsightSection({
                     <div className={cn("grid gap-3 mb-3", gridColsClass)}>
                       {expandedItems}
                     </div>
-                    <div className="flex items-center justify-between gap-3 text-[11px] text-neutral-500 pt-2 border-t border-white/5">
+                    <div className="flex items-center justify-between gap-3 text-[10px] text-neutral-500 pt-2 border-t border-white/5">
                       <span>{totalCount > visibleCount ? `Showing ${visibleCount} of ${totalCount}` : `Showing all ${visibleCount}`}</span>
                       {viewMoreHref && (
                         <button
@@ -307,6 +316,7 @@ export default function Dashboard() {
   const { usage, applyUsageDelta } = usePlanGate();
   const limits = getPlanLimits(user);
   const [exporting, setExporting] = useState(false);
+  const [timeRange, setTimeRange] = useState<TimeRange>("14d");
 
   // Insights State
   const [insightsLoading, setInsightsLoading] = useState(true);
@@ -380,9 +390,10 @@ export default function Dashboard() {
     queryFn: () => graphApi.data().then((r) => r.data),
   });
 
+  // Atualiza dinamicamente baseado na escolha do período
   const { data: scoreTimeline } = useQuery({
-    queryKey: ["metrics", "scoreTimeline"],
-    queryFn: () => metricsApi.scoreTimeline(14).then((r) => r.data),
+    queryKey: ["metrics", "scoreTimeline", timeRange],
+    queryFn: () => metricsApi.scoreTimeline(rangeDaysMap[timeRange]).then((r) => r.data),
   });
 
   const { data: vaultFiles } = useQuery({
@@ -440,23 +451,23 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="px-6 lg:px-12 py-10 max-w-7xl mx-auto space-y-6">
+      <div className="px-4 sm:px-6 lg:px-12 py-6 sm:py-10 max-w-7xl mx-auto space-y-6">
         
         {/* HEADER */}
-        <header className="border-b border-white/5 pb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <header className="border-b border-white/5 pb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[10px] tracking-wider uppercase text-neutral-500 font-semibold mb-1">Overview</p>
-            <h1 className="font-serif text-4xl tracking-tight text-neutral-100">
+            <p className="text-[10px] tracking-wider uppercase text-neutral-500 font-semibold mb-0.5">Overview</p>
+            <h1 className="font-serif text-3xl sm:text-4xl tracking-tight text-neutral-100">
               {greeting}, {displayName}
             </h1>
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="mt-0.5 text-xs text-neutral-500">
               Here's what's happening across your knowledge graph.
             </p>
           </div>
         </header>
 
         {/* CONTADORES / CARDS KPI */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <StatCard icon={FileText} label="Notes" value={totalNotes} hint={limits.maxNotes === -1 ? "Unlimited" : `of ${limits.maxNotes}`} />
           <StatCard icon={Tag} label="Entities" value={totalEntities} hint={limits.maxEntities === -1 ? "Unlimited" : `of ${limits.maxEntities}`} />
           <StatCard icon={Network} label="Graph nodes" value={graphNodeCount} hint="In your network" />
@@ -466,44 +477,76 @@ export default function Dashboard() {
         {/* CORPO DO DASHBOARD */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* BLOCO 1: PERFORMANCE & METRICS (8+4 Split) */}
-          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:col-span-8 flex flex-col justify-between shadow-inner">
-            <div className="flex items-center justify-between gap-3 mb-6">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                  <Share2 className="h-4 w-4 text-neutral-400" />
+          {/* BLOCO 1: PERFORMANCE & METRICS */}
+          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-4 sm:p-6 lg:col-span-8 flex flex-col justify-between shadow-inner">
+            <div className="flex flex-col gap-4 mb-6">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                    <Share2 className="h-4 w-4 text-neutral-400" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-semibold text-neutral-200">Score evolution</h2>
+                    <p className="text-xs text-neutral-500">Knowledge graph gravity index</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-neutral-200">Score evolution</h2>
-                  <p className="text-xs text-neutral-500">Last 14 days performance index</p>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/insights")}
+                  className="text-xs text-neutral-500 hover:text-white hidden sm:block transition-colors shrink-0"
+                >
+                  Explore insights →
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => navigate("/insights")}
-                className="text-xs text-neutral-400 hover:text-white transition-colors"
-              >
-                Explore insights →
-              </button>
+
+              {/* BARRA SELETORA DE PERÍODO (Responsiva com scroll horizontal no mobile) */}
+              <div className="flex items-center -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto scrollbar-none gap-1 border-y sm:border border-white/5 sm:rounded-xl bg-white/[0.01] p-1.5">
+                {(Object.keys(rangeDaysMap) as TimeRange[]).map((range) => {
+                  const labels: Record<TimeRange, string> = {
+                    "14d": "14 Days",
+                    "1mo": "1 Month",
+                    "3mo": "3 Months",
+                    "6mo": "6 Months",
+                    "1y": "1 Year",
+                    "total": "All Time"
+                  };
+                  return (
+                    <button
+                      key={range}
+                      type="button"
+                      onClick={() => setTimeRange(range)}
+                      className={cn(
+                        "text-[11px] font-medium px-3 py-1.5 rounded-lg transition-all shrink-0",
+                        timeRange === range 
+                          ? "bg-white/10 text-white border border-white/10 shadow-sm" 
+                          : "text-neutral-500 hover:text-neutral-300 border border-transparent"
+                      )}
+                    >
+                      {labels[range]}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-            <div className="h-[240px] w-full -mx-2">
+
+            <div className="h-[200px] sm:h-[250px] w-full -mx-2">
               <ChartContainer config={{}} className="h-full w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={scoreTimelineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <AreaChart data={scoreTimelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
                       <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="white" stopOpacity={0.12} />
+                        <stop offset="0%" stopColor="white" stopOpacity={0.1} />
                         <stop offset="100%" stopColor="white" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid stroke="rgba(255,255,255,0.03)" strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#525252", fontSize: 10 }} interval="preserveStartEnd" />
-                    <YAxis tickLine={false} axisLine={false} tick={{ fill: "#525252", fontSize: 10 }} width={24} />
+                    <CartesianGrid stroke="rgba(255,255,255,0.02)" strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#404040", fontSize: 9 }} interval="preserveStartEnd" />
+                    <YAxis tickLine={false} axisLine={false} tick={{ fill: "#404040", fontSize: 9 }} />
                     <Tooltip
-                      contentStyle={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12, color: "#f5f5f5" }}
+                      contentStyle={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 11, color: "#f5f5f5" }}
                       labelStyle={{ color: "#737373" }}
                     />
-                    <Area type="monotone" dataKey="score" stroke="rgba(255,255,255,0.3)" strokeWidth={1.5} fill="url(#scoreFill)" />
+                    <Area type="monotone" dataKey="score" stroke="rgba(255,255,255,0.25)" strokeWidth={1.5} fill="url(#scoreFill)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -511,10 +554,10 @@ export default function Dashboard() {
           </div>
 
           {/* PLAN USAGE CARD */}
-          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:col-span-4 flex flex-col justify-between shadow-inner">
+          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-4 sm:p-6 lg:col-span-4 flex flex-col justify-between shadow-inner">
             <div>
-              <div className="flex items-center justify-between gap-3 mb-6">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 mb-5">
+                <div className="flex items-center gap-2.5">
                   <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
                     <Activity className="h-4 w-4 text-neutral-400" />
                   </div>
@@ -526,7 +569,7 @@ export default function Dashboard() {
               </div>
 
               {usage ? (
-                <div className="space-y-4">
+                <div className="space-y-3.5">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-neutral-400">Notes</span>
@@ -579,7 +622,7 @@ export default function Dashboard() {
                         {exporting ? "Exporting…" : "Download backup"}
                       </button>
                     ) : (
-                      <span className="text-neutral-600 text-xs">Upgrade required</span>
+                      <span className="text-neutral-600 text-[10px]">Upgrade required</span>
                     )}
                   </div>
                 </div>
@@ -594,34 +637,34 @@ export default function Dashboard() {
             </button>
           </div>
 
-          {/* BLOCO 2: WORKSPACE ACTIVITY (4+8 Split) */}
+          {/* BLOCO 2: WORKSPACE ACTIVITY */}
           {/* RECENT NOTES CARD */}
-          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:col-span-4 flex flex-col shadow-inner">
+          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-4 sm:p-6 lg:col-span-4 flex flex-col shadow-inner">
             <div className="flex items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-                  <FolderOpen className="h-4 w-4 text-neutral-400" />
+              <div className="flex items-center gap-2.5">
+                <div className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
+                  <FolderOpen className="h-3.5 w-3.5 text-neutral-400" />
                 </div>
-                <h2 className="text-sm font-semibold text-neutral-200">Recent notes</h2>
+                <h2 className="text-xs sm:text-sm font-semibold text-neutral-200">Recent notes</h2>
               </div>
               <button type="button" onClick={() => navigate("/notes")} className="text-xs text-neutral-400 hover:text-white transition-colors">
                 View all
               </button>
             </div>
-            <div className="space-y-1 flex-1 overflow-y-auto max-h-[310px] pr-1 scrollbar-thin">
+            <div className="space-y-1 flex-1 overflow-y-auto max-h-[280px] sm:max-h-[310px] pr-1 scrollbar-thin">
               {recentNotes.length > 0 ? (
                 recentNotes.map((note) => (
                   <button
                     key={note.id}
                     type="button"
                     onClick={() => navigate(`/notes/${note.id}`)}
-                    className="group w-full rounded-xl border border-transparent px-3 py-2 text-left transition-all hover:bg-neutral-900/50 hover:border-white/5"
+                    className="group w-full rounded-xl border border-transparent px-2.5 py-2 text-left transition-all hover:bg-neutral-900/50 hover:border-white/5"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-sm font-medium text-neutral-300 group-hover:text-white truncate">{note.title || "Untitled"}</p>
+                      <p className="text-xs sm:text-sm font-medium text-neutral-300 group-hover:text-white truncate">{note.title || "Untitled"}</p>
                       <ArrowRight className="h-3.5 w-3.5 text-neutral-600 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-neutral-400" />
                     </div>
-                    <p className="mt-0.5 text-[10px] font-mono text-neutral-500">{formatNoteDate(note.createdAtTimestamp)}</p>
+                    <p className="mt-0.5 text-[9px] font-mono text-neutral-500">{formatNoteDate(note.createdAtTimestamp)}</p>
                   </button>
                 ))
               ) : (
@@ -632,7 +675,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* INSIGHTS: HOT RIGHT NOW (Agora expandido em 2 colunas internas) */}
+          {/* INSIGHTS: HOT RIGHT NOW */}
           <DashboardInsightSection
             title="Hot right now"
             subtitle="Strongest recent gravity across notes"
@@ -651,7 +694,7 @@ export default function Dashboard() {
             ))}
           </DashboardInsightSection>
 
-          {/* BLOCO 3: GRAPH DISCOVERY (Uniform 3-Column Grid) */}
+          {/* BLOCO 3: GRAPH DISCOVERY */}
           {/* INSIGHTS: KEY PEOPLE & PROJECTS */}
           <DashboardInsightSection
             title="Key people & projects"
