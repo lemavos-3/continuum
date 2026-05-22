@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/AppLayout";
-import { dashboardApi, graphApi, notesApi, vaultApi, insightsApi } from "@/lib/api";
+import { dashboardApi, graphApi, metricsApi, notesApi, vaultApi, insightsApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { getPlanLimits } from "@/lib/plan";
 import { Progress } from "@/components/ui/progress";
@@ -383,6 +383,11 @@ export default function Dashboard() {
     queryFn: () => graphApi.data().then((r) => r.data),
   });
 
+  const { data: scoreTimeline } = useQuery({
+    queryKey: ["metrics", "scoreTimeline"],
+    queryFn: () => metricsApi.scoreTimeline(14).then((r) => r.data),
+  });
+
   const { data: vaultFiles } = useQuery({
     queryKey: ["vault", "files"],
     queryFn: () => vaultApi.list().then((r) => r.data),
@@ -399,26 +404,13 @@ export default function Dashboard() {
     applyUsageDelta({ vaultSizeMB: storageMB - usage.vaultSizeMB });
   }, [vaultFiles, vaultUsedMB, usage, applyUsageDelta]);
 
-  const noteTimeline = useMemo(() => {
-    if (!Array.isArray(notes)) return [];
-    const counts: Record<string, number> = {};
-    notes.forEach((note: any) => {
-      if (!note.createdAt) return;
-      const date = note.createdAt.split("T")[0];
-      counts[date] = (counts[date] || 0) + 1;
-    });
-
-    return Array.from({ length: 14 }, (_, index) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (13 - index));
-      const iso = date.toISOString().split("T")[0];
-      return {
-        date: iso,
-        label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        count: counts[iso] || 0,
-      };
-    });
-  }, [notes]);
+  const scoreTimelineData = useMemo(() => {
+    if (!Array.isArray(scoreTimeline)) return [];
+    return scoreTimeline.map((point: any) => ({
+      ...point,
+      label: new Date(point.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    }));
+  }, [scoreTimeline]);
 
   const recentNotes = useMemo(() => {
     if (summary?.recentNotes && summary.recentNotes.length > 0) {
@@ -477,7 +469,7 @@ export default function Dashboard() {
         {/* CORPO DO DASHBOARD */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* GRÁFICO HISTÓRICO DE NOTAS */}
+          {/* GRÁFICO HISTÓRICO DE SCORE */}
           <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:col-span-7 flex flex-col justify-between shadow-inner">
             <div className="flex items-center justify-between gap-3 mb-6">
               <div className="flex items-center gap-3">
@@ -485,36 +477,36 @@ export default function Dashboard() {
                   <Share2 className="h-4 w-4 text-neutral-400" />
                 </div>
                 <div>
-                  <h2 className="text-sm font-semibold text-neutral-200">Notes over time</h2>
+                  <h2 className="text-sm font-semibold text-neutral-200">Score evolution</h2>
                   <p className="text-xs text-neutral-500">Last 14 days</p>
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => navigate("/graph")}
+                onClick={() => navigate("/insights")}
                 className="text-xs text-neutral-400 hover:text-white transition-colors"
               >
-                Explore graph →
+                Explore insights →
               </button>
             </div>
             <div className="h-[220px] sm:h-[250px] -mx-2">
               <ChartContainer config={{}} className="h-full w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={noteTimeline} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <AreaChart data={scoreTimelineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="notesFill" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="white" stopOpacity={0.15} />
                         <stop offset="100%" stopColor="white" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#737373", fontSize: 10 }} interval="preserveStartEnd" />
-                    <YAxis tickLine={false} axisLine={false} tick={{ fill: "#737373", fontSize: 10 }} width={24} allowDecimals={false} />
+                    <YAxis tickLine={false} axisLine={false} tick={{ fill: "#737373", fontSize: 10 }} width={24} />
                     <Tooltip
                       contentStyle={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12, color: "#f5f5f5" }}
                       labelStyle={{ color: "#737373" }}
                     />
-                    <Area type="monotone" dataKey="count" stroke="rgba(255,255,255,0.4)" strokeWidth={1.5} fill="url(#notesFill)" />
+                    <Area type="monotone" dataKey="score" stroke="rgba(255,255,255,0.4)" strokeWidth={1.5} fill="url(#scoreFill)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </ChartContainer>

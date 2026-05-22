@@ -7,7 +7,11 @@ import tech.lemnova.continuum.controller.dto.metrics.DashboardMetrics;
 import tech.lemnova.continuum.controller.dto.metrics.EntityTimeline;
 import tech.lemnova.continuum.controller.dto.metrics.MentionEntry;
 import tech.lemnova.continuum.controller.dto.metrics.TopEntity;
+import tech.lemnova.continuum.controller.dto.metrics.UserScoreSnapshotResponse;
+import tech.lemnova.continuum.controller.dto.insights.EntityInsightDTO;
+import tech.lemnova.continuum.controller.dto.insights.NoteInsightDTO;
 import tech.lemnova.continuum.domain.connection.NoteReference;
+import tech.lemnova.continuum.domain.metrics.UserScoreSnapshot;
 import tech.lemnova.continuum.domain.note.Note;
 import tech.lemnova.continuum.domain.note.NoteIndex;
 import tech.lemnova.continuum.domain.plan.PlanConfiguration;
@@ -18,7 +22,9 @@ import tech.lemnova.continuum.domain.user.User;
 import tech.lemnova.continuum.domain.user.UserRepository;
 import tech.lemnova.continuum.infra.persistence.EntityRepository;
 import tech.lemnova.continuum.infra.persistence.NoteRepository;
+import tech.lemnova.continuum.infra.persistence.UserScoreSnapshotRepository;
 import tech.lemnova.continuum.infra.vault.VaultDataService;
+import tech.lemnova.continuum.application.service.InsightsService;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
@@ -36,6 +42,8 @@ public class MetricsService {
     private final PlanConfiguration planConfig;
     private final EntityService entityService;
     private final TrackingService trackingService;
+    private final InsightsService insightsService;
+    private final UserScoreSnapshotRepository scoreSnapshotRepo;
 
     public MetricsService(UserRepository userRepo,
                           NoteRepository noteRepo,
@@ -43,7 +51,9 @@ public class MetricsService {
                           VaultDataService vaultData,
                           PlanConfiguration planConfig,
                           EntityService entityService,
-                          TrackingService trackingService) {
+                          TrackingService trackingService,
+                          InsightsService insightsService,
+                          UserScoreSnapshotRepository scoreSnapshotRepo) {
         this.userRepo   = userRepo;
         this.noteRepo   = noteRepo;
         this.entityRepo = entityRepo;
@@ -51,6 +61,8 @@ public class MetricsService {
         this.planConfig = planConfig;
         this.entityService = entityService;
         this.trackingService = trackingService;
+        this.insightsService = insightsService;
+        this.scoreSnapshotRepo = scoreSnapshotRepo;
     }
 
     public EntityTimeline getEntityTimeline(String userId, String entityId) {
@@ -190,6 +202,56 @@ public class MetricsService {
                 totalNotes, totalEntities, topMentions,
                 topEntities(people, 5), topEntities(projects, 5), topEntities(activitiesRefs, 5),
                 activitiesCompletedToday, weeklyAverage, globalHeatmap);
+    }
+
+    public List<UserScoreSnapshotResponse> getUserScoreTimeline(String userId, int days) {
+        getUser(userId);
+        if (days <= 0) {
+            days = 14;
+        }
+
+        LocalDate today = LocalDate.now();
+        LocalDate from = today.minusDays(days - 1);
+
+        List<UserScoreSnapshot> snapshots = scoreSnapshotRepo
+                .findByUserIdAndDateBetweenOrderByDateAsc(userId, from, today);
+        Map<LocalDate, Double> scoreByDate = snapshots.stream()
+                .collect(Collectors.toMap(UserScoreSnapshot::getDate, UserScoreSnapshot::getScore));
+
+        if (!scoreByDate.containsKey(today)) {
+            double currentScore = computeCurrentScore(userId);
+            UserScoreSnapshot todaySnapshot = UserScoreSnapshot.builder()
+                    .userId(userId)
+                    .date(today)
+                    .score(currentScore)
+                    .build();
+            scoreSnapshotRepo.save(todaySnapshot);
+            scoreByDate.put(today, currentScore);
+        }
+
+        List<UserScoreSnapshotResponse> timeline = new ArrayList<>();
+        for (int i = 0; i < days; i++) {
+            LocalDate date = from.plusDays(i);
+            timeline.add(new UserScoreSnapshotResponse(date, scoreByDate.getOrDefault(date, 0.0)));
+        }
+        return timeline;
+    }
+
+    private double computeCurrentScore(String userId) {
+        List<NoteInsightDTO> noteInsights = insightsService.computeAllNoteInsights();
+        List<EntityInsightDTO> entityInsights = insightsService.computeAllEntityInsights();
+
+        double noteScore = noteInsights.isEmpty() ? 0.0 : noteInsights.stream()
+                .mapToDouble(NoteInsightDTO::score)
+                .average().orElse(0.0);
+
+        double entityScore = entityInsights.isEmpty() ? 0.0 : entityInsights.stream()
+                .mapToDouble(EntityInsightDTO::score)
+                .average().orElse(0.0);
+
+        if (noteInsights.isEmpty()) return entityScore;
+        if (entityInsights.isEmpty()) return noteScore;
+        return (noteScore + entityScore) / 2.0;
     }
 
     // ── private ───────────────────────────────────────────────────────────────
