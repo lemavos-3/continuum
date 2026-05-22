@@ -210,7 +210,9 @@
   .continuum-editor h2 { @apply text-2xl font-serif mt-7 mb-2 tracking-tight; }
   .continuum-editor h3 { @apply text-xl font-serif mt-5 mb-2; }
   .continuum-editor blockquote { @apply border-l-2 border-white/40 pl-4 italic text-muted-foreground my-3; }
-  .continuum-editor ul, .continuum-editor ol { @apply pl-6 my-2; }
+  .continuum-editor ul { @apply list-disc pl-6 my-2; list-style-position: outside; }
+  .continuum-editor ol { @apply list-decimal pl-6 my-2; list-style-position: outside; }
+  .continuum-editor li::marker { color: rgba(255, 255, 255, 0.85); }
   .continuum-editor li > p { @apply my-0.5; }
   .continuum-editor ul[data-type="taskList"] { @apply list-none pl-1; }
   .continuum-editor ul[data-type="taskList"] li { @apply flex items-start gap-2 my-1; }

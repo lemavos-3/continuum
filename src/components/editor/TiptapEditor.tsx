@@ -273,7 +273,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               "data-label": node.attrs.label,
               "data-mention-type": "entity",
             },
-            0,
+            node.attrs.label || `@${node.attrs.id}`,
           ],
           suggestion: buildSuggestion("entity") as any,
         }),
@@ -287,7 +287,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               "data-label": node.attrs.label,
               "data-mention-type": "note",
             },
-            0,
+            node.attrs.label || `#${node.attrs.id}`,
           ],
           suggestion: buildSuggestion("note", currentNoteId) as any,
         }),
@@ -508,7 +508,8 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
           onDrop={handleDrop}
           onClick={(e) => {
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-            const target = (e.target as HTMLElement).closest<HTMLElement>(".continuum-entity-mention, .continuum-note-mention");
+            const targetElement = e.target instanceof HTMLElement ? e.target : (e.target as Node).parentElement;
+            const target = targetElement?.closest<HTMLElement>(".continuum-entity-mention, .continuum-note-mention");
             if (!target) return;
             const mentionId = target.getAttribute("data-id");
             if (!mentionId) return;
