@@ -247,7 +247,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         CharacterCount,
         Dropcursor.configure({ color: "hsl(var(--primary))", width: 2 }),
         LinkExtension.configure({
-          openOnClick: true,
+          openOnClick: false, // Desativado o comportamento padrão para gerenciar via delegador onClick
           autolink: true,
           HTMLAttributes: { class: "text-primary underline underline-offset-4 cursor-pointer" },
         }),
@@ -262,41 +262,31 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         TableCell,
         TableHeader,
         CodeBlockLowlight.configure({ lowlight }),
-        
-        // ENTIDADES (@): Monocromático usando o tema do seu app
         Mention.configure({
-          HTMLAttributes: { 
-            class: "continuum-entity-mention inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded-md bg-secondary text-secondary-foreground text-sm font-medium no-underline transition-colors hover:opacity-80 cursor-pointer shadow-sm border border-border" 
-          },
+          HTMLAttributes: { class: "continuum-entity-mention" },
           renderHTML: ({ node, HTMLAttributes }) => [
-            "a",
+            "span",
             {
               ...HTMLAttributes,
-              href: `/entities/${node.attrs.id}`,
               "data-id": node.attrs.id,
               "data-label": node.attrs.label,
               "data-mention-type": "entity",
             },
-            node.attrs.label ? (node.attrs.label.startsWith("@") ? node.attrs.label : `@${node.attrs.label}`) : `@${node.attrs.id}`,
+            0,
           ],
           suggestion: buildSuggestion("entity") as any,
         }),
-
-        // NOTAS (#): Monocromático usando o tema do seu app
         NoteMention.configure({
-          HTMLAttributes: { 
-            class: "continuum-note-mention inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded-md bg-secondary text-secondary-foreground text-sm font-medium no-underline transition-colors hover:opacity-80 cursor-pointer shadow-sm border border-border" 
-          },
+          HTMLAttributes: { class: "continuum-note-mention" },
           renderHTML: ({ node, HTMLAttributes }) => [
-            "a",
+            "span",
             {
               ...HTMLAttributes,
-              href: `/notes/${node.attrs.id}`,
               "data-id": node.attrs.id,
               "data-label": node.attrs.label,
               "data-mention-type": "note",
             },
-            node.attrs.label ? (node.attrs.label.startsWith("#") ? node.attrs.label : `#${node.attrs.label}`) : `#${node.attrs.id}`,
+            0,
           ],
           suggestion: buildSuggestion("note", currentNoteId) as any,
         }),
@@ -322,28 +312,6 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
           }
           return false;
         },
-        // INTERCEPTADOR DE CLIQUES NATIVO DO TIPTAP (Garante abertura estrita na mesma aba)
-        handleDOMEvents: {
-          click: (view, event) => {
-            if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return false;
-            
-            const target = (event.target as HTMLElement).closest<HTMLElement>(".continuum-entity-mention, .continuum-note-mention");
-            if (!target) return false;
-            
-            const mentionId = target.getAttribute("data-id");
-            if (!mentionId) return false;
-            
-            event.preventDefault();
-            event.stopPropagation();
-
-            if (target.classList.contains("continuum-note-mention")) {
-              navigate(`/notes/${mentionId}`);
-            } else {
-              navigate(`/entities/${mentionId}`);
-            }
-            return true;
-          }
-        }
       },
       onUpdate: ({ editor }) => {
         onChangeRef.current?.(editor.getJSON());
@@ -533,6 +501,41 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
+          onClick={(e) => {
+            // Ignora cliques que envolvam teclas modificadoras ou que não sejam o clique principal esquerdo
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+
+            const target = e.target as HTMLElement;
+
+            // 1. CAPTURA DE CLIQUES EM MENÇÕES (@ ou #)
+            const mentionTarget = target.closest<HTMLElement>(".continuum-entity-mention, .continuum-note-mention");
+            if (mentionTarget) {
+              const mentionId = mentionTarget.getAttribute("data-id");
+              if (!mentionId) return;
+              e.preventDefault();
+              if (mentionTarget.classList.contains("continuum-note-mention")) {
+                navigate(`/notes/${mentionId}`);
+              } else {
+                navigate(`/entities/${mentionId}`);
+              }
+              return;
+            }
+
+            // 2. CAPTURA DE CLIQUES EM LINKS TRADICIONAIS (Nós do LinkExtension)
+            const linkTarget = target.closest<HTMLAnchorElement>("a");
+            if (linkTarget) {
+              const href = linkTarget.getAttribute("href");
+              if (!href) return;
+
+              // Verifica se o link é interno da aplicação (começa com '/' ou bate com o domínio atual)
+              if (href.startsWith("/") || href.startsWith(window.location.origin)) {
+                e.preventDefault();
+                const path = href.replace(window.location.origin, "");
+                navigate(path);
+              }
+              // Links totalmente externos (ex: https://google.com) seguem o fluxo nativo do navegador
+            }
+          }}
           className="relative"
         >
           {isDragging && (
