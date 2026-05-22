@@ -21,8 +21,8 @@ export default function Activities() {
           </header>
 
           <div className="sticky top-14 z-10 -mx-4 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1">
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="relative flex-1 min-w-0">
                 <MagnifyingGlassIcon className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
                 <input
                   value={search}

@@ -18,7 +18,7 @@ const formatDate = (iso?: string) => {
  * Premium striped table with inline accordion rows. Mirrors the
  * `/entities` aesthetic: serif header, hairline borders, monochrome.
  */
-export function TimeTrackingList({ filterType }: {
+export function TimeTrackingList({ filterType, search, hideInternalSearch }: {
   filterType?: string;
   search?: string;
   sortBy?: "createdAt" | "updatedAt";
@@ -31,6 +31,8 @@ export function TimeTrackingList({ filterType }: {
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const { getAllSummaries } = useTimeTracking();
+
+  const lower = hideInternalSearch ? (search ?? '').trim().toLowerCase() : query.trim().toLowerCase();
 
   const { data: trackableEntities, isLoading: entitiesLoading } = useQuery({
     queryKey: ['entities', 'trackable', filterType],
@@ -49,7 +51,6 @@ export function TimeTrackingList({ filterType }: {
   const isLoading = entitiesLoading || summariesLoading;
   const typeLabels: Record<string, string> = { PROJECT: 'Project', ACTIVITY: 'Activity' };
 
-  const lower = query.trim().toLowerCase();
   const filtered = useMemo(() => trackableEntities ?? [], [trackableEntities]);
   const matches = useMemo(() => {
     if (!lower) return new Set<number>();
@@ -66,13 +67,15 @@ export function TimeTrackingList({ filterType }: {
 
   return (
     <>
-      <div className="mb-6 flex items-center justify-between gap-4">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={placeholder}
-          className="w-full max-w-sm bg-transparent border-0 border-b border-white/15 focus:border-white pb-2 text-sm outline-none transition-colors placeholder:text-white/30"
-        />
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        {!hideInternalSearch && (
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={placeholder}
+            className="w-full max-w-sm bg-transparent border-0 border-b border-white/15 focus:border-white pb-2 text-sm outline-none transition-colors placeholder:text-white/30"
+          />
+        )}
         <button onClick={() => setCreateOpen(true)} className="btn-primary shrink-0">
           <Plus className="w-4 h-4" /> New {filterType ? typeLabels[filterType] : 'Entity'}
         </button>
