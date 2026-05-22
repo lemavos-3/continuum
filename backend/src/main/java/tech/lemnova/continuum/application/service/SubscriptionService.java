@@ -112,7 +112,6 @@ public class SubscriptionService {
     }
 
     @Transactional
-    @Transactional
     public void handleLemonSqueezyWebhook(JsonNode root) {
         if (root == null) return;
         String eventId = root.path("data").path("id").asText(null);
