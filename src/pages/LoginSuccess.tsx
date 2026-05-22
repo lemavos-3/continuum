@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/lib/heroicons";
 import { useAuth } from "@/contexts/AuthContext";
 
 const LoginSuccess = () => {

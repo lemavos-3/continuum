@@ -18,7 +18,7 @@ import {
   HardDrive,
   Sparkles,
   X,
-} from "lucide-react";
+} from "@/lib/heroicons";
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -5,7 +5,7 @@
  * Background: near-black with subtle radial gradient + grid
  */
 import { motion } from "framer-motion";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play } from "@/lib/heroicons";
 import { Link } from "react-router-dom";
 import KnowledgeGraph from "@/components/landing/KnowledgeGraph";
 

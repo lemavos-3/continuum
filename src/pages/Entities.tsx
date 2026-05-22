@@ -12,7 +12,7 @@ import {
   Loader2,
   Trash2,
   SlidersHorizontal,
-} from "lucide-react";
+} from "@/lib/heroicons";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";

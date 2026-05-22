@@ -2,7 +2,7 @@ import { Node, mergeAttributes } from "@tiptap/core";
 import { ReactNodeViewRenderer, NodeViewWrapper, type NodeViewProps } from "@tiptap/react";
 import { useEffect, useState } from "react";
 import { resolveVaultBlob } from "@/lib/vault-blob";
-import { FileText, Loader2, ExternalLink } from "lucide-react";
+import { FileText, Loader2, ExternalLink } from "@/lib/heroicons";
 
 function VaultPdfView({ node }: NodeViewProps) {
   const vaultId: string | null = node.attrs.vaultId ?? null;

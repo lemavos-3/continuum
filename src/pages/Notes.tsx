@@ -18,7 +18,7 @@ import {
   ChevronDown,
   ChevronRight,
   SlidersHorizontal,
-} from "lucide-react";
+} from "@/lib/heroicons";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";

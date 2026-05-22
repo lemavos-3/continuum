@@ -1,4 +1,4 @@
-import { Play, Pause, Trash2, X } from 'lucide-react';
+import { Play, Pause, Trash2, X } from "@/lib/heroicons";
 import { useEffect, useRef, useState } from 'react';
 import { useTimeTracking } from '@/hooks/useTimeTracking';
 import { Button } from '@/components/ui/button';

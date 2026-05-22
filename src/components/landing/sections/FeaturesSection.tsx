@@ -5,7 +5,7 @@
  */
 import { motion } from "framer-motion";
 import { useInView } from "@/hooks/useInView";
-import { Link2, Zap, Layers, Gauge } from "lucide-react";
+import { Link2, Zap, Layers, Gauge } from "@/lib/heroicons";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 

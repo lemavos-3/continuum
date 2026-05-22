@@ -17,7 +17,7 @@ import {
   StickyNote,
   Timer,
   UserCircle,
-} from "lucide-react";
+} from "@/lib/heroicons";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";

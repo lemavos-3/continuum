@@ -5,7 +5,7 @@ import { entitiesApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Loader2, Flame, Edit, StickyNote, Network, Calendar, Tag, Clock } from "lucide-react";
+import { ArrowLeft, Loader2, Flame, Edit, StickyNote, Network, Calendar, Tag, Clock } from "@/lib/heroicons";
 import {
   Accordion,
   AccordionContent,

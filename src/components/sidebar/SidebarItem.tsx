@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { LucideIcon } from "lucide-react";
+import { LucideIcon } from "@/lib/heroicons";
 import { cn } from "@/lib/utils";
 import { SidebarTooltip } from "@/components/sidebar/SidebarTooltip";
 
