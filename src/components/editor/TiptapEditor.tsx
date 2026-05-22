@@ -266,28 +266,30 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         Mention.configure({
           HTMLAttributes: { class: "continuum-entity-mention" },
           renderHTML: ({ node, HTMLAttributes }) => [
-            "span",
+            "a",
             {
               ...HTMLAttributes,
+              href: `/entities/${node.attrs.id}`,
               "data-id": node.attrs.id,
               "data-label": node.attrs.label,
               "data-mention-type": "entity",
             },
-            node.attrs.label || `@${node.attrs.id}`,
+            node.attrs.label ? (node.attrs.label.startsWith("@") ? node.attrs.label : `@${node.attrs.label}`) : `@${node.attrs.id}`,
           ],
           suggestion: buildSuggestion("entity") as any,
         }),
         NoteMention.configure({
           HTMLAttributes: { class: "continuum-note-mention" },
           renderHTML: ({ node, HTMLAttributes }) => [
-            "span",
+            "a",
             {
               ...HTMLAttributes,
+              href: `/notes/${node.attrs.id}`,
               "data-id": node.attrs.id,
               "data-label": node.attrs.label,
               "data-mention-type": "note",
             },
-            node.attrs.label || `#${node.attrs.id}`,
+            node.attrs.label ? (node.attrs.label.startsWith("#") ? node.attrs.label : `#${node.attrs.label}`) : `#${node.attrs.id}`,
           ],
           suggestion: buildSuggestion("note", currentNoteId) as any,
         }),
