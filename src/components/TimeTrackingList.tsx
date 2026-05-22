@@ -76,9 +76,11 @@ export function TimeTrackingList({ filterType, search, hideInternalSearch }: {
             className="w-full max-w-sm bg-transparent border-0 border-b border-white/15 focus:border-white pb-2 text-sm outline-none transition-colors placeholder:text-white/30"
           />
         )}
-        <button onClick={() => setCreateOpen(true)} className="btn-primary shrink-0">
-          <Plus className="w-4 h-4" /> New {filterType ? typeLabels[filterType] : 'Entity'}
-        </button>
+        {!hideInternalSearch && (
+          <button onClick={() => setCreateOpen(true)} className="btn-primary shrink-0">
+            <Plus className="w-4 h-4" /> New {filterType ? typeLabels[filterType] : 'Entity'}
+          </button>
+        )}
       </div>
 
       {isLoading ? (

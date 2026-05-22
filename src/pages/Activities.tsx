@@ -35,7 +35,7 @@ export default function Activities() {
               </div>
               <Button className="gap-2" onClick={() => console.log("New action triggered") }>
                 <Plus className="h-3.5 w-3.5" />
-                New
+                New activity
               </Button>
             </div>
           </div>
