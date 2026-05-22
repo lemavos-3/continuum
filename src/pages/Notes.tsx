@@ -213,13 +213,13 @@ export default function Notes() {
     applyUsageDelta({ notesCount: 1 });
     setCreating(true);
     creatingRef.current = true;
-    navigate(`/notes/${tempId}?optimistic=true`);
+    navigate(`/notes/${tempId}?optimistic=true&tempId=${tempId}`);
 
     notesApi.create("Untitled", "")
       .then(({ data }) => {
         if (data?.id) {
           void refresh();
-          navigate(`/notes/${data.id}`);
+          navigate(`/notes/${data.id}?tempId=${tempId}`, { replace: true });
         } else {
           throw new Error("Invalid response from server");
         }

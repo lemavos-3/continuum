@@ -53,7 +53,9 @@ export default function NoteEditor() {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const editorRef = useRef<TiptapEditorHandle>(null);
+  const tempId = searchParams.get("tempId");
   const isOptimistic = searchParams.get("optimistic") === "true";
+  const optimisticKey = tempId ? `optimistic-note:${tempId}` : null;
 
   const [note, setNote] = useState<NoteData | null>(null);
   const [title, setTitle] = useState("");
@@ -70,6 +72,34 @@ export default function NoteEditor() {
   const lastSavedTitle = useRef<string>("");
   const lastSavedType = useRef<string>("");
   const currentJSON = useRef<any>(null);
+
+  const saveOptimisticDraft = (draft: { title: string; type: string; content: any }) => {
+    if (!optimisticKey) return;
+    try {
+      sessionStorage.setItem(optimisticKey, JSON.stringify(draft));
+    } catch {
+      // ignore storage failures
+    }
+  };
+
+  const loadOptimisticDraft = () => {
+    if (!optimisticKey) return null;
+    try {
+      const raw = sessionStorage.getItem(optimisticKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+
+  const clearOptimisticDraft = () => {
+    if (!optimisticKey) return;
+    try {
+      sessionStorage.removeItem(optimisticKey);
+    } catch {
+      // ignore
+    }
+  };
 
   const mentionedEntities = useMemo(() => {
     if (!note?.entityIds || !allEntities.length) return [];
@@ -142,18 +172,38 @@ export default function NoteEditor() {
             setAvailableTypes(typesResult.value.data);
           }
 
+          const optimisticDraft = loadOptimisticDraft();
+          const draftTitle = optimisticDraft?.title ?? data.title;
+          const draftType = optimisticDraft?.type ?? data.type ?? "";
+          const draftContent = optimisticDraft?.content ?? normalizedContent;
+          const hasDraftChanges = optimisticDraft && (
+            draftTitle !== data.title ||
+            draftType !== (data.type ?? "") ||
+            JSON.stringify(draftContent) !== JSON.stringify(normalizedContent)
+          );
+
           setNote({
             ...data,
-            content: normalizedContent,
+            content: draftContent,
             entityIds: sanitized.entityIds,
+            type: draftType,
           });
-          setTitle(data.title);
-          setType(data.type || "");
+          setTitle(draftTitle);
+          setType(draftType);
           lastSavedTitle.current = data.title;
           lastSavedType.current = data.type || "";
-          currentJSON.current = sanitized.doc;
+          currentJSON.current = draftContent;
           lastSavedJSON.current = JSON.stringify(normalizedContent);
-          setSaveStatus("idle");
+
+          if (hasDraftChanges) {
+            setSaveStatus("saving");
+            void doSave(draftTitle, draftContent, draftType).finally(() => {
+              clearOptimisticDraft();
+            });
+          } else {
+            setSaveStatus("idle");
+            clearOptimisticDraft();
+          }
 
           if (sanitized.changed) {
             void notesApi.update(id, {
@@ -212,27 +262,45 @@ export default function NoteEditor() {
   }, [id, toast]);
 
   const scheduleAutoSave = useCallback((t: string, json: any, newType: string) => {
+    if (isOptimistic) return;
     if (!autoSaveEnabled) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     autoSaveTimer.current = setTimeout(() => doSave(t, json, newType), 1500);
-  }, [doSave, autoSaveEnabled]);
+  }, [doSave, autoSaveEnabled, isOptimistic]);
 
   const handleTitleChange = (val: string) => {
     setTitle(val);
+    if (isOptimistic) {
+      saveOptimisticDraft({ title: val, type, content: currentJSON.current });
+      return;
+    }
     scheduleAutoSave(val, currentJSON.current, type);
   };
 
   const handleTypeChange = (val: string) => {
     setType(val);
+    if (isOptimistic) {
+      saveOptimisticDraft({ title, type: val, content: currentJSON.current });
+      return;
+    }
     scheduleAutoSave(title, currentJSON.current, val);
   };
 
   const handleEditorChange = useCallback((json: any) => {
     currentJSON.current = json;
+    if (isOptimistic) {
+      saveOptimisticDraft({ title, type, content: json });
+      return;
+    }
     scheduleAutoSave(title, json, type);
-  }, [title, type, scheduleAutoSave]);
+  }, [title, type, scheduleAutoSave, isOptimistic]);
 
   const handleManualSave = async () => {
+    if (isOptimistic) {
+      toast({ title: "Waiting for note creation", description: "Your note is still being created on the server.", variant: "default" });
+      return;
+    }
+
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     const json = editorRef.current?.getJSON() || currentJSON.current;
     await doSave(title, json, type);
@@ -287,7 +355,7 @@ export default function NoteEditor() {
 
               <div className="h-4 w-[1px] bg-white/10 mx-1" />
 
-              <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground" onClick={() => editorRef.current?.triggerUpload()} title="Attach Media" disabled={isOptimistic}>
+              <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground" onClick={() => editorRef.current?.triggerUpload()} title="Attach Media">
                 <ImageIcon className="w-4 h-4" />
               </Button>
 
@@ -310,7 +378,7 @@ export default function NoteEditor() {
                         <Label className="text-xs uppercase tracking-wider text-muted-foreground">Note Type</Label>
                         <div className="flex gap-2">
                           {availableTypes.length > 0 && (
-                            <Select value={type} onValueChange={handleTypeChange} disabled={isOptimistic}>
+                            <Select value={type} onValueChange={handleTypeChange}>
                               <SelectTrigger className="flex-1 bg-white/5 border-white/10 h-8 text-xs">
                                 <SelectValue placeholder="Select..." />
                               </SelectTrigger>
@@ -325,7 +393,6 @@ export default function NoteEditor() {
                             value={type}
                             onChange={(e) => handleTypeChange(e.target.value)}
                             placeholder="Or new..."
-                            disabled={isOptimistic}
                             className="flex-1 bg-white/5 border-white/10 h-8 text-xs"
                             maxLength={50}
                           />
@@ -339,7 +406,7 @@ export default function NoteEditor() {
 
                       <div className="flex items-center justify-between pt-2 border-t border-white/5">
                         <Label htmlFor="auto-save" className="text-xs text-foreground cursor-pointer">Auto Save</Label>
-                        <Switch id="auto-save" checked={autoSaveEnabled} onCheckedChange={setAutoSaveEnabled} disabled={isOptimistic} className="scale-75 origin-right" />
+                        <Switch id="auto-save" checked={autoSaveEnabled} onCheckedChange={setAutoSaveEnabled} className="scale-75 origin-right" />
                       </div>
                     </div>
                   </div>
@@ -359,7 +426,6 @@ export default function NoteEditor() {
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Untitled Note"
-                disabled={isOptimistic}
                 className="text-4xl font-display font-bold border-0 px-0 focus-visible:ring-0 bg-transparent text-foreground mb-8 h-auto placeholder:text-muted-foreground/30"
               />
 
@@ -370,7 +436,6 @@ export default function NoteEditor() {
                     content={currentJSON.current}
                     onChange={handleEditorChange}
                     currentNoteId={note?.id}
-                    editable={!isOptimistic}
                   />
                 </div>
               )}
