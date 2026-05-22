@@ -1,5 +1,6 @@
 import { useEditor, EditorContent, ReactRenderer, type Editor } from "@tiptap/react";
 import { BubbleMenu } from "@tiptap/react/menus";
+import { useNavigate } from "react-router-dom";
 import StarterKit from "@tiptap/starter-kit";
 import Placeholder from "@tiptap/extension-placeholder";
 import LinkExtension from "@tiptap/extension-link";
@@ -218,7 +219,8 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
   ({ content, onChange, editable = true, className, currentNoteId }, ref) => {
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
-    
+    const navigate = useNavigate();
+
     const [isUploading, setIsUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -263,10 +265,30 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         CodeBlockLowlight.configure({ lowlight }),
         Mention.configure({
           HTMLAttributes: { class: "continuum-entity-mention" },
+          renderHTML: ({ node, HTMLAttributes }) => [
+            "span",
+            {
+              ...HTMLAttributes,
+              "data-id": node.attrs.id,
+              "data-label": node.attrs.label,
+              "data-mention-type": "entity",
+            },
+            0,
+          ],
           suggestion: buildSuggestion("entity") as any,
         }),
         NoteMention.configure({
           HTMLAttributes: { class: "continuum-note-mention" },
+          renderHTML: ({ node, HTMLAttributes }) => [
+            "span",
+            {
+              ...HTMLAttributes,
+              "data-id": node.attrs.id,
+              "data-label": node.attrs.label,
+              "data-mention-type": "note",
+            },
+            0,
+          ],
           suggestion: buildSuggestion("note", currentNoteId) as any,
         }),
         SlashCommands,
@@ -484,6 +506,19 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
+          onClick={(e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            const target = (e.target as HTMLElement).closest<HTMLElement>(".continuum-entity-mention, .continuum-note-mention");
+            if (!target) return;
+            const mentionId = target.getAttribute("data-id");
+            if (!mentionId) return;
+            e.preventDefault();
+            if (target.classList.contains("continuum-note-mention")) {
+              navigate(`/notes/${mentionId}`);
+            } else {
+              navigate(`/entities/${mentionId}`);
+            }
+          }}
           className="relative"
         >
           {isDragging && (

@@ -26,7 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { TiptapEditor, type TiptapEditorHandle } from "@/components/TiptapEditor";
 import { BacklinksPanel } from "@/components/BacklinksPanel";
-import { extractMentionIds, parseTiptapContent, sanitizeTiptapMentions } from "@/lib/tiptap-content";
+import { countTiptapMentions, extractMentionIds, parseTiptapContent, sanitizeTiptapMentions, tiptapContentToPlainText } from "@/lib/tiptap-content";
 
 interface NoteData {
   id: string;
@@ -105,6 +105,24 @@ export default function NoteEditor() {
     if (!note?.entityIds || !allEntities.length) return [];
     return allEntities.filter((e) => note.entityIds.includes(e.id));
   }, [note?.entityIds, allEntities]);
+
+  const contentForMetadata = note?.content ?? currentJSON.current;
+  const mentionCounts = useMemo(
+    () => countTiptapMentions(contentForMetadata),
+    [contentForMetadata]
+  );
+
+  const characterCount = useMemo(
+    () => tiptapContentToPlainText(contentForMetadata).length,
+    [contentForMetadata]
+  );
+
+  const noteScore = useMemo(() => {
+    const entityMentions = note?.entityIds?.length ?? 0;
+    const noteMentions = mentionCounts.noteMentions;
+    const baseScore = entityMentions * 0.8 + noteMentions * 0.5 + Math.min(2, Math.log10(Math.max(1, characterCount)));
+    return Number(Math.max(0, Math.min(10, baseScore)).toFixed(1));
+  }, [mentionCounts, characterCount, note?.entityIds?.length]);
 
   useEffect(() => {
     if (!id) return;
@@ -270,6 +288,7 @@ export default function NoteEditor() {
 
   const handleTitleChange = (val: string) => {
     setTitle(val);
+    setNote((prev) => (prev ? { ...prev, title: val } : prev));
     if (isOptimistic) {
       saveOptimisticDraft({ title: val, type, content: currentJSON.current });
       return;
@@ -279,6 +298,7 @@ export default function NoteEditor() {
 
   const handleTypeChange = (val: string) => {
     setType(val);
+    setNote((prev) => (prev ? { ...prev, type: val } : prev));
     if (isOptimistic) {
       saveOptimisticDraft({ title, type: val, content: currentJSON.current });
       return;
@@ -288,6 +308,9 @@ export default function NoteEditor() {
 
   const handleEditorChange = useCallback((json: any) => {
     currentJSON.current = json;
+    setNote((prev) =>
+      prev ? { ...prev, content: json, entityIds: extractMentionIds(json) } : prev
+    );
     if (isOptimistic) {
       saveOptimisticDraft({ title, type, content: json });
       return;
@@ -466,6 +489,31 @@ export default function NoteEditor() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-5 space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-white/40">
+                <AtSign className="w-3 h-3" />
+                <span>Note Metadata</span>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-sm border border-white/5 bg-white/[0.02] p-3">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">Score</p>
+                  <p className="mt-2 text-sm font-medium text-white">{noteScore.toFixed(1)}</p>
+                </div>
+                <div className="rounded-sm border border-white/5 bg-white/[0.02] p-3">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">Mentions</p>
+                  <p className="mt-2 text-sm font-medium text-white">{mentionCounts.total}</p>
+                </div>
+                <div className="rounded-sm border border-white/5 bg-white/[0.02] p-3">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">Entities</p>
+                  <p className="mt-2 text-sm font-medium text-white">{note?.entityIds?.length ?? 0}</p>
+                </div>
+                <div className="rounded-sm border border-white/5 bg-white/[0.02] p-3">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">Characters</p>
+                  <p className="mt-2 text-sm font-medium text-white">{characterCount}</p>
+                </div>
+              </div>
+            </div>
+
             <div>
               <div className="flex items-center gap-1.5 mb-3 text-[10px] font-semibold uppercase tracking-wider text-white/40">
                 <AtSign className="w-3 h-3" />
