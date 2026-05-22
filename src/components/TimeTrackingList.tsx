@@ -18,18 +18,30 @@ const formatDate = (iso?: string) => {
  * Premium striped table with inline accordion rows. Mirrors the
  * `/entities` aesthetic: serif header, hairline borders, monochrome.
  */
-export function TimeTrackingList({ filterType, search, hideInternalSearch }: {
+export function TimeTrackingList({
+  filterType,
+  search,
+  hideInternalSearch,
+  createOpen,
+  onCreateOpenChange,
+  onCreated,
+}: {
   filterType?: string;
   search?: string;
   sortBy?: "createdAt" | "updatedAt";
   sortOrder?: "asc" | "desc";
   hideInternalSearch?: boolean;
+  createOpen?: boolean;
+  onCreateOpenChange?: (open: boolean) => void;
+  onCreated?: (entity: Entity) => void;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [createOpen, setCreateOpen] = useState(false);
+  const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
+  const createDialogOpen = onCreateOpenChange ? createOpen ?? false : internalCreateOpen;
+  const setCreateDialogOpen = onCreateOpenChange ? onCreateOpenChange : setInternalCreateOpen;
   const { getAllSummaries } = useTimeTracking();
 
   const lower = hideInternalSearch ? (search ?? '').trim().toLowerCase() : query.trim().toLowerCase();
@@ -77,7 +89,7 @@ export function TimeTrackingList({ filterType, search, hideInternalSearch }: {
           />
         )}
         {!hideInternalSearch && (
-          <button onClick={() => setCreateOpen(true)} className="btn-primary shrink-0">
+          <button onClick={() => setCreateDialogOpen(true)} className="btn-primary shrink-0">
             <Plus className="w-4 h-4" /> New {filterType ? typeLabels[filterType] : 'Entity'}
           </button>
         )}
@@ -186,12 +198,13 @@ export function TimeTrackingList({ filterType, search, hideInternalSearch }: {
       )}
 
       <CreateEntityDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
         defaultType={filterType || 'PROJECT'}
         lockType={!!filterType}
         onCreated={(entity) => {
           queryClient.invalidateQueries({ queryKey: ['entities'] });
+          onCreated?.(entity);
           navigate(`/entities/${entity.id}`);
         }}
       />

@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { entitiesApi, notesApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
@@ -50,8 +50,10 @@ const typeLabels: Record<string, string> = {
 export default function NoteEditor() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const editorRef = useRef<TiptapEditorHandle>(null);
+  const isOptimistic = searchParams.get("optimistic") === "true";
 
   const [note, setNote] = useState<NoteData | null>(null);
   const [title, setTitle] = useState("");
@@ -59,7 +61,7 @@ export default function NoteEditor() {
   const [availableTypes, setAvailableTypes] = useState<string[]>([]);
   const [allEntities, setAllEntities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "creating">("idle");
   const [showBacklinks, setShowBacklinks] = useState(false);
   const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
 
@@ -77,66 +79,104 @@ export default function NoteEditor() {
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
+    const optimistic = searchParams.get("optimistic") === "true";
     setLoading(true);
 
-    Promise.allSettled([notesApi.get(id), entitiesApi.list(), notesApi.getTypes()])
-      .then(([noteResult, entitiesResult, typesResult]) => {
-        if (noteResult.status !== "fulfilled") throw noteResult.reason;
-        if (cancelled) return;
+    if (optimistic) {
+      const placeholderContent = { type: "doc", content: [{ type: "paragraph" }] };
+      setNote({
+        id,
+        title: "Untitled",
+        content: placeholderContent,
+        type: undefined,
+        folderId: undefined,
+        entityIds: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      setTitle("Untitled");
+      setType("");
+      setAllEntities([]);
+      currentJSON.current = placeholderContent;
+      lastSavedTitle.current = "Untitled";
+      lastSavedType.current = "";
+      lastSavedJSON.current = JSON.stringify(placeholderContent);
+      setSaveStatus("creating");
+      setLoading(false);
 
-        const data = noteResult.value.data as NoteData;
-        const parsedContent = parseTiptapContent(data.content);
-        const userEntities =
-          entitiesResult.status === "fulfilled" && Array.isArray(entitiesResult.value.data)
-            ? entitiesResult.value.data
-            : [];
-        
-        setAllEntities(userEntities);
-
-        const sanitized = userEntities.length > 0
-          ? sanitizeTiptapMentions(parsedContent, userEntities)
-          : { doc: parsedContent, entityIds: extractMentionIds(parsedContent), changed: false, removedIds: [] };
-        
-        const normalizedContent = sanitized.doc;
-
-        if (typesResult.status === "fulfilled" && Array.isArray(typesResult.value.data)) {
-          setAvailableTypes(typesResult.value.data);
-        }
-
-        setNote({
-          ...data,
-          content: normalizedContent,
-          entityIds: sanitized.entityIds,
+      Promise.allSettled([entitiesApi.list(), notesApi.getTypes()])
+        .then(([entitiesResult, typesResult]) => {
+          if (cancelled) return;
+          if (entitiesResult.status === "fulfilled" && Array.isArray(entitiesResult.value.data)) {
+            setAllEntities(entitiesResult.value.data);
+          }
+          if (typesResult.status === "fulfilled" && Array.isArray(typesResult.value.data)) {
+            setAvailableTypes(typesResult.value.data);
+          }
+        })
+        .catch(() => {
+          /* ignore fetch details for optimistic placeholder */
         });
-        setTitle(data.title);
-        setType(data.type || "");
-        lastSavedTitle.current = data.title;
-        lastSavedType.current = data.type || "";
-        currentJSON.current = sanitized.doc;
-        lastSavedJSON.current = JSON.stringify(normalizedContent);
+    } else {
+      Promise.allSettled([notesApi.get(id), entitiesApi.list(), notesApi.getTypes()])
+        .then(([noteResult, entitiesResult, typesResult]) => {
+          if (noteResult.status !== "fulfilled") throw noteResult.reason;
+          if (cancelled) return;
 
-        if (sanitized.changed) {
-          void notesApi.update(id, {
-            title: data.title,
+          const data = noteResult.value.data as NoteData;
+          const parsedContent = parseTiptapContent(data.content);
+          const userEntities =
+            entitiesResult.status === "fulfilled" && Array.isArray(entitiesResult.value.data)
+              ? entitiesResult.value.data
+              : [];
+          
+          setAllEntities(userEntities);
+
+          const sanitized = userEntities.length > 0
+            ? sanitizeTiptapMentions(parsedContent, userEntities)
+            : { doc: parsedContent, entityIds: extractMentionIds(parsedContent), changed: false, removedIds: [] };
+          
+          const normalizedContent = sanitized.doc;
+
+          if (typesResult.status === "fulfilled" && Array.isArray(typesResult.value.data)) {
+            setAvailableTypes(typesResult.value.data);
+          }
+
+          setNote({
+            ...data,
             content: normalizedContent,
             entityIds: sanitized.entityIds,
           });
-        }
-      })
-      .catch(() => {
-        if (cancelled) return;
-        toast({ title: "Note not found", variant: "destructive" });
-        navigate("/notes");
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+          setTitle(data.title);
+          setType(data.type || "");
+          lastSavedTitle.current = data.title;
+          lastSavedType.current = data.type || "";
+          currentJSON.current = sanitized.doc;
+          lastSavedJSON.current = JSON.stringify(normalizedContent);
+
+          if (sanitized.changed) {
+            void notesApi.update(id, {
+              title: data.title,
+              content: normalizedContent,
+              entityIds: sanitized.entityIds,
+            });
+          }
+        })
+        .catch(() => {
+          if (cancelled) return;
+          toast({ title: "Note not found", variant: "destructive" });
+          navigate("/notes");
+        })
+        .finally(() => {
+          if (!cancelled) setLoading(false);
+        });
+    }
 
     return () => {
       cancelled = true;
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
-  }, [id, navigate, toast]);
+  }, [id, navigate, searchParams, toast]);
 
   const doSave = useCallback(async (t: string, json: any, newType: string) => {
     if (!id) return;
@@ -226,6 +266,7 @@ export default function NoteEditor() {
               
               {/* Status Indicator */}
               <div className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5 bg-white/5 px-2.5 py-1 rounded-full">
+                {saveStatus === "creating" && <><Loader2 className="w-3 h-3 animate-spin" /> Creating...</>}
                 {saveStatus === "saving" && <><Loader2 className="w-3 h-3 animate-spin" /> Saving...</>}
                 {saveStatus === "saved" && <><Check className="w-3 h-3 text-emerald-400" /> Saved</>}
                 {saveStatus === "idle" && <><FileText className="w-3 h-3" /> Ready</>}
@@ -236,7 +277,7 @@ export default function NoteEditor() {
               {/* Botão Premium de Salvar */}
               <Button 
                 onClick={handleManualSave}
-                disabled={saveStatus === "saving"}
+                disabled={saveStatus === "saving" || saveStatus === "creating"}
                 className="gap-2 h-9 px-4 rounded-sm text-sm"
               >
                 <Save className="w-3.5 h-3.5" />
@@ -245,7 +286,7 @@ export default function NoteEditor() {
 
               <div className="h-4 w-[1px] bg-white/10 mx-1" />
 
-              <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground" onClick={() => editorRef.current?.triggerUpload()} title="Attach Media">
+              <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground" onClick={() => editorRef.current?.triggerUpload()} title="Attach Media" disabled={isOptimistic}>
                 <ImageIcon className="w-4 h-4" />
               </Button>
 
@@ -268,7 +309,7 @@ export default function NoteEditor() {
                         <Label className="text-xs uppercase tracking-wider text-muted-foreground">Note Type</Label>
                         <div className="flex gap-2">
                           {availableTypes.length > 0 && (
-                            <Select value={type} onValueChange={handleTypeChange}>
+                            <Select value={type} onValueChange={handleTypeChange} disabled={isOptimistic}>
                               <SelectTrigger className="flex-1 bg-white/5 border-white/10 h-8 text-xs">
                                 <SelectValue placeholder="Select..." />
                               </SelectTrigger>
@@ -283,6 +324,7 @@ export default function NoteEditor() {
                             value={type}
                             onChange={(e) => handleTypeChange(e.target.value)}
                             placeholder="Or new..."
+                            disabled={isOptimistic}
                             className="flex-1 bg-white/5 border-white/10 h-8 text-xs"
                             maxLength={50}
                           />
@@ -296,7 +338,7 @@ export default function NoteEditor() {
 
                       <div className="flex items-center justify-between pt-2 border-t border-white/5">
                         <Label htmlFor="auto-save" className="text-xs text-foreground cursor-pointer">Auto Save</Label>
-                        <Switch id="auto-save" checked={autoSaveEnabled} onCheckedChange={setAutoSaveEnabled} className="scale-75 origin-right" />
+                        <Switch id="auto-save" checked={autoSaveEnabled} onCheckedChange={setAutoSaveEnabled} disabled={isOptimistic} className="scale-75 origin-right" />
                       </div>
                     </div>
                   </div>
@@ -316,6 +358,7 @@ export default function NoteEditor() {
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
                 placeholder="Untitled Note"
+                disabled={isOptimistic}
                 className="text-4xl font-display font-bold border-0 px-0 focus-visible:ring-0 bg-transparent text-foreground mb-8 h-auto placeholder:text-muted-foreground/30"
               />
 
@@ -326,6 +369,7 @@ export default function NoteEditor() {
                     content={currentJSON.current}
                     onChange={handleEditorChange}
                     currentNoteId={note?.id}
+                    editable={!isOptimistic}
                   />
                 </div>
               )}

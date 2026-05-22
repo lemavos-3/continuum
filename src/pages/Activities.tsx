@@ -9,6 +9,7 @@ export default function Activities() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"createdAt" | "updatedAt">("updatedAt");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <AppLayout>
@@ -69,6 +70,8 @@ export default function Activities() {
             sortBy={sortBy}
             sortOrder={sortOrder}
             hideInternalSearch={true}
+            createOpen={createOpen}
+            onCreateOpenChange={setCreateOpen}
           />
         </main>
       </div>

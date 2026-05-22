@@ -9,6 +9,7 @@ export default function Projects() {
   const [search, setSearch] = useState("");
   const [sortBy, setSortBy] = useState<"createdAt" | "updatedAt">("updatedAt");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+  const [createOpen, setCreateOpen] = useState(false);
 
   return (
     <AppLayout>
@@ -33,7 +34,7 @@ export default function Projects() {
                   className="w-full border-0 bg-transparent pl-6 text-sm text-white placeholder:italic placeholder:text-white/30 focus:outline-none focus:ring-0"
                 />
               </div>
-              <Button className="gap-2" onClick={() => console.log("New action triggered") }>
+              <Button className="gap-2" onClick={() => setCreateOpen(true)}>
                 <Plus className="h-3.5 w-3.5" />
                 New project
               </Button>
@@ -69,6 +70,8 @@ export default function Projects() {
             sortBy={sortBy}
             sortOrder={sortOrder}
             hideInternalSearch={true}
+            createOpen={createOpen}
+            onCreateOpenChange={setCreateOpen}
           />
         </main>
       </div>

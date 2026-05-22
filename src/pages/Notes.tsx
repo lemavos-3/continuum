@@ -141,6 +141,14 @@ export default function Notes() {
   // Drag-drop upload to vault
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const creatingRef = useRef(false);
+
+  useEffect(() => {
+    return () => {
+      creatingRef.current = false;
+    };
+  }, []);
 
   // Edge swipe to open mobile filter drawer
   const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
@@ -197,15 +205,37 @@ export default function Notes() {
       setUpgradeOpen(true);
       return;
     }
-    try {
-      const { data } = await notesApi.create("Untitled", "");
-      applyUsageDelta({ notesCount: 1 });
-      void refresh();
-      navigate(`/notes/${data.id}`);
-    } catch (err: any) {
-      if (err.response?.status === 403) setUpgradeOpen(true);
-      else toast({ title: "Error", description: err.response?.data?.message, variant: "destructive" });
-    }
+
+    const tempId = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : `temp-${Math.random().toString(36).slice(2, 10)}`;
+
+    applyUsageDelta({ notesCount: 1 });
+    setCreating(true);
+    creatingRef.current = true;
+    navigate(`/notes/${tempId}?optimistic=true`);
+
+    notesApi.create("Untitled", "")
+      .then(({ data }) => {
+        if (data?.id) {
+          void refresh();
+          navigate(`/notes/${data.id}`);
+        } else {
+          throw new Error("Invalid response from server");
+        }
+      })
+      .catch((err: any) => {
+        applyUsageDelta({ notesCount: -1 });
+        if (err.response?.status === 403) {
+          setUpgradeOpen(true);
+        } else {
+          toast({ title: "Error", description: err.response?.data?.message, variant: "destructive" });
+        }
+        navigate("/notes");
+      })
+      .finally(() => {
+        if (creatingRef.current) setCreating(false);
+      });
   };
 
   const confirmDelete = async () => {
@@ -423,8 +453,8 @@ export default function Notes() {
                   >
                     <SlidersHorizontal className="h-3.5 w-3.5" />
                   </button>
-                  <Button onClick={handleCreate} className="gap-2">
-                    <Plus className="h-3.5 w-3.5" /> New entry
+                  <Button onClick={handleCreate} className="gap-2" disabled={creating}>
+                    <Plus className="h-3.5 w-3.5" /> {creating ? "Creating..." : "New entry"}
                   </Button>
                 </div>
               </div>
