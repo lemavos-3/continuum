@@ -9,7 +9,6 @@ import { usePlanGate } from "@/hooks/usePlanGate";
 import { getPlanLimits } from "@/lib/plan";
 import { Progress } from "@/components/ui/progress";
 import { ChartContainer } from "@/components/ui/chart";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "@/hooks/use-toast";
@@ -24,7 +23,6 @@ import {
   CartesianGrid,
 } from "recharts";
 import {
-  Plus,
   Share2,
   Activity,
   FolderOpen,
@@ -40,7 +38,6 @@ import {
   StickyNote,
   RefreshCw
 } from "@/lib/heroicons";
-import type { Entity } from "@/types";
 
 // --- TYPES & HELPERS FROM INSIGHTS ---
 interface NoteInsight {
@@ -98,18 +95,18 @@ const formatNoteDate = (timestamp?: number) => {
 // --- SUB-COMPONENTS ---
 const DashboardSkeleton = () => (
   <AppLayout>
-    <div className="px-6 lg:px-12 py-10 max-w-6xl mx-auto space-y-6">
+    <div className="px-6 lg:px-12 py-10 max-w-7xl mx-auto space-y-6">
       <div className="h-16 rounded-2xl bg-neutral-900/40 border border-white/5 animate-pulse" />
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="h-28 rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
+          <div key={i} className="h-24 rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
         ))}
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-7 h-[340px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
-        <div className="lg:col-span-5 h-[340px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
-        <div className="lg:col-span-5 h-[280px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
-        <div className="lg:col-span-7 h-[280px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
+        <div className="lg:col-span-8 h-[360px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
+        <div className="lg:col-span-4 h-[360px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
+        <div className="lg:col-span-4 h-[320px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
+        <div className="lg:col-span-8 h-[320px] rounded-2xl bg-neutral-900/20 border border-white/5 animate-pulse" />
       </div>
     </div>
   </AppLayout>
@@ -117,12 +114,12 @@ const DashboardSkeleton = () => (
 
 function StatCard({ icon: Icon, label, value, hint }: { icon: ComponentType<{ className?: string }>; label: string; value: string | number; hint?: string; }) {
   return (
-    <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 flex flex-col gap-1.5 min-w-0 shadow-inner transition-all duration-300 hover:border-white/10">
+    <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 flex flex-col gap-1.5 min-w-0 shadow-inner transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/30">
       <div className="flex items-center gap-2 text-neutral-500">
         <Icon className="h-3.5 w-3.5 shrink-0" />
         <span className="text-[10px] uppercase tracking-wider font-semibold">{label}</span>
       </div>
-      <p className="text-2xl sm:text-3xl font-semibold text-neutral-100 tabular-nums leading-none mt-1">{value}</p>
+      <p className="text-2xl sm:text-3xl font-medium tracking-tight text-neutral-100 tabular-nums leading-none mt-1">{value}</p>
       {hint && <p className="text-[11px] text-neutral-500 truncate mt-0.5">{hint}</p>}
     </div>
   );
@@ -153,15 +150,15 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
         </Badge>
         <span className="font-mono text-[10px] text-neutral-500">{item.score.toFixed(1)}</span>
       </div>
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-2 flex-1">
         <div className="mt-0.5 rounded-lg bg-white/5 p-1 border border-white/5 shrink-0">
           <StickyNote className="h-3.5 w-3.5 text-neutral-400" />
         </div>
         <h3 className="line-clamp-2 text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{item.note.title || "Untitled"}</h3>
       </div>
       <div className="mt-auto flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
-        {item.mentionCount > 0 && <StatChip>{item.mentionCount} mentions</StatChip>}
-        {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)} tracked</StatChip>}
+        {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
+        {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)}</StatChip>}
         <StatChip>{formatDays(item.daysSinceLastInteraction)}</StatChip>
       </div>
     </motion.button>
@@ -185,7 +182,7 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
         </Badge>
         <span className="font-mono text-[10px] text-neutral-500">{item.score.toFixed(1)}</span>
       </div>
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-2 flex-1">
         <div className="mt-0.5 rounded-lg bg-white/5 p-1 border border-white/5 shrink-0">
           <Network className="h-3.5 w-3.5 text-neutral-400" />
         </div>
@@ -197,8 +194,8 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
         </div>
       </div>
       <div className="mt-auto flex flex-wrap gap-1.5 pt-2 border-t border-white/5">
-        {item.mentionCount > 0 && <StatChip>{item.mentionCount} mentions</StatChip>}
-        {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)} tracked</StatChip>}
+        {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
+        {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)}</StatChip>}
         <StatChip>{formatDays(item.daysSinceLastMention)}</StatChip>
       </div>
     </motion.button>
@@ -206,17 +203,17 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
 }
 
 function DashboardInsightSection({
-  title, subtitle, icon: Icon, children, empty, loading, className, onRefresh, refreshing, viewMoreHref, viewMoreLabel
+  title, subtitle, icon: Icon, children, empty, loading, className, onRefresh, refreshing, viewMoreHref, viewMoreLabel, gridColsClass = "grid-cols-1"
 }: {
-  title: string; subtitle?: string; icon: ComponentType<{ className?: string }>; children: ReactNode; empty: boolean; loading: boolean; className?: string; onRefresh?: () => void; refreshing?: boolean; viewMoreHref?: string; viewMoreLabel?: string;
+  title: string; subtitle?: string; icon: ComponentType<{ className?: string }>; children: ReactNode; empty: boolean; loading: boolean; className?: string; onRefresh?: () => void; refreshing?: boolean; viewMoreHref?: string; viewMoreLabel?: string; gridColsClass?: string;
 }) {
   const navigate = useNavigate();
   const items = Children.toArray(children);
-  const previewItems = items.slice(0, 3);
-  const expandedItems = items.slice(3, 10);
+  const previewItems = items.slice(0, 4); // Alterado para max 4 para encaixar melhor em grids de 2 colunas
+  const expandedItems = items.slice(4, 10);
   const totalCount = items.length;
   const visibleCount = Math.min(10, totalCount);
-  const showAccordion = !loading && !empty && items.length > 3;
+  const showAccordion = !loading && !empty && items.length > 4;
 
   return (
     <div className={cn("border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 flex flex-col shadow-inner", className)}>
@@ -253,11 +250,11 @@ function DashboardInsightSection({
           )}
         </div>
       </div>
-      <div className="flex-1 min-h-0">
+      <div className="flex-1 flex flex-col justify-between min-h-0">
         {loading ? (
-          <div className="space-y-3">
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             {[0, 1].map((i) => (
-              <div key={i} className="h-[140px] w-full animate-pulse rounded-xl border border-white/5 bg-neutral-900/30" />
+              <div key={i} className="h-[130px] w-full animate-pulse rounded-xl border border-white/5 bg-neutral-900/30" />
             ))}
           </div>
         ) : empty ? (
@@ -266,27 +263,27 @@ function DashboardInsightSection({
           </div>
         ) : (
           <>
-            <div className="space-y-3">{previewItems}</div>
+            <div className={cn("grid gap-3", gridColsClass)}>{previewItems}</div>
             {showAccordion ? (
               <Accordion type="single" collapsible className="mt-4">
-                <AccordionItem value={title}>
-                  <AccordionTrigger className="px-0">
-                    <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/5 bg-white/5 px-4 py-3 text-xs font-medium text-neutral-300 hover:bg-white/10 transition-colors">
+                <AccordionItem value={title} className="border-none">
+                  <AccordionTrigger className="px-0 py-0 hover:no-underline">
+                    <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.02] px-4 py-2.5 text-xs font-medium text-neutral-400 hover:bg-white/5 transition-colors">
                       <span>Show {visibleCount - previewItems.length} more</span>
                       <span>{visibleCount} of {totalCount}</span>
                     </div>
                   </AccordionTrigger>
-                  <AccordionContent className="px-0">
-                    <div className="space-y-3">
+                  <AccordionContent className="px-0 pt-3 pb-0">
+                    <div className={cn("grid gap-3 mb-3", gridColsClass)}>
                       {expandedItems}
                     </div>
-                    <div className="mt-4 flex items-center justify-between gap-3 text-xs text-neutral-400">
+                    <div className="flex items-center justify-between gap-3 text-[11px] text-neutral-500 pt-2 border-t border-white/5">
                       <span>{totalCount > visibleCount ? `Showing ${visibleCount} of ${totalCount}` : `Showing all ${visibleCount}`}</span>
                       {viewMoreHref && (
                         <button
                           type="button"
                           onClick={() => navigate(viewMoreHref)}
-                          className="text-xs text-neutral-400 hover:text-white transition-colors"
+                          className="text-neutral-400 hover:text-white transition-colors"
                         >
                           {viewMoreLabel || "View all"}
                         </button>
@@ -443,10 +440,10 @@ export default function Dashboard() {
 
   return (
     <AppLayout>
-      <div className="px-6 lg:px-12 py-10 max-w-6xl mx-auto space-y-6">
+      <div className="px-6 lg:px-12 py-10 max-w-7xl mx-auto space-y-6">
         
         {/* HEADER */}
-        <header className="border-b border-white/5 pb-6 mb-2 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <header className="border-b border-white/5 pb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-[10px] tracking-wider uppercase text-neutral-500 font-semibold mb-1">Overview</p>
             <h1 className="font-serif text-4xl tracking-tight text-neutral-100">
@@ -459,7 +456,7 @@ export default function Dashboard() {
         </header>
 
         {/* CONTADORES / CARDS KPI */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={FileText} label="Notes" value={totalNotes} hint={limits.maxNotes === -1 ? "Unlimited" : `of ${limits.maxNotes}`} />
           <StatCard icon={Tag} label="Entities" value={totalEntities} hint={limits.maxEntities === -1 ? "Unlimited" : `of ${limits.maxEntities}`} />
           <StatCard icon={Network} label="Graph nodes" value={graphNodeCount} hint="In your network" />
@@ -469,8 +466,8 @@ export default function Dashboard() {
         {/* CORPO DO DASHBOARD */}
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
-          {/* GRÁFICO HISTÓRICO DE SCORE */}
-          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:col-span-7 flex flex-col justify-between shadow-inner">
+          {/* BLOCO 1: PERFORMANCE & METRICS (8+4 Split) */}
+          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:col-span-8 flex flex-col justify-between shadow-inner">
             <div className="flex items-center justify-between gap-3 mb-6">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
@@ -478,7 +475,7 @@ export default function Dashboard() {
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold text-neutral-200">Score evolution</h2>
-                  <p className="text-xs text-neutral-500">Last 14 days</p>
+                  <p className="text-xs text-neutral-500">Last 14 days performance index</p>
                 </div>
               </div>
               <button
@@ -489,24 +486,24 @@ export default function Dashboard() {
                 Explore insights →
               </button>
             </div>
-            <div className="h-[220px] sm:h-[250px] -mx-2">
+            <div className="h-[240px] w-full -mx-2">
               <ChartContainer config={{}} className="h-full w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={scoreTimelineData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="white" stopOpacity={0.15} />
+                        <stop offset="0%" stopColor="white" stopOpacity={0.12} />
                         <stop offset="100%" stopColor="white" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid stroke="rgba(255,255,255,0.04)" strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#737373", fontSize: 10 }} interval="preserveStartEnd" />
-                    <YAxis tickLine={false} axisLine={false} tick={{ fill: "#737373", fontSize: 10 }} width={24} />
+                    <CartesianGrid stroke="rgba(255,255,255,0.03)" strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#525252", fontSize: 10 }} interval="preserveStartEnd" />
+                    <YAxis tickLine={false} axisLine={false} tick={{ fill: "#525252", fontSize: 10 }} width={24} />
                     <Tooltip
                       contentStyle={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 12, color: "#f5f5f5" }}
                       labelStyle={{ color: "#737373" }}
                     />
-                    <Area type="monotone" dataKey="score" stroke="rgba(255,255,255,0.4)" strokeWidth={1.5} fill="url(#scoreFill)" />
+                    <Area type="monotone" dataKey="score" stroke="rgba(255,255,255,0.3)" strokeWidth={1.5} fill="url(#scoreFill)" />
                   </AreaChart>
                 </ResponsiveContainer>
               </ChartContainer>
@@ -514,7 +511,7 @@ export default function Dashboard() {
           </div>
 
           {/* PLAN USAGE CARD */}
-          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:col-span-5 flex flex-col justify-between shadow-inner">
+          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:col-span-4 flex flex-col justify-between shadow-inner">
             <div>
               <div className="flex items-center justify-between gap-3 mb-6">
                 <div className="flex items-center gap-3">
@@ -523,35 +520,35 @@ export default function Dashboard() {
                   </div>
                   <h2 className="text-sm font-semibold text-neutral-200">Plan usage</h2>
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-neutral-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded-lg">
+                <span className="text-[9px] font-bold uppercase tracking-[0.15em] text-neutral-400 bg-white/5 border border-white/10 px-2 py-0.5 rounded-md">
                   {user?.plan || "FREE"}
                 </span>
               </div>
 
               {usage ? (
                 <div className="space-y-4">
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-neutral-400">Notes</span>
-                      <span className="text-neutral-200 font-mono tabular-nums">
+                      <span className="text-neutral-200 font-mono text-[11px] tabular-nums">
                         {usage.notesCount} / {limits.maxNotes === -1 ? "∞" : limits.maxNotes}
                       </span>
                     </div>
                     <Progress value={limits.maxNotes === -1 ? 0 : Math.min((usage.notesCount / limits.maxNotes) * 100, 100)} className="h-1 bg-white/5" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-neutral-400">Entities</span>
-                      <span className="text-neutral-200 font-mono tabular-nums">
+                      <span className="text-neutral-200 font-mono text-[11px] tabular-nums">
                         {usage.entitiesCount} / {limits.maxEntities === -1 ? "∞" : limits.maxEntities}
                       </span>
                     </div>
                     <Progress value={limits.maxEntities === -1 ? 0 : Math.min((usage.entitiesCount / limits.maxEntities) * 100, 100)} className="h-1 bg-white/5" />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-neutral-400">Vault storage</span>
-                      <span className="text-neutral-200 font-mono tabular-nums">{storageUsed} / {storageLimit}</span>
+                      <span className="text-neutral-200 font-mono text-[11px] tabular-nums">{storageUsed} / {storageLimit}</span>
                     </div>
                     <Progress value={limits.maxVaultSizeMB === -1 ? 0 : Math.min((usage.vaultSizeMB / limits.maxVaultSizeMB) * 100, 100)} className="h-1 bg-white/5" />
                   </div>
@@ -560,17 +557,17 @@ export default function Dashboard() {
                 <div className="text-xs text-neutral-500">Loading usage…</div>
               )}
 
-              <div className="mt-6 rounded-xl border border-white/5 bg-white/[0.02] p-4">
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="flex flex-col gap-0.5 text-xs">
-                    <span className="text-neutral-500 text-[10px] uppercase font-medium">History retention</span>
+              <div className="mt-5 rounded-xl border border-white/5 bg-white/[0.01] p-3.5 text-[11px]">
+                <div className="grid gap-3 grid-cols-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">History retention</span>
                     <span className="text-neutral-300 font-medium">{limits.historyDays === -1 ? "Unlimited" : `${limits.historyDays} days`}</span>
                   </div>
-                  <div className="flex flex-col gap-0.5 text-xs">
-                    <span className="text-neutral-500 text-[10px] uppercase font-medium">Metadata limit</span>
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">Metadata limit</span>
                     <span className="text-neutral-300 font-medium">{limits.maxMetadataSizeKb === -1 ? "Unlimited" : `${limits.maxMetadataSizeKb} KB`}</span>
                   </div>
-                  <div className="flex items-center justify-between text-xs text-neutral-400 sm:col-span-2 pt-2 border-t border-white/5 mt-1">
+                  <div className="flex items-center justify-between col-span-2 pt-2.5 border-t border-white/5 mt-0.5 text-neutral-400">
                     <span>Data export</span>
                     {user?.dataExport ? (
                       <button
@@ -582,7 +579,7 @@ export default function Dashboard() {
                         {exporting ? "Exporting…" : "Download backup"}
                       </button>
                     ) : (
-                      <span className="text-neutral-500 text-xs">Upgrade to enable</span>
+                      <span className="text-neutral-600 text-xs">Upgrade required</span>
                     )}
                   </div>
                 </div>
@@ -591,14 +588,15 @@ export default function Dashboard() {
             <button
               type="button"
               onClick={() => navigate("/subscription")}
-              className="mt-5 text-xs text-neutral-400 hover:text-white self-start transition-colors"
+              className="mt-4 text-xs text-neutral-400 hover:text-white self-start transition-colors"
             >
               Manage subscription →
             </button>
           </div>
 
+          {/* BLOCO 2: WORKSPACE ACTIVITY (4+8 Split) */}
           {/* RECENT NOTES CARD */}
-          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:col-span-5 flex flex-col shadow-inner">
+          <div className="border border-white/5 bg-neutral-900/20 backdrop-blur-md rounded-2xl p-5 sm:p-6 lg:col-span-4 flex flex-col shadow-inner">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div className="flex items-center gap-3">
                 <div className="h-9 w-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
@@ -610,38 +608,39 @@ export default function Dashboard() {
                 View all
               </button>
             </div>
-            <div className="space-y-1 flex-1 overflow-y-auto max-h-[300px] pr-1">
+            <div className="space-y-1 flex-1 overflow-y-auto max-h-[310px] pr-1 scrollbar-thin">
               {recentNotes.length > 0 ? (
                 recentNotes.map((note) => (
                   <button
                     key={note.id}
                     type="button"
                     onClick={() => navigate(`/notes/${note.id}`)}
-                    className="group w-full rounded-xl border border-transparent px-3 py-2.5 text-left transition-all hover:bg-neutral-900/40 hover:border-white/5"
+                    className="group w-full rounded-xl border border-transparent px-3 py-2 text-left transition-all hover:bg-neutral-900/50 hover:border-white/5"
                   >
                     <div className="flex items-center justify-between gap-3">
                       <p className="text-sm font-medium text-neutral-300 group-hover:text-white truncate">{note.title || "Untitled"}</p>
-                      <ArrowRight className="h-3.5 w-3.5 text-neutral-500 shrink-0 transition-transform group-hover:translate-x-0.5" />
+                      <ArrowRight className="h-3.5 w-3.5 text-neutral-600 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-neutral-400" />
                     </div>
                     <p className="mt-0.5 text-[10px] font-mono text-neutral-500">{formatNoteDate(note.createdAtTimestamp)}</p>
                   </button>
                 ))
               ) : (
-                <div className="rounded-xl border border-dashed border-white/5 bg-neutral-900/5 p-6 text-center text-xs text-neutral-500">
+                <div className="rounded-xl border border-dashed border-white/5 bg-neutral-900/5 p-6 text-center text-xs text-neutral-500 h-full flex items-center justify-center">
                   No recent notes yet.
                 </div>
               )}
             </div>
           </div>
 
-          {/* INSIGHTS: HOT RIGHT NOW */}
+          {/* INSIGHTS: HOT RIGHT NOW (Agora expandido em 2 colunas internas) */}
           <DashboardInsightSection
             title="Hot right now"
-            subtitle="Strongest recent gravity"
+            subtitle="Strongest recent gravity across notes"
             icon={Flame}
             loading={insightsLoading}
             empty={hotNotes.length === 0}
-            className="lg:col-span-7"
+            className="lg:col-span-8"
+            gridColsClass="grid-cols-1 sm:grid-cols-2"
             onRefresh={() => loadInsights(true)}
             refreshing={refreshingInsights}
             viewMoreHref="/notes"
@@ -652,14 +651,16 @@ export default function Dashboard() {
             ))}
           </DashboardInsightSection>
 
+          {/* BLOCO 3: GRAPH DISCOVERY (Uniform 3-Column Grid) */}
           {/* INSIGHTS: KEY PEOPLE & PROJECTS */}
           <DashboardInsightSection
             title="Key people & projects"
-            subtitle="Trending entities"
+            subtitle="Trending graph entities"
             icon={Users}
             loading={insightsLoading}
             empty={hotEntities.length === 0}
-            className="lg:col-span-6"
+            className="lg:col-span-4"
+            gridColsClass="grid-cols-1"
             viewMoreHref="/entities"
             viewMoreLabel="View all entities"
           >
@@ -671,11 +672,12 @@ export default function Dashboard() {
           {/* INSIGHTS: WORTH REVISITING */}
           <DashboardInsightSection
             title="Worth revisiting"
-            subtitle="High-value notes"
+            subtitle="High-value aging notes"
             icon={Clock}
             loading={insightsLoading}
             empty={forgottenNotes.length === 0}
-            className="lg:col-span-6"
+            className="lg:col-span-4"
+            gridColsClass="grid-cols-1"
             viewMoreHref="/notes"
             viewMoreLabel="View all notes"
           >
@@ -691,7 +693,8 @@ export default function Dashboard() {
             icon={TrendingUp}
             loading={insightsLoading}
             empty={forgottenEntities.length === 0}
-            className="lg:col-span-12"
+            className="lg:col-span-4"
+            gridColsClass="grid-cols-1"
             viewMoreHref="/entities"
             viewMoreLabel="View all entities"
           >
@@ -704,4 +707,4 @@ export default function Dashboard() {
       </div>
     </AppLayout>
   );
-          }
+}
