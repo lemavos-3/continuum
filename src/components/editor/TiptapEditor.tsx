@@ -247,7 +247,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         CharacterCount,
         Dropcursor.configure({ color: "hsl(var(--primary))", width: 2 }),
         LinkExtension.configure({
-          openOnClick: false, // Desativado o comportamento padrão para gerenciar via delegador onClick
+          openOnClick: false,
           autolink: true,
           HTMLAttributes: { class: "text-primary underline underline-offset-4 cursor-pointer" },
         }),
@@ -272,7 +272,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               "data-label": node.attrs.label,
               "data-mention-type": "entity",
             },
-            0,
+            `@${node.attrs.label || node.attrs.id}`, // CORREÇÃO: Agora renderiza a label da entidade de forma explícita
           ],
           suggestion: buildSuggestion("entity") as any,
         }),
@@ -286,7 +286,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               "data-label": node.attrs.label,
               "data-mention-type": "note",
             },
-            0,
+            `#${node.attrs.label || node.attrs.id}`, // CORREÇÃO: Agora renderiza a label da nota de forma explícita
           ],
           suggestion: buildSuggestion("note", currentNoteId) as any,
         }),
@@ -502,12 +502,10 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onClick={(e) => {
-            // Ignora cliques que envolvam teclas modificadoras ou que não sejam o clique principal esquerdo
             if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
 
             const target = e.target as HTMLElement;
 
-            // 1. CAPTURA DE CLIQUES EM MENÇÕES (@ ou #)
             const mentionTarget = target.closest<HTMLElement>(".continuum-entity-mention, .continuum-note-mention");
             if (mentionTarget) {
               const mentionId = mentionTarget.getAttribute("data-id");
@@ -521,19 +519,16 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               return;
             }
 
-            // 2. CAPTURA DE CLIQUES EM LINKS TRADICIONAIS (Nós do LinkExtension)
             const linkTarget = target.closest<HTMLAnchorElement>("a");
             if (linkTarget) {
               const href = linkTarget.getAttribute("href");
               if (!href) return;
 
-              // Verifica se o link é interno da aplicação (começa com '/' ou bate com o domínio atual)
               if (href.startsWith("/") || href.startsWith(window.location.origin)) {
                 e.preventDefault();
                 const path = href.replace(window.location.origin, "");
                 navigate(path);
               }
-              // Links totalmente externos (ex: https://google.com) seguem o fluxo nativo do navegador
             }
           }}
           className="relative"
