@@ -272,7 +272,8 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               "data-label": node.attrs.label,
               "data-mention-type": "entity",
             },
-            `@${node.attrs.label || node.attrs.id}`, // CORREÇÃO: Agora renderiza a label da entidade de forma explícita
+            // CORREÇÃO VISUAL E DE CLIQUE: Mantém a estrutura de nós do ProseMirror intacta
+            `@${node.attrs.label || node.attrs.id}`,
           ],
           suggestion: buildSuggestion("entity") as any,
         }),
@@ -286,7 +287,8 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               "data-label": node.attrs.label,
               "data-mention-type": "note",
             },
-            `#${node.attrs.label || node.attrs.id}`, // CORREÇÃO: Agora renderiza a label da nota de forma explícita
+            // CORREÇÃO VISUAL E DE CLIQUE: Mantém a estrutura de nós do ProseMirror intacta
+            `#${node.attrs.label || node.attrs.id}`,
           ],
           suggestion: buildSuggestion("note", currentNoteId) as any,
         }),
