@@ -212,24 +212,6 @@ export default function Profile() {
               <h2 className="text-sm font-semibold text-white/80">Preferences & Appearance</h2>
             </div>
 
-            <div className="border border-white/5 bg-white/[0.01] p-5 rounded-sm">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-medium text-white/80">Dark Mode Theme</p>
-                  <p className="text-xs text-white/30">Toggle your preferred interface appearance.</p>
-                </div>
-                <div className="flex items-center gap-2 bg-black border border-white/10 rounded-sm p-1 shrink-0">
-                  <SunIcon className="w-3.5 h-3.5 text-white/40" />
-                  <Switch
-                    checked={mounted ? theme !== "light" : true}
-                    onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                    disabled={!mounted}
-                    className="data-[state=checked]:bg-white/20 data-[state=unchecked]:bg-white/5"
-                  />
-                  <MoonIcon className="w-3.5 h-3.5 text-white/40" />
-                </div>
-              </div>
-            </div>
 
             <div className="border-t border-b border-white/5 divide-y divide-white/[0.04]">
               <div className="flex items-center gap-4 py-4">
