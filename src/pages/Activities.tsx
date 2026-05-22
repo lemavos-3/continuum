@@ -1,7 +1,9 @@
 import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import { TimeTrackingList } from "@/components/TimeTrackingList";
-import { MagnifyingGlassIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { Button } from "@/components/ui/button";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+import { Plus } from "@/lib/heroicons";
 
 export default function Activities() {
   const [search, setSearch] = useState("");
@@ -31,13 +33,10 @@ export default function Activities() {
                   className="w-full border-0 bg-transparent pl-6 text-sm text-white placeholder:italic placeholder:text-white/30 focus:outline-none focus:ring-0"
                 />
               </div>
-              <button
-                onClick={() => console.log("New action triggered")}
-                className="flex items-center gap-1.5 rounded border border-white/15 bg-white/5 px-3 py-1.5 font-mono text-[11px] text-white/80 transition-colors hover:border-white/30 hover:bg-white/10 hover:text-white"
-              >
-                <PlusIcon className="h-3.5 w-3.5" />
-                <span>New</span>
-              </button>
+              <Button className="gap-2" onClick={() => console.log("New action triggered") }>
+                <Plus className="h-3.5 w-3.5" />
+                New
+              </Button>
             </div>
           </div>
 

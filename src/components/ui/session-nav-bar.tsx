@@ -6,17 +6,20 @@ import { motion } from "framer-motion";
 import {
   Activity,
   ChevronsUpDown,
-  GitGraph,
   HardDrive,
   LayoutDashboard,
   LogOut,
-  Network,
   Search,
   Settings,
   Sparkles,
   StickyNote,
+  Tag,
   Timer,
   UserCircle,
+  Lock,
+  Clock,
+  FolderOpen,
+  Layers,
 } from "@/lib/heroicons";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -58,18 +61,18 @@ interface NavItem {
 const primaryNav: NavItem[] = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/notes", label: "Notes", icon: StickyNote },
-  { to: "/entities", label: "Entities", icon: Network },
-  { to: "/vault", label: "Vault", icon: HardDrive },
+  { to: "/entities", label: "Entities", icon: Tag },
+  { to: "/vault", label: "Vault", icon: Lock },
 ];
 
 const trackingNav: NavItem[] = [
-  { to: "/projects", label: "Projects", icon: Timer },
-  { to: "/activities", label: "Activities", icon: Activity },
+  { to: "/projects", label: "Projects", icon: FolderOpen },
+  { to: "/activities", label: "Activities", icon: Clock },
 ];
 
 const exploreNav: NavItem[] = [
   { to: "/insights", label: "Insights", icon: Sparkles },
-  { to: "/graph", label: "Graph", icon: GitGraph },
+  { to: "/graph", label: "Graph", icon: Layers },
 ];
 
 function SidebarLink({

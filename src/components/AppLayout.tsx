@@ -7,17 +7,18 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   LayoutDashboard,
   StickyNote,
-  Network,
+  Tag,
   LogOut,
   User as UserIcon,
   Menu,
-  GitGraph,
+  Layers,
   Settings,
   Timer,
-  Activity,
-  HardDrive,
+  Clock,
+  Lock,
   Sparkles,
   X,
+  FolderOpen,
 } from "@/lib/heroicons";
 import {
   DropdownMenu,
@@ -33,12 +34,12 @@ import { SessionNavBar } from "@/components/ui/session-nav-bar";
 const mobileItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard", end: true },
   { to: "/notes", icon: StickyNote, label: "Notes" },
-  { to: "/entities", icon: Network, label: "Entities" },
+  { to: "/entities", icon: Tag, label: "Entities" },
   { to: "/insights", icon: Sparkles, label: "Insights" },
-  { to: "/vault", icon: HardDrive, label: "Vault" },
-  { to: "/projects", icon: Timer, label: "Projects" },
-  { to: "/activities", icon: Activity, label: "Activities" },
-  { to: "/graph", icon: GitGraph, label: "Graph" },
+  { to: "/vault", icon: Lock, label: "Vault" },
+  { to: "/projects", icon: FolderOpen, label: "Projects" },
+  { to: "/activities", icon: Clock, label: "Activities" },
+  { to: "/graph", icon: Layers, label: "Graph" },
 ];
 
 
