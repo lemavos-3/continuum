@@ -153,6 +153,7 @@ export default function NoteEditor() {
           lastSavedType.current = data.type || "";
           currentJSON.current = sanitized.doc;
           lastSavedJSON.current = JSON.stringify(normalizedContent);
+          setSaveStatus("idle");
 
           if (sanitized.changed) {
             void notesApi.update(id, {
