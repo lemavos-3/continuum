@@ -263,10 +263,10 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         TableHeader,
         CodeBlockLowlight.configure({ lowlight }),
         
-        // ENTIDADES (@): Badge Monocromática Minimalista
+        // ENTIDADES (@): Monocromático usando o tema do seu app
         Mention.configure({
           HTMLAttributes: { 
-            class: "continuum-entity-mention inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-neutral-200 font-medium no-underline transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-700 cursor-pointer" 
+            class: "continuum-entity-mention inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded-md bg-secondary text-secondary-foreground text-sm font-medium no-underline transition-colors hover:opacity-80 cursor-pointer shadow-sm border border-border" 
           },
           renderHTML: ({ node, HTMLAttributes }) => [
             "a",
@@ -282,10 +282,10 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
           suggestion: buildSuggestion("entity") as any,
         }),
 
-        // NOTAS (#): Badge Monocromática Minimalista (Idêntica para manter consistência com o app)
+        // NOTAS (#): Monocromático usando o tema do seu app
         NoteMention.configure({
           HTMLAttributes: { 
-            class: "continuum-note-mention inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded-md bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-950 dark:text-neutral-200 font-medium no-underline transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-700 cursor-pointer" 
+            class: "continuum-note-mention inline-flex items-center px-1.5 py-0.5 mx-0.5 rounded-md bg-secondary text-secondary-foreground text-sm font-medium no-underline transition-colors hover:opacity-80 cursor-pointer shadow-sm border border-border" 
           },
           renderHTML: ({ node, HTMLAttributes }) => [
             "a",
