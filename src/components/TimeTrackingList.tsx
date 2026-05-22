@@ -95,10 +95,10 @@ export function TimeTrackingList({ filterType, search, hideInternalSearch }: {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full border-collapse">
+        <div className="overflow-x-auto rounded-3xl border border-white/10 bg-black/95 shadow-black/20 shadow-sm">
+          <table className="min-w-full border-separate border-spacing-y-2">
             <thead>
-              <tr className="border-b border-white/10 bg-white/5">
+              <tr className="bg-white/5">
                 <th className="label-caps text-left px-3 py-3 font-medium text-white/50 w-10"></th>
                 <th className="label-caps text-left px-3 py-3 font-medium text-white/50">Name</th>
                 <th className="label-caps text-left px-3 py-3 font-medium text-white/50 w-[140px]">Type</th>
@@ -106,7 +106,7 @@ export function TimeTrackingList({ filterType, search, hideInternalSearch }: {
                 <th className="label-caps text-left px-3 py-3 font-medium text-white/50 w-[120px]">Entries</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-white/[0.06]">
               {filtered.map((entity, i) => {
                 const dim = lower && !matches.has(i);
                 const summary = getSummaryForEntity(entity.id);
@@ -118,7 +118,7 @@ export function TimeTrackingList({ filterType, search, hideInternalSearch }: {
                     <tr
                       onClick={() => setOpenId(isOpen ? null : entity.id)}
                       className={cn(
-                        'group border-b border-white/[0.06] cursor-pointer transition-opacity duration-200 odd:bg-white/5 even:bg-white/0',
+                        'group cursor-pointer transition-colors',
                         dim ? 'opacity-20' : 'opacity-100 hover:bg-white/[0.08]',
                       )}
                     >
