@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { entitiesApi } from '@/lib/api';
 import { useTimeTracking, type TimeEntitySummary } from '@/hooks/useTimeTracking';
 import { cn } from '@/lib/utils';
-import { Plus, ChevronDown, FolderOpen, Loader2 } from 'lucide-react';
+import { Plus, ChevronDown, FolderOpen, Loader2 } from "@/lib/heroicons";
 import { CreateEntityDialog } from '@/components/CreateEntityDialog';
 import { ActivityCompletionCalendar } from '@/components/ActivityCompletionCalendar';
 import type { Entity } from '@/types';

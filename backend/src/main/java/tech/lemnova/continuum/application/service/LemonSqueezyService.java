@@ -50,19 +50,30 @@ public class LemonSqueezyService {
             throw new BadRequestException("Invalid Lemon Squeezy plan or variant: " + priceOrPlan);
         }
 
+        // Lemon Squeezy "create checkout" payload — the correct way to attach
+        // a per-user identifier that comes back in webhooks is
+        // attributes.checkout_data.custom.user_id (NOT attributes.metadata).
+        // The variant_id must live under relationships.variant.data, and
+        // the store_id under relationships.store.data.
         Map<String, Object> body = Map.of(
                 "data", Map.of(
                         "type", "checkouts",
                         "attributes", Map.of(
-                                "store_id", storeId,
-                                "variant_id", variantId,
-                                "customer", Map.of("email", email),
-                                "redirect_url", successUrl,
-                                "cancel_url", cancelUrl,
-                                "metadata", Map.of("userId", userId)
+                                "checkout_data", Map.of(
+                                        "email", email == null ? "" : email,
+                                        "custom", Map.of("user_id", userId)
+                                ),
+                                "product_options", Map.of(
+                                        "redirect_url", successUrl
+                                )
+                        ),
+                        "relationships", Map.of(
+                                "store", Map.of("data", Map.of("type", "stores", "id", storeId)),
+                                "variant", Map.of("data", Map.of("type", "variants", "id", variantId))
                         )
                 )
         );
+
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);

@@ -33,16 +33,19 @@ public class StripeWebhookController {
     @PostMapping("/stripe")
     public ResponseEntity<String> stripe(
             @RequestBody String payload,
-            @RequestHeader("Lemon-Squeezy-Signature") String signature) {
+            @RequestHeader(value = "X-Signature", required = false) String xSig,
+            @RequestHeader(value = "Lemon-Squeezy-Signature", required = false) String lsSig) {
 
-        if (!verifySignature(payload, signature)) {
-            log.error("Invalid Lemon Squeezy signature");
+        String signature = xSig != null ? xSig : lsSig;
+        if (signature == null || !verifySignature(payload, signature)) {
+            log.error("Invalid Lemon Squeezy signature (header missing or mismatch)");
             return ResponseEntity.status(400).body("Invalid signature");
         }
 
         try {
             JsonNode root = mapper.readTree(payload);
-            String eventType = root.path("data").path("attributes").path("event_type").asText(null);
+            // Lemon Squeezy puts the event name in meta.event_name (NOT in data.attributes).
+            String eventType = root.path("meta").path("event_name").asText(null);
             String eventId = root.path("data").path("id").asText(null);
             log.info("Lemon Squeezy event: {} [{}]", eventType, eventId);
             subscriptionService.handleLemonSqueezyWebhook(root);
@@ -53,6 +56,7 @@ public class StripeWebhookController {
 
         return ResponseEntity.ok("ok");
     }
+
 
     private boolean verifySignature(String payload, String signatureHeader) {
         try {

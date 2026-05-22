@@ -12,7 +12,7 @@ import {
   Eye,
   EyeOff,
   X,
-} from "lucide-react";
+} from "@/lib/heroicons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SideInspector } from "@/components/SideInspector";

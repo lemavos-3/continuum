@@ -22,7 +22,7 @@ import {
   ArrowLeft, Save, Loader2, Check, PanelRight, 
   Settings2, ImageIcon, FileText, X, Clock,
   Link2, AtSign
-} from "lucide-react";
+} from "@/lib/heroicons";
 import { useToast } from "@/hooks/use-toast";
 import { TiptapEditor, type TiptapEditorHandle } from "@/components/TiptapEditor";
 import { BacklinksPanel } from "@/components/BacklinksPanel";

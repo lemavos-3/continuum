@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "next-themes";
 import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi } from "@/lib/api";
@@ -10,15 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
-import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   UserIcon,
   EnvelopeIcon,
   ShieldCheckIcon,
-  SunIcon,
-  MoonIcon,
   CalendarIcon,
   LockClosedIcon,
   ArrowPathIcon,
@@ -32,14 +28,13 @@ export default function Profile() {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const { usage, loading: usageLoading } = usePlanGate();
-  const { theme, setTheme } = useTheme();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+
 
   const handleExportData = async () => {
     if (exporting) return;
@@ -64,9 +59,8 @@ export default function Profile() {
     }
   };
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+
+
 
   useEffect(() => {
     setUsername(user?.username ?? "");
@@ -212,24 +206,6 @@ export default function Profile() {
               <h2 className="text-sm font-semibold text-white/80">Preferences & Appearance</h2>
             </div>
 
-            <div className="border border-white/5 bg-white/[0.01] p-5 rounded-sm">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs font-medium text-white/80">Dark Mode Theme</p>
-                  <p className="text-xs text-white/30">Toggle your preferred interface appearance.</p>
-                </div>
-                <div className="flex items-center gap-2 bg-black border border-white/10 rounded-sm p-1 shrink-0">
-                  <SunIcon className="w-3.5 h-3.5 text-white/40" />
-                  <Switch
-                    checked={mounted ? theme !== "light" : true}
-                    onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                    disabled={!mounted}
-                    className="data-[state=checked]:bg-white/20 data-[state=unchecked]:bg-white/5"
-                  />
-                  <MoonIcon className="w-3.5 h-3.5 text-white/40" />
-                </div>
-              </div>
-            </div>
 
             <div className="border-t border-b border-white/5 divide-y divide-white/[0.04]">
               <div className="flex items-center gap-4 py-4">

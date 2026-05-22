@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi } from "@/lib/api";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/lib/heroicons";
 import { useToast } from "@/hooks/use-toast";
 
 export default function GoogleCallback() {

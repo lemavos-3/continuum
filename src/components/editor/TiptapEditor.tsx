@@ -23,7 +23,7 @@ import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion
 import {
   Bold, Italic, Strikethrough, Code, Link as LinkIcon, Upload,
   Heading1, Heading2, Quote, List, ListOrdered, Trash2
-} from "lucide-react";
+} from "@/lib/heroicons";
 import { entitiesApi, notesApi, vaultApi } from "@/lib/api";
 import type { Entity } from "@/types";
 import { useToast } from "@/hooks/use-toast";

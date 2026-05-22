@@ -18,7 +18,9 @@ import {
   ChevronDown,
   ChevronRight,
   SlidersHorizontal,
-} from "lucide-react";
+} from "@/lib/heroicons";
+import { InsightSignalBadge } from "@/components/InsightSignal";
+
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -532,9 +534,12 @@ export default function Notes() {
                                   </div>
 
                                   <div className="min-w-0 flex-1">
-                                    <h3 className="font-serif text-xl leading-snug text-white/90 transition-colors group-hover:text-white">
-                                      {note.title || "Untitled"}
-                                    </h3>
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <h3 className="font-serif text-xl leading-snug text-white/90 transition-colors group-hover:text-white">
+                                        {note.title || "Untitled"}
+                                      </h3>
+                                      <InsightSignalBadge kind="note" id={note.id} />
+                                    </div>
                                     {preview && (
                                       <p className="mt-1 line-clamp-1 text-sm text-white/45">{preview}</p>
                                     )}
@@ -545,6 +550,7 @@ export default function Notes() {
                                       <span className="sm:hidden">{relativeDate(targetDate)}</span>
                                     </div>
                                   </div>
+
 
                                   <div className="flex shrink-0 items-center gap-1 pt-1">
                                     <span

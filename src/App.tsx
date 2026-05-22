@@ -29,7 +29,7 @@ import Subscription from "./pages/Subscription";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import Insights from "./pages/Insights";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/lib/heroicons";
 
 const queryClient = new QueryClient();
 

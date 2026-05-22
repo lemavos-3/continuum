@@ -112,21 +112,27 @@ public class SubscriptionService {
     }
 
     @Transactional
+    @Transactional
     public void handleLemonSqueezyWebhook(JsonNode root) {
         if (root == null) return;
         String eventId = root.path("data").path("id").asText(null);
         if (eventId == null || isProcessed(eventId)) return;
 
-        JsonNode attributes = root.path("data").path("attributes");
-        String eventType = attributes.path("event_type").asText(null);
-        JsonNode data = attributes.path("data");
+        // Lemon Squeezy real payload shape:
+        //   { "meta": { "event_name": "...", "custom_data": { "user_id": "..." } },
+        //     "data": { "id": "...", "attributes": {...} } }
+        JsonNode meta = root.path("meta");
+        String eventType = meta.path("event_name").asText(null);
+        JsonNode data = root.path("data");
+        JsonNode customData = meta.path("custom_data");
 
         try {
-            switch (eventType) {
-                case "subscription_created" -> handleSubscriptionCreated(data);
+            switch (eventType == null ? "" : eventType) {
+                case "subscription_created" -> handleSubscriptionCreated(data, customData);
                 case "subscription_updated" -> handleSubscriptionUpdated(data);
                 case "subscription_cancelled" -> handleSubscriptionCancelled(data);
-                case "order_completed", "payment_succeeded" -> handlePaymentSucceeded(data);
+                case "subscription_resumed", "subscription_unpaused" -> handleSubscriptionUpdated(data);
+                case "subscription_payment_success", "order_created" -> handlePaymentSucceeded(data);
                 default -> log.debug("Ignored Lemon Squeezy event: {}", eventType);
             }
         } catch (Exception e) {
@@ -138,21 +144,28 @@ public class SubscriptionService {
     }
 
     @Transactional
-    public void handleSubscriptionCreated(JsonNode data) {
-        String userId = data.path("attributes").path("metadata").path("userId").asText(null);
+    public void handleSubscriptionCreated(JsonNode data, JsonNode customData) {
+        // userId comes from meta.custom_data — accept both "user_id" and "userId"
+        String userId = customData.path("user_id").asText(null);
+        if (userId == null || userId.isBlank()) userId = customData.path("userId").asText(null);
+
         String subscriptionId = data.path("id").asText(null);
         String customerId = data.path("attributes").path("customer_id").asText(null);
         String variantId = data.path("attributes").path("variant_id").asText(null);
         String status = data.path("attributes").path("status").asText(null);
-        Instant currentPeriodEnd = parseInstant(data.path("attributes").path("current_period_ends_at").asText(null));
+        Instant currentPeriodEnd = parseInstant(data.path("attributes").path("renews_at").asText(null));
+        if (currentPeriodEnd == null) {
+            currentPeriodEnd = parseInstant(data.path("attributes").path("current_period_ends_at").asText(null));
+        }
 
         if (userId == null || subscriptionId == null) {
-            log.warn("[LEMONSQUEEZY] Missing userId or subscriptionId in webhook payload");
+            log.warn("[LEMONSQUEEZY] Missing userId (custom_data.user_id) or subscriptionId in webhook payload");
             return;
         }
 
         syncFromLemonSqueezy(userId, customerId, subscriptionId, variantId, status, currentPeriodEnd);
     }
+
 
     @Transactional
     public void handleSubscriptionUpdated(JsonNode data) {
@@ -160,7 +173,11 @@ public class SubscriptionService {
         String customerId = data.path("attributes").path("customer_id").asText(null);
         String variantId = data.path("attributes").path("variant_id").asText(null);
         String status = data.path("attributes").path("status").asText(null);
-        Instant currentPeriodEnd = parseInstant(data.path("attributes").path("current_period_ends_at").asText(null));
+        Instant currentPeriodEnd = parseInstant(data.path("attributes").path("renews_at").asText(null));
+        if (currentPeriodEnd == null) {
+            currentPeriodEnd = parseInstant(data.path("attributes").path("current_period_ends_at").asText(null));
+        }
+
 
         Subscription local = subscriptionId == null ? null : subRepo.findByLemonSqueezySubscriptionId(subscriptionId).orElse(null);
         if (local != null) {

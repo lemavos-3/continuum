@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { subscriptionApi } from "@/lib/api";
-import { Loader2 } from "lucide-react";
+import { Loader2 } from "@/lib/heroicons";
 
 interface UpgradeModalProps { open: boolean; onOpenChange: (open: boolean) => void; reason?: string; }
 

@@ -39,7 +39,7 @@ import {
   TrendingUp,
   StickyNote,
   RefreshCw
-} from "lucide-react";
+} from "@/lib/heroicons";
 import type { Entity } from "@/types";
 
 // --- TYPES & HELPERS FROM INSIGHTS ---

@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   FileText, Image as ImageIcon, File as FileGeneric,
   Loader2, HardDrive, Trash2, Music, ExternalLink,
-} from "lucide-react";
+} from "@/lib/heroicons";
 import type { VaultFile } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { getPlanLimits } from "@/lib/plan";
