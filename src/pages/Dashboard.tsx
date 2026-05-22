@@ -414,10 +414,14 @@ export default function Dashboard() {
 
   const scoreTimelineData = useMemo(() => {
     if (!Array.isArray(scoreTimeline)) return [];
-    return scoreTimeline.map((point: any) => ({
-      ...point,
-      label: new Date(point.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-    }));
+    return scoreTimeline.map((point: any) => {
+      const scoreValue = Number(point.score ?? 0);
+      return {
+        ...point,
+        label: new Date(point.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+        score: Number(scoreValue.toFixed(1)),
+      };
+    });
   }, [scoreTimeline]);
 
   const recentNotes = useMemo(() => {
@@ -541,10 +545,11 @@ export default function Dashboard() {
                     </defs>
                     <CartesianGrid stroke="rgba(255,255,255,0.02)" strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#404040", fontSize: 9 }} interval="preserveStartEnd" />
-                    <YAxis tickLine={false} axisLine={false} tick={{ fill: "#404040", fontSize: 9 }} />
+                    <YAxis tickLine={false} axisLine={false} tick={{ fill: "#404040", fontSize: 9 }} tickFormatter={(value) => Number(value).toFixed(1)} />
                     <Tooltip
                       contentStyle={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 11, color: "#f5f5f5" }}
                       labelStyle={{ color: "#737373" }}
+                      formatter={(value) => [Number(value as number).toFixed(1), "Score"]}
                     />
                     <Area type="monotone" dataKey="score" stroke="rgba(255,255,255,0.25)" strokeWidth={1.5} fill="url(#scoreFill)" />
                   </AreaChart>

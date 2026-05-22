@@ -79,18 +79,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
         <div className="flex-1" />
 
-        {isGraphPage ? (
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new Event("graph-options-toggle"))}
-            className="grid h-10 w-10 place-items-center rounded-md bg-white/5 text-white transition-colors hover:bg-white/10"
-            aria-label="Open graph options"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
-        ) : (
-          <div className="h-10 w-10" />
-        )}
+        <div className="h-10 w-10" />
       </div>
 
       {/* Mobile drawer */}

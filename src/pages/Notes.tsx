@@ -146,7 +146,7 @@ export default function Notes() {
   const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
   const onSwipeStart = (e: React.TouchEvent) => {
     const t = e.touches[0];
-    if (t.clientX > 32) return;
+    if (t.clientX > 96) return;
     swipeRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
   };
   const onSwipeEnd = (e: React.TouchEvent) => {
@@ -155,7 +155,7 @@ export default function Notes() {
     const t = e.changedTouches[0];
     const dx = t.clientX - s.x;
     const dy = Math.abs(t.clientY - s.y);
-    if (dx > 60 && dy < 60 && Date.now() - s.t < 600) setFilterDrawerOpen(true);
+    if (dx > 50 && dy < 80 && Date.now() - s.t < 700) setFilterDrawerOpen(true);
     swipeRef.current = null;
   };
 
