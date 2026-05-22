@@ -101,7 +101,7 @@ export default function FeaturesSection() {
 
                 {/* Icon */}
                 <div className="w-11 h-11 rounded-xl bg-white/10 border border-white/[0.12] flex items-center justify-center mb-6 group-hover:bg-white/15 transition-colors duration-300">
-                  <Icon className="w-5 h-5" className="text-white" />
+                  <Icon className="w-5 h-5 text-white" />
                 </div>
 
                 {/* Content */}

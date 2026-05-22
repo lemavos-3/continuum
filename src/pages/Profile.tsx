@@ -59,9 +59,8 @@ export default function Profile() {
     }
   };
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+
+
 
   useEffect(() => {
     setUsername(user?.username ?? "");
