@@ -289,8 +289,8 @@ public class NoteService {
         }
         
         // Atualizar tipo se fornecido
-        if (req.type() != null && !req.type().isBlank()) {
-            note.setType(req.type());
+        if (req.type() != null) {
+            note.setType(req.type().isBlank() ? null : req.type());
         }
         
         note.setContent(newContent);

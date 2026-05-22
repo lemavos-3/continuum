@@ -26,7 +26,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { TiptapEditor, type TiptapEditorHandle } from "@/components/TiptapEditor";
 import { BacklinksPanel } from "@/components/BacklinksPanel";
-import { countTiptapMentions, extractMentionIds, parseTiptapContent, sanitizeTiptapMentions, tiptapContentToPlainText } from "@/lib/tiptap-content";
+import { countTiptapMentions, extractMentionIds, extractMentionLabels, parseTiptapContent, sanitizeTiptapMentions, tiptapContentToPlainText } from "@/lib/tiptap-content";
 
 interface NoteData {
   id: string;
@@ -101,12 +101,23 @@ export default function NoteEditor() {
     }
   };
 
-  const mentionedEntities = useMemo(() => {
-    if (!note?.entityIds || !allEntities.length) return [];
-    return allEntities.filter((e) => note.entityIds.includes(e.id));
-  }, [note?.entityIds, allEntities]);
+  const contentForMetadata = currentJSON.current ?? note?.content;
 
-  const contentForMetadata = note?.content ?? currentJSON.current;
+  const mentionLabels = useMemo(() => extractMentionLabels(contentForMetadata), [contentForMetadata]);
+
+  const mentionedEntities = useMemo(() => {
+    if (!note?.entityIds?.length) return [];
+    const entitiesById = new Map(allEntities.map((entity) => [entity.id, entity]));
+    return note.entityIds.map((entityId) => {
+      return (
+        entitiesById.get(entityId) ?? {
+          id: entityId,
+          title: mentionLabels.get(entityId) ?? `@${entityId}`,
+          type: undefined,
+        }
+      );
+    });
+  }, [note?.entityIds, allEntities, mentionLabels]);
   const mentionCounts = useMemo(
     () => countTiptapMentions(contentForMetadata),
     [contentForMetadata]
@@ -118,11 +129,11 @@ export default function NoteEditor() {
   );
 
   const noteScore = useMemo(() => {
-    const entityMentions = note?.entityIds?.length ?? 0;
+    const entityMentions = mentionCounts.entityMentions;
     const noteMentions = mentionCounts.noteMentions;
     const baseScore = entityMentions * 0.8 + noteMentions * 0.5 + Math.min(2, Math.log10(Math.max(1, characterCount)));
     return Number(Math.max(0, Math.min(10, baseScore)).toFixed(1));
-  }, [mentionCounts, characterCount, note?.entityIds?.length]);
+  }, [mentionCounts, characterCount]);
 
   useEffect(() => {
     if (!id) return;

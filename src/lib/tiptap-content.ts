@@ -84,6 +84,28 @@ export function extractMentionIds(content: unknown): string[] {
   return [...ids];
 }
 
+export function extractMentionLabels(content: unknown): Map<string, string> {
+  const labels = new Map<string, string>();
+
+  const walk = (node: unknown) => {
+    if (!isRecord(node)) return;
+
+    if (node.type === "mention" && isRecord(node.attrs) && typeof node.attrs.id === "string" && node.attrs.id) {
+      const attrs = node.attrs as JsonRecord;
+      if (attrs.type !== "NOTE") {
+        labels.set(node.attrs.id, typeof attrs.label === "string" ? attrs.label : node.attrs.id);
+      }
+    }
+
+    if (Array.isArray(node.content)) {
+      node.content.forEach(walk);
+    }
+  };
+
+  walk(parseTiptapContent(content));
+  return labels;
+}
+
 const sanitizeNode = (node: TiptapNode, entitiesById: Map<string, Entity>, removedIds: Set<string>): TiptapNode => {
   if (node.type === "noteMention") {
     return node;
