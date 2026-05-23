@@ -264,7 +264,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         CodeBlockLowlight.configure({ lowlight }),
         Mention.configure({
           HTMLAttributes: { class: "continuum-entity-mention" },
-          renderHTML: ({ node, HTMLAttributes }) => [
+          renderHTML: ({ node, HTMLAttributes }: any) => [
             "span",
             {
               ...HTMLAttributes,
@@ -272,14 +272,13 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               "data-label": node.attrs.label,
               "data-mention-type": "entity",
             },
-            // CORREÇÃO VISUAL E DE CLIQUE: Mantém a estrutura de nós do ProseMirror intacta
             `@${node.attrs.label || node.attrs.id}`,
           ],
           suggestion: buildSuggestion("entity") as any,
         }),
         NoteMention.configure({
           HTMLAttributes: { class: "continuum-note-mention" },
-          renderHTML: ({ node, HTMLAttributes }) => [
+          renderHTML: ({ node, HTMLAttributes }: any) => [
             "span",
             {
               ...HTMLAttributes,
@@ -287,7 +286,6 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               "data-label": node.attrs.label,
               "data-mention-type": "note",
             },
-            // CORREÇÃO VISUAL E DE CLIQUE: Mantém a estrutura de nós do ProseMirror intacta
             `#${node.attrs.label || node.attrs.id}`,
           ],
           suggestion: buildSuggestion("note", currentNoteId) as any,
