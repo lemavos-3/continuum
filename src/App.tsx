@@ -129,21 +129,23 @@ const AppRoutes = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <HashRouter>
-        <LanguageProvider>
-          <AuthProvider>
-            <UsageProvider>
-              <EntityProvider>
-                <AppRoutes />
-              </EntityProvider>
-            </UsageProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </HashRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <HashRouter>
+          <LanguageProvider>
+            <AuthProvider>
+              <UsageProvider>
+                <EntityProvider>
+                  <AppRoutes />
+                </EntityProvider>
+              </UsageProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </HashRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
