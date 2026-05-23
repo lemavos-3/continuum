@@ -419,10 +419,19 @@ export default function Dashboard() {
       return {
         ...point,
         label: new Date(point.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        score: Number(scoreValue.toFixed(1)),
+        score: Number(scoreValue.toFixed(2)),
       };
     });
   }, [scoreTimeline]);
+
+  const scoreStats = useMemo(() => {
+    if (scoreTimelineData.length === 0) return { current: 0, max: 1, hasData: false };
+    const values = scoreTimelineData.map((p: any) => p.score);
+    const current = values[values.length - 1] ?? 0;
+    const max = Math.max(...values, 0.1);
+    const hasData = values.some((v: number) => v > 0);
+    return { current, max, hasData };
+  }, [scoreTimelineData]);
 
   const recentNotes = useMemo(() => {
     if (summary?.recentNotes && summary.recentNotes.length > 0) {
