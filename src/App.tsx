@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { UsageProvider } from "@/contexts/UsageContext";
 import { EntityProvider } from "@/contexts/EntityContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -129,21 +130,23 @@ const AppRoutes = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <HashRouter>
-        <LanguageProvider>
-          <AuthProvider>
-            <UsageProvider>
-              <EntityProvider>
-                <AppRoutes />
-              </EntityProvider>
-            </UsageProvider>
-          </AuthProvider>
-        </LanguageProvider>
-      </HashRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <HashRouter>
+          <LanguageProvider>
+            <AuthProvider>
+              <UsageProvider>
+                <EntityProvider>
+                  <AppRoutes />
+                </EntityProvider>
+              </UsageProvider>
+            </AuthProvider>
+          </LanguageProvider>
+        </HashRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 

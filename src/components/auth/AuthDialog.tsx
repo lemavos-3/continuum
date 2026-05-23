@@ -25,44 +25,63 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-md sm:max-w-lg rounded-3xl bg-black/90 border-white/10 shadow-2xl shadow-black/20 p-6 sm:p-8 max-h-[calc(100vh-3rem)] overflow-y-auto">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <DialogHeader>
-                <DialogTitle className="text-3xl">{activeTab === "login" ? "Sign in" : activeTab === "register" ? "Create account" : "Reset password"}</DialogTitle>
-                <DialogDescription className="max-w-xl text-white/70">
-                  {activeTab === "login"
-                    ? "Access your Continuum workspace instantly."
-                    : activeTab === "register"
-                    ? "Start your free account and begin connecting your ideas."
-                    : "Enter your email and we’ll send a recovery link."}
-                </DialogDescription>
-              </DialogHeader>
-            </div>
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-md p-0 overflow-hidden rounded-2xl border-border bg-popover shadow-2xl">
+        <div className="relative">
+          {/* Subtle top accent */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
 
-            <div className="flex flex-wrap items-center gap-2 rounded-full bg-white/5 p-1.5">
-              {(["login", "register"] as AuthTab[]).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={
-                    "flex-1 min-w-[110px] whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 " +
-                    (activeTab === tab
-                      ? "bg-white text-black shadow-[0_14px_32px_rgba(255,255,255,0.18)]"
-                      : "text-white/70 hover:text-white hover:bg-white/10")
-                  }
-                >
-                  {tab === "login" ? "Login" : "Register"}
-                </button>
-              ))}
-            </div>
+          <div className="p-6 sm:p-8 space-y-6">
+            {/* Header */}
+            <DialogHeader className="space-y-2 text-left">
+              <DialogTitle className="text-2xl sm:text-3xl font-serif tracking-tight">
+                {activeTab === "login"
+                  ? "Welcome back"
+                  : activeTab === "register"
+                  ? "Create your account"
+                  : "Reset password"}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {activeTab === "login"
+                  ? "Continue building your continuum."
+                  : activeTab === "register"
+                  ? "Free forever. No card required."
+                  : "We'll email you a secure recovery link."}
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Tabs */}
+            {activeTab !== "forgot" && (
+              <div className="grid grid-cols-2 rounded-xl border border-border bg-muted/40 p-1">
+                {(["login", "register"] as AuthTab[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={
+                      "rounded-lg px-3 py-1.5 text-xs sm:text-sm font-medium transition-all " +
+                      (activeTab === tab
+                        ? "bg-foreground text-background shadow-sm"
+                        : "text-muted-foreground hover:text-foreground")
+                    }
+                  >
+                    {tab === "login" ? "Sign in" : "Register"}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "login" && <LoginForm onSuccess={() => onOpenChange(false)} onForgot={() => setActiveTab("forgot")} />}
+            {activeTab === "register" && <RegisterForm onSwitchToLogin={() => setActiveTab("login")} />}
+            {activeTab === "forgot" && <ForgotForm onSwitchToLogin={() => setActiveTab("login")} />}
+
+            {/* Footer */}
+            <p className="text-[10px] text-center text-muted-foreground/60 pt-1">
+              By continuing you agree to our{" "}
+              <a href="#/terms" className="underline underline-offset-2 hover:text-foreground">Terms</a>
+              {" "}and{" "}
+              <a href="#/privacy" className="underline underline-offset-2 hover:text-foreground">Privacy</a>.
+            </p>
           </div>
-
-          {activeTab === "login" && <LoginForm onSuccess={() => onOpenChange(false)} onForgot={() => setActiveTab("forgot")} />}
-          {activeTab === "register" && <RegisterForm onSwitchToLogin={() => setActiveTab("login")} />}
-          {activeTab === "forgot" && <ForgotForm onSwitchToLogin={() => setActiveTab("login")} />}
         </div>
       </DialogContent>
     </Dialog>
@@ -111,26 +130,26 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: () => void; onForgot: (
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-4">
-        <label className="block text-sm font-medium text-white/70">Email</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-muted-foreground">Email</label>
         <input
           type="email"
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-4">
-          <label className="text-sm font-medium text-white/70">Password</label>
+          <label className="text-sm font-medium text-muted-foreground">Password</label>
           <button
             type="button"
             onClick={onForgot}
-            className="text-sm font-semibold text-white/80 hover:text-white hover:underline"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
           >
             Forgot?
           </button>
@@ -141,25 +160,25 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: () => void; onForgot: (
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="••••••••"
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition shadow-[0_14px_34px_rgba(255,255,255,0.16)] hover:bg-white/95 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Signing in…</span> : "Sign in"}
       </button>
 
-      <div className="text-center text-sm text-white/60">or</div>
+      <div className="text-center text-xs text-muted-foreground">or</div>
 
       <button
         type="button"
         onClick={handleGoogle}
         disabled={loading}
-        className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-60"
+        className="w-full h-11 rounded-xl border border-border bg-transparent text-sm font-semibold text-foreground transition hover:bg-muted/40 disabled:opacity-60"
       >
         Continue with Google
       </button>
@@ -198,32 +217,32 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-4">
-        <label className="block text-sm font-medium text-white/70">Username</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-muted-foreground">Username</label>
         <input
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           placeholder="johndoe"
           required
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
-      <div className="space-y-4">
-        <label className="block text-sm font-medium text-white/70">Email</label>
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-muted-foreground">Email</label>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
-      <div className="space-y-4">
-        <label className="block text-sm font-medium text-white/70">Password</label>
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-muted-foreground">Password</label>
         <input
           type="password"
           value={password}
@@ -231,21 +250,21 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
           placeholder="At least 8 characters"
           required
           minLength={8}
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Creating…</span> : "Create account"}
       </button>
 
-      <div className="text-center text-sm text-white/60">
+      <div className="text-center text-xs text-muted-foreground">
         Already have an account?{' '}
-        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-white hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-foreground hover:underline">
           Sign in
         </button>
       </div>
@@ -278,34 +297,34 @@ function ForgotForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   };
 
   return sent ? (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/80">
-      A recovery link has been sent to <span className="font-medium text-white">{email}</span>. Check your inbox and spam folder.
+    <div className="rounded-xl border border-border bg-muted/40 p-5 text-sm text-foreground/80">
+      A recovery link has been sent to <span className="font-medium text-foreground">{email}</span>. Check your inbox and spam folder.
     </div>
   ) : (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-4">
-        <label className="block text-sm font-medium text-white/70">Email</label>
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="block text-sm font-medium text-muted-foreground">Email</label>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Sending…</span> : "Send recovery link"}
       </button>
 
-      <div className="text-center text-sm text-white/60">
+      <div className="text-center text-xs text-muted-foreground">
         Remember it?{' '}
-        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-white hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-foreground hover:underline">
           Sign in
         </button>
       </div>

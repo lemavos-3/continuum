@@ -419,10 +419,19 @@ export default function Dashboard() {
       return {
         ...point,
         label: new Date(point.date).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        score: Number(scoreValue.toFixed(1)),
+        score: Number(scoreValue.toFixed(2)),
       };
     });
   }, [scoreTimeline]);
+
+  const scoreStats = useMemo(() => {
+    if (scoreTimelineData.length === 0) return { current: 0, max: 1, hasData: false };
+    const values = scoreTimelineData.map((p: any) => p.score);
+    const current = values[values.length - 1] ?? 0;
+    const max = Math.max(...values, 0.1);
+    const hasData = values.some((v: number) => v > 0);
+    return { current, max, hasData };
+  }, [scoreTimelineData]);
 
   const recentNotes = useMemo(() => {
     if (summary?.recentNotes && summary.recentNotes.length > 0) {
@@ -494,13 +503,21 @@ export default function Dashboard() {
                     <p className="text-xs text-neutral-500">Knowledge graph gravity index</p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => navigate("/insights")}
-                  className="text-xs text-neutral-500 hover:text-white hidden sm:block transition-colors shrink-0"
-                >
-                  Explore insights →
-                </button>
+                <div className="flex items-center gap-3 shrink-0">
+                  <div className="text-right">
+                    <p className="text-[9px] uppercase tracking-wider text-neutral-500 font-semibold">Current</p>
+                    <p className="font-mono text-lg sm:text-xl text-neutral-100 tabular-nums leading-none mt-0.5">
+                      {scoreStats.current.toFixed(2)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/insights")}
+                    className="text-xs text-neutral-500 hover:text-white hidden sm:block transition-colors"
+                  >
+                    Insights →
+                  </button>
+                </div>
               </div>
 
               {/* BARRA SELETORA DE PERÍODO (Responsiva com scroll horizontal no mobile) */}
@@ -533,28 +550,55 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="h-[200px] sm:h-[250px] w-full -mx-2">
-              <ChartContainer config={{}} className="h-full w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={scoreTimelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="white" stopOpacity={0.1} />
-                        <stop offset="100%" stopColor="white" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid stroke="rgba(255,255,255,0.02)" strokeDasharray="3 3" vertical={false} />
-                    <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "#404040", fontSize: 9 }} interval="preserveStartEnd" />
-                    <YAxis tickLine={false} axisLine={false} tick={{ fill: "#404040", fontSize: 9 }} tickFormatter={(value) => Number(value).toFixed(1)} />
-                    <Tooltip
-                      contentStyle={{ background: "#0a0a0a", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, fontSize: 11, color: "#f5f5f5" }}
-                      labelStyle={{ color: "#737373" }}
-                      formatter={(value) => [Number(value as number).toFixed(1), "Score"]}
-                    />
-                    <Area type="monotone" dataKey="score" stroke="rgba(255,255,255,0.25)" strokeWidth={1.5} fill="url(#scoreFill)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </ChartContainer>
+            <div className="h-[200px] sm:h-[250px] w-full -mx-2 relative">
+              {scoreTimelineData.length === 0 ? (
+                <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-500">
+                  Loading score history…
+                </div>
+              ) : !scoreStats.hasData ? (
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center px-4">
+                  <p className="text-xs text-neutral-400">No score history yet</p>
+                  <p className="text-[11px] text-neutral-600">Create notes and entities to build your knowledge gravity.</p>
+                </div>
+              ) : (
+                <ChartContainer config={{}} className="h-full w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={scoreTimelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--foreground))" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="hsl(var(--foreground))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid stroke="hsl(var(--foreground) / 0.06)" strokeDasharray="3 3" vertical={false} />
+                      <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }} interval="preserveStartEnd" />
+                      <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 9 }}
+                        domain={[0, (dataMax: number) => Math.max(dataMax * 1.2, 1)]}
+                        tickFormatter={(value) => Number(value).toFixed(1)}
+                        width={32}
+                      />
+                      <Tooltip
+                        contentStyle={{ background: "hsl(var(--popover))", border: "1px solid hsl(var(--border))", borderRadius: 12, fontSize: 11, color: "hsl(var(--foreground))" }}
+                        labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                        formatter={(value) => [Number(value as number).toFixed(2), "Score"]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="score"
+                        stroke="hsl(var(--foreground))"
+                        strokeWidth={2}
+                        fill="url(#scoreFill)"
+                        dot={false}
+                        activeDot={{ r: 4, fill: "hsl(var(--foreground))", stroke: "hsl(var(--background))", strokeWidth: 2 }}
+                        isAnimationActive
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              )}
             </div>
           </div>
 

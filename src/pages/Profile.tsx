@@ -19,7 +19,10 @@ import {
   LockClosedIcon,
   ArrowPathIcon,
   ArrowDownTrayIcon,
+  SunIcon,
+  MoonIcon,
 } from "@heroicons/react/24/outline";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const formatLimitValue = (value: number, suffix = "") => (value === -1 ? "Unlimited" : `${value}${suffix}`);
 
@@ -28,6 +31,7 @@ export default function Profile() {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const { usage, loading: usageLoading } = usePlanGate();
+  const { theme, setTheme } = useTheme();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -207,20 +211,52 @@ export default function Profile() {
             </div>
 
 
-            <div className="border-t border-b border-white/5 divide-y divide-white/[0.04]">
-              <div className="flex items-center gap-4 py-4">
-                <CalendarIcon className="h-4 w-4 text-white/30 shrink-0" />
-                <div>
-                  <p className="text-xs font-medium text-white/70">History Retention</p>
-                  <p className="text-xs text-white/30">{formatLimitValue(limits.historyDays, " days")}</p>
+            <div className="border-t border-b border-white/5 divide-y divide-white/[0.04] dark:border-white/5 light:border-black/5">
+              {/* Theme toggle */}
+              <div className="flex items-center justify-between gap-4 py-4">
+                <div className="flex items-center gap-4 min-w-0">
+                  {theme === "dark" ? (
+                    <MoonIcon className="h-4 w-4 text-foreground/40 shrink-0" />
+                  ) : (
+                    <SunIcon className="h-4 w-4 text-foreground/40 shrink-0" />
+                  )}
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-foreground/70">Appearance</p>
+                    <p className="text-xs text-foreground/40">Switch between light and dark mode.</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 rounded-full border border-border bg-muted/30 p-1">
+                  {(["light", "dark"] as const).map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setTheme(t)}
+                      className={
+                        "px-3 py-1 text-[11px] font-medium rounded-full transition-colors " +
+                        (theme === t
+                          ? "bg-foreground text-background"
+                          : "text-foreground/60 hover:text-foreground")
+                      }
+                    >
+                      {t === "light" ? "Light" : "Dark"}
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div className="flex items-center gap-4 py-4">
-                <LockClosedIcon className="h-4 w-4 text-white/30 shrink-0" />
+                <CalendarIcon className="h-4 w-4 text-foreground/30 shrink-0" />
                 <div>
-                  <p className="text-xs font-medium text-white/70">Security Layer</p>
-                  <p className="text-xs text-white/30">Active session tokens are isolated and protected.</p>
+                  <p className="text-xs font-medium text-foreground/70">History Retention</p>
+                  <p className="text-xs text-foreground/30">{formatLimitValue(limits.historyDays, " days")}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4 py-4">
+                <LockClosedIcon className="h-4 w-4 text-foreground/30 shrink-0" />
+                <div>
+                  <p className="text-xs font-medium text-foreground/70">Security Layer</p>
+                  <p className="text-xs text-foreground/30">Active session tokens are isolated and protected.</p>
                 </div>
               </div>
             </div>
