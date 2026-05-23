@@ -25,44 +25,63 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full max-w-md sm:max-w-lg rounded-3xl bg-black/90 border-white/10 shadow-2xl shadow-black/20 p-6 sm:p-8 max-h-[calc(100vh-3rem)] overflow-y-auto">
-        <div className="flex flex-col gap-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <DialogHeader>
-                <DialogTitle className="text-3xl">{activeTab === "login" ? "Sign in" : activeTab === "register" ? "Create account" : "Reset password"}</DialogTitle>
-                <DialogDescription className="max-w-xl text-white/70">
-                  {activeTab === "login"
-                    ? "Access your Continuum workspace instantly."
-                    : activeTab === "register"
-                    ? "Start your free account and begin connecting your ideas."
-                    : "Enter your email and we’ll send a recovery link."}
-                </DialogDescription>
-              </DialogHeader>
-            </div>
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-md p-0 overflow-hidden rounded-2xl border-border bg-popover shadow-2xl">
+        <div className="relative">
+          {/* Subtle top accent */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
 
-            <div className="flex flex-wrap items-center gap-2 rounded-full bg-white/5 p-1.5">
-              {(["login", "register"] as AuthTab[]).map((tab) => (
-                <button
-                  key={tab}
-                  type="button"
-                  onClick={() => setActiveTab(tab)}
-                  className={
-                    "flex-1 min-w-[110px] whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 " +
-                    (activeTab === tab
-                      ? "bg-white text-black shadow-[0_14px_32px_rgba(255,255,255,0.18)]"
-                      : "text-white/70 hover:text-white hover:bg-white/10")
-                  }
-                >
-                  {tab === "login" ? "Login" : "Register"}
-                </button>
-              ))}
-            </div>
+          <div className="p-6 sm:p-8 space-y-6">
+            {/* Header */}
+            <DialogHeader className="space-y-2 text-left">
+              <DialogTitle className="text-2xl sm:text-3xl font-serif tracking-tight">
+                {activeTab === "login"
+                  ? "Welcome back"
+                  : activeTab === "register"
+                  ? "Create your account"
+                  : "Reset password"}
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground">
+                {activeTab === "login"
+                  ? "Continue building your continuum."
+                  : activeTab === "register"
+                  ? "Free forever. No card required."
+                  : "We'll email you a secure recovery link."}
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Tabs */}
+            {activeTab !== "forgot" && (
+              <div className="grid grid-cols-2 rounded-xl border border-border bg-muted/40 p-1">
+                {(["login", "register"] as AuthTab[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={
+                      "rounded-lg px-3 py-1.5 text-xs sm:text-sm font-medium transition-all " +
+                      (activeTab === tab
+                        ? "bg-foreground text-background shadow-sm"
+                        : "text-muted-foreground hover:text-foreground")
+                    }
+                  >
+                    {tab === "login" ? "Sign in" : "Register"}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {activeTab === "login" && <LoginForm onSuccess={() => onOpenChange(false)} onForgot={() => setActiveTab("forgot")} />}
+            {activeTab === "register" && <RegisterForm onSwitchToLogin={() => setActiveTab("login")} />}
+            {activeTab === "forgot" && <ForgotForm onSwitchToLogin={() => setActiveTab("login")} />}
+
+            {/* Footer */}
+            <p className="text-[10px] text-center text-muted-foreground/60 pt-1">
+              By continuing you agree to our{" "}
+              <a href="#/terms" className="underline underline-offset-2 hover:text-foreground">Terms</a>
+              {" "}and{" "}
+              <a href="#/privacy" className="underline underline-offset-2 hover:text-foreground">Privacy</a>.
+            </p>
           </div>
-
-          {activeTab === "login" && <LoginForm onSuccess={() => onOpenChange(false)} onForgot={() => setActiveTab("forgot")} />}
-          {activeTab === "register" && <RegisterForm onSwitchToLogin={() => setActiveTab("login")} />}
-          {activeTab === "forgot" && <ForgotForm onSwitchToLogin={() => setActiveTab("login")} />}
         </div>
       </DialogContent>
     </Dialog>
