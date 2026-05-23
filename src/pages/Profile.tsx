@@ -19,7 +19,10 @@ import {
   LockClosedIcon,
   ArrowPathIcon,
   ArrowDownTrayIcon,
+  SunIcon,
+  MoonIcon,
 } from "@heroicons/react/24/outline";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const formatLimitValue = (value: number, suffix = "") => (value === -1 ? "Unlimited" : `${value}${suffix}`);
 
