@@ -130,8 +130,8 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: () => void; onForgot: (
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
         <label className="block text-sm font-medium text-muted-foreground">Email</label>
         <input
           type="email"
@@ -143,7 +143,7 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: () => void; onForgot: (
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-4">
           <label className="text-sm font-medium text-muted-foreground">Password</label>
           <button
@@ -217,8 +217,8 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
         <label className="block text-sm font-medium text-muted-foreground">Username</label>
         <input
           value={username}
@@ -229,7 +229,7 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-1.5">
         <label className="block text-sm font-medium text-muted-foreground">Email</label>
         <input
           type="email"
@@ -241,7 +241,7 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         />
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-1.5">
         <label className="block text-sm font-medium text-muted-foreground">Password</label>
         <input
           type="password"
@@ -301,8 +301,8 @@ function ForgotForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
       A recovery link has been sent to <span className="font-medium text-foreground">{email}</span>. Check your inbox and spam folder.
     </div>
   ) : (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
         <label className="block text-sm font-medium text-muted-foreground">Email</label>
         <input
           type="email"
