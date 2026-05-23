@@ -238,18 +238,16 @@
   }
 
   .continuum-entity-mention {
-    @apply inline-flex items-center px-1.5 py-0.5 rounded-md font-medium text-[0.9em] cursor-pointer transition-colors;
-    background: hsl(0 0% 100% / 0.06); color: #fff; border: 1px solid transparent;
+    @apply inline-flex items-center px-1.5 py-0.5 mx-[1px] rounded-md font-medium text-[0.9em] cursor-pointer transition-colors no-underline;
+    background: hsl(190 80% 55% / 0.12); color: hsl(190 90% 75%); border: 1px solid hsl(190 80% 55% / 0.25);
   }
-  .continuum-entity-mention:hover { background: hsl(0 0% 100% / 0.12); }
-  /* prefix already in mention label text — no ::before */
+  .continuum-entity-mention:hover { background: hsl(190 80% 55% / 0.22); border-color: hsl(190 80% 55% / 0.45); }
 
   .continuum-note-mention {
-    @apply inline-flex items-center px-1.5 py-0.5 rounded-md text-[0.9em] font-medium cursor-pointer transition-colors;
-    background: hsl(0 0% 100% / 0.06); color: #fff; border: 1px solid transparent;
+    @apply inline-flex items-center px-1.5 py-0.5 mx-[1px] rounded-md text-[0.9em] font-medium cursor-pointer transition-colors no-underline;
+    background: hsl(280 70% 65% / 0.12); color: hsl(280 80% 80%); border: 1px solid hsl(280 70% 65% / 0.25);
   }
-  .continuum-note-mention:hover { background: hsl(0 0% 100% / 0.12); }
-  /* prefix already in mention label text — no ::before */
+  .continuum-note-mention:hover { background: hsl(280 70% 65% / 0.22); border-color: hsl(280 70% 65% / 0.45); }
 
   .hljs-comment, .hljs-quote { @apply text-muted-foreground italic; }
   .hljs-keyword, .hljs-selector-tag { color: hsl(0 0% 90%); font-weight: 600; }
