@@ -298,6 +298,17 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         attributes: {
           class: `continuum-editor prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[60vh] ${className || ""}`,
         },
+        handleClickOn: (_view, _pos, node, _nodePos, event) => {
+          const name = node.type.name;
+          if (name !== "mention" && name !== "noteMention") return false;
+          const id = (node.attrs as any)?.id;
+          if (!id) return false;
+          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false;
+          event.preventDefault();
+          if (name === "noteMention") navigate(`/notes/${id}`);
+          else navigate(`/entities/${id}`);
+          return true;
+        },
         handlePaste: (view, event) => {
           const items = event.clipboardData?.items;
           if (!items) return false;
