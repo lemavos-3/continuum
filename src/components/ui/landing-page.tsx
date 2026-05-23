@@ -12,6 +12,7 @@ interface ScrollGlobeProps {
     align?: "left" | "center" | "right";
     features?: { title: string; description: string }[];
     actions?: { label: string; variant: "primary" | "secondary"; onClick?: () => void }[];
+    screenshots?: { src?: string; alt: string; caption?: string }[];
   }[];
   globeConfig?: {
     positions: { top: string; left: string; scale: number }[];
