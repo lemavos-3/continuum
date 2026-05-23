@@ -2,10 +2,18 @@ import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 
-// Force dark mode globally — design system is monochrome dark only.
+// Apply persisted theme synchronously to avoid flash.
 if (typeof document !== "undefined") {
-  document.documentElement.classList.add("dark");
-  document.documentElement.style.colorScheme = "dark";
+  try {
+    const stored = window.localStorage.getItem("continuum.theme");
+    const theme = stored === "light" ? "light" : "dark";
+    document.documentElement.classList.remove("light", "dark");
+    document.documentElement.classList.add(theme);
+    document.documentElement.style.colorScheme = theme;
+  } catch {
+    document.documentElement.classList.add("dark");
+    document.documentElement.style.colorScheme = "dark";
+  }
 }
 
 createRoot(document.getElementById("root")!).render(<App />);
