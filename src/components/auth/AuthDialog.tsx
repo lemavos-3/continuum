@@ -132,24 +132,24 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: () => void; onForgot: (
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-4">
-        <label className="block text-sm font-medium text-white/70">Email</label>
+        <label className="block text-sm font-medium text-muted-foreground">Email</label>
         <input
           type="email"
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-4">
-          <label className="text-sm font-medium text-white/70">Password</label>
+          <label className="text-sm font-medium text-muted-foreground">Password</label>
           <button
             type="button"
             onClick={onForgot}
-            className="text-sm font-semibold text-white/80 hover:text-white hover:underline"
+            className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
           >
             Forgot?
           </button>
@@ -160,25 +160,25 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: () => void; onForgot: (
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="••••••••"
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition shadow-[0_14px_34px_rgba(255,255,255,0.16)] hover:bg-white/95 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Signing in…</span> : "Sign in"}
       </button>
 
-      <div className="text-center text-sm text-white/60">or</div>
+      <div className="text-center text-xs text-muted-foreground">or</div>
 
       <button
         type="button"
         onClick={handleGoogle}
         disabled={loading}
-        className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10 disabled:opacity-60"
+        className="w-full h-11 rounded-xl border border-border bg-transparent text-sm font-semibold text-foreground transition hover:bg-muted/40 disabled:opacity-60"
       >
         Continue with Google
       </button>
@@ -219,30 +219,30 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-4">
-        <label className="block text-sm font-medium text-white/70">Username</label>
+        <label className="block text-sm font-medium text-muted-foreground">Username</label>
         <input
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           placeholder="johndoe"
           required
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
       <div className="space-y-4">
-        <label className="block text-sm font-medium text-white/70">Email</label>
+        <label className="block text-sm font-medium text-muted-foreground">Email</label>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
       <div className="space-y-4">
-        <label className="block text-sm font-medium text-white/70">Password</label>
+        <label className="block text-sm font-medium text-muted-foreground">Password</label>
         <input
           type="password"
           value={password}
@@ -250,21 +250,21 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
           placeholder="At least 8 characters"
           required
           minLength={8}
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Creating…</span> : "Create account"}
       </button>
 
-      <div className="text-center text-sm text-white/60">
+      <div className="text-center text-xs text-muted-foreground">
         Already have an account?{' '}
-        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-white hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-foreground hover:underline">
           Sign in
         </button>
       </div>
@@ -297,34 +297,34 @@ function ForgotForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   };
 
   return sent ? (
-    <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/80">
-      A recovery link has been sent to <span className="font-medium text-white">{email}</span>. Check your inbox and spam folder.
+    <div className="rounded-xl border border-border bg-muted/40 p-5 text-sm text-foreground/80">
+      A recovery link has been sent to <span className="font-medium text-foreground">{email}</span>. Check your inbox and spam folder.
     </div>
   ) : (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-4">
-        <label className="block text-sm font-medium text-white/70">Email</label>
+        <label className="block text-sm font-medium text-muted-foreground">Email</label>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-white outline-none transition focus:border-white/30 focus:bg-white/10"
+          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-black transition hover:bg-white/90 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Sending…</span> : "Send recovery link"}
       </button>
 
-      <div className="text-center text-sm text-white/60">
+      <div className="text-center text-xs text-muted-foreground">
         Remember it?{' '}
-        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-white hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-foreground hover:underline">
           Sign in
         </button>
       </div>
