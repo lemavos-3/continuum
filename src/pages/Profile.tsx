@@ -31,6 +31,7 @@ export default function Profile() {
   const { user, refreshUser } = useAuth();
   const { toast } = useToast();
   const { usage, loading: usageLoading } = usePlanGate();
+  const { theme, setTheme } = useTheme();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
