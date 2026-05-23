@@ -64,19 +64,66 @@
     --bento-gradient-via: 0 0% 100% / 0.02;
   }
 
-  /* Force dark always — keep .dark for compat */
+  /* Light theme — soft paper aesthetic, hairline borders @ 8% black. */
+  .light {
+    color-scheme: light;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
+
+    --card: 0 0% 99%;
+    --card-foreground: 0 0% 7%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+
+    --primary: 0 0% 7%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 0 0% 94%;
+    --accent-foreground: 0 0% 10%;
+
+    --destructive: 0 0% 7%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 0% / 0.08;
+    --input: 0 0% 0% / 0.08;
+    --ring: 0 0% 0% / 0.20;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 30%;
+    --sidebar-primary: 0 0% 7%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 94%;
+    --sidebar-accent-foreground: 0 0% 7%;
+    --sidebar-border: 0 0% 0% / 0.06;
+    --sidebar-ring: 0 0% 0% / 0.18;
+
+    --bento-dot: 0 0% 0% / 0.025;
+    --bento-border: 0 0% 0% / 0.08;
+    --bento-hover-shadow: 0 0% 0% / 0.05;
+    --bento-gradient-via: 0 0% 0% / 0.03;
+  }
+
   .dark { color-scheme: dark; }
 }
 
 @layer base {
   * { @apply border-border; }
-  html, body { background: #000; color: #fff; }
+  html, body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
   body {
     @apply antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: "ss01", "cv11";
   }
-  html { color-scheme: dark; }
 }
 
 @layer components {
