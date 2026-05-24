@@ -256,7 +256,7 @@ export const metricsApi = {
 };
 
 export const dashboardApi = {
-  summary: () => api.get("/api/dashboard/summary"),
+  summary: () => api.get("/api/dashboard/summary", { timeout: 15000 }),
 };
 
 export const searchApi = {
