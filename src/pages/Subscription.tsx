@@ -10,18 +10,31 @@ import {
   SparklesIcon,
   ArrowPathIcon,
   ArrowRightIcon,
+  CheckIcon,
 } from "@heroicons/react/24/outline";
 
-const planMeta: Record<Plan, { icon: typeof CommandLineIcon; color: string; desc: string }> = {
+// Refined commercial text highlights and descriptions emphasizing value props
+const planMeta: Record<Plan, { icon: typeof CommandLineIcon; color: string; desc: string; benefits: string[] }> = {
   FREE: {
     icon: CommandLineIcon,
     color: "text-white/40",
-    desc: "Essential features for mapping and managing your local knowledge graph.",
+    desc: "Build the foundation of your second brain with automated tools and essential knowledge graph mapping.",
+    benefits: [
+      "Auto-sync across Desktop & Mobile",
+      "Advanced note & entity insights",
+      "Essential local backup limits",
+    ]
   },
   VISION: {
     icon: SparklesIcon,
     color: "text-white",
-    desc: "Complete access, dedicated intelligence models, and unrestricted system limits.",
+    desc: "Unlock boundless intelligence. Dedicated AI models to connect your complex ideas without restrictions.",
+    benefits: [
+      "Everything in Free, completely unmetered",
+      "Unlimited Notes & Entities mapping",
+      "Infinite Version History retention",
+      "Priority infrastructure & larger vault size",
+    ]
   },
 };
 
@@ -167,16 +180,26 @@ export default function Subscription() {
                       <div>
                         <h3 className="font-serif text-2xl tracking-tight text-white">{p.plan}</h3>
                         <p className="mt-1 text-xs text-white/40 font-medium">
-                          {isVision ? "$49.00 / mo" : "Free of charge"}
+                          {isVision ? "$7.90 / mo" : "Free of charge"}
                         </p>
                       </div>
                     </div>
 
-                    <p className="text-sm text-white/50 leading-relaxed min-h-[40px]">
+                    <p className="text-sm text-white/50 leading-relaxed min-h-[48px]">
                       {meta.desc}
                     </p>
 
-                    {/* Feature Details */}
+                    {/* Feature Benefits List */}
+                    <ul className="space-y-2 pt-1">
+                      {meta.benefits.map((benefit, idx) => (
+                        <li key={idx} className="flex items-start gap-2 text-xs text-white/70">
+                          <CheckIcon className="h-3.5 w-3.5 text-white/40 mt-0.5 shrink-0" />
+                          <span>{benefit}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    {/* Feature Details Matrix */}
                     <div className="pt-4 border-t border-white/[0.04] space-y-2.5">
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-white/40 text-xs">Notes Quota</span>

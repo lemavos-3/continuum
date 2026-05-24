@@ -112,7 +112,7 @@ export default function Profile() {
   return (
     <AppLayout>
       <div className="mx-auto max-w-5xl px-6 py-10 lg:px-12 lg:py-16 space-y-12">
-        
+
         {/* HEADER */}
         <header>
           <p className="text-[10px] uppercase tracking-[0.2em] text-white/30">Settings</p>
@@ -121,7 +121,7 @@ export default function Profile() {
         </header>
 
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
-          
+
           {/* ACCOUNT SECTION */}
           <div className="space-y-6">
             <div>
@@ -210,39 +210,8 @@ export default function Profile() {
               <h2 className="text-sm font-semibold text-white/80">Preferences & Appearance</h2>
             </div>
 
-
             <div className="border-t border-b border-white/5 divide-y divide-white/[0.04] dark:border-white/5 light:border-black/5">
-              {/* Theme toggle */}
-              <div className="flex items-center justify-between gap-4 py-4">
-                <div className="flex items-center gap-4 min-w-0">
-                  {theme === "dark" ? (
-                    <MoonIcon className="h-4 w-4 text-foreground/40 shrink-0" />
-                  ) : (
-                    <SunIcon className="h-4 w-4 text-foreground/40 shrink-0" />
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-foreground/70">Appearance</p>
-                    <p className="text-xs text-foreground/40">Switch between light and dark mode.</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 rounded-full border border-border bg-muted/30 p-1">
-                  {(["light", "dark"] as const).map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setTheme(t)}
-                      className={
-                        "px-3 py-1 text-[11px] font-medium rounded-full transition-colors " +
-                        (theme === t
-                          ? "bg-foreground text-background"
-                          : "text-foreground/60 hover:text-foreground")
-                      }
-                    >
-                      {t === "light" ? "Light" : "Dark"}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* O bloco do "Theme toggle" que estava aqui foi removido */}
 
               <div className="flex items-center gap-4 py-4">
                 <CalendarIcon className="h-4 w-4 text-foreground/30 shrink-0" />
@@ -261,67 +230,66 @@ export default function Profile() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* LIMITS SECTION */}
-        <section className="space-y-6 pt-4 border-t border-white/5">
-          <div>
-            <h2 className="text-sm font-semibold text-white/80">Plan Usage & Limits</h2>
-          </div>
-
-          {usageLoading && !usage ? (
-            <div className="flex justify-center py-12">
-              <ArrowPathIcon className="w-5 h-5 animate-spin text-white/20" />
+          {/* LIMITS SECTION */}
+          <section className="space-y-6 pt-4 border-t border-white/5">
+            <div>
+              <h2 className="text-sm font-semibold text-white/80">Plan Usage & Limits</h2>
             </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-3">
-              {usageResources.map((resource) => {
-                const unlimited = resource.max === -1;
-                const percent = unlimited ? 100 : Math.min((resource.current / resource.max) * 100, 100);
 
-                return (
-                  <div key={resource.label} className="border border-white/5 bg-white/[0.01] p-5 rounded-sm space-y-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="text-xs font-medium text-white/80">{resource.label}</span>
-                      <span className="text-xs text-white/40 tabular-nums">
-                        {unlimited ? "∞" : `${resource.current.toFixed(resource.suffix ? 1 : 0)} / ${resource.max}${resource.suffix}`}
-                      </span>
-                    </div>
-                    <Progress value={unlimited ? 0 : percent} className="h-[2px] bg-white/5 rounded-none" />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* PLAN DETAILS */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {planDetails.map((detail) => (
-              <div key={detail.label} className="border border-white/5 bg-white/[0.01] p-4 flex items-center justify-between gap-3 text-xs rounded-sm">
-                <span className="text-white/40 text-xs">{detail.label}</span>
-                <span className="text-xs text-white/70 tabular-nums">{detail.value}</span>
+            {usageLoading && !usage ? (
+              <div className="flex justify-center py-12">
+                <ArrowPathIcon className="w-5 h-5 animate-spin text-white/20" />
               </div>
-            ))}
-            
-            <div className="border border-white/5 bg-white/[0.01] p-4 flex items-center justify-between gap-3 text-xs rounded-sm">
-              <span className="text-white/40 text-xs">Export Data</span>
-              {user?.dataExport ? (
-                <button
-                  type="button"
-                  onClick={handleExportData}
-                  disabled={exporting}
-                  className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white underline underline-offset-4 disabled:opacity-40 transition-colors"
-                >
-                  <ArrowDownTrayIcon className="w-3 h-3" />
-                  {exporting ? "Exporting…" : "Download Backup"}
-                </button>
-              ) : (
-                <span className="text-white/20 text-xs">Locked</span>
-              )}
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-3">
+                {usageResources.map((resource) => {
+                  const unlimited = resource.max === -1;
+                  const percent = unlimited ? 100 : Math.min((resource.current / resource.max) * 100, 100);
+
+                  return (
+                    <div key={resource.label} className="border border-white/5 bg-white/[0.01] p-5 rounded-sm space-y-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-medium text-white/80">{resource.label}</span>
+                        <span className="text-xs text-white/40 tabular-nums">
+                          {unlimited ? "∞" : `${resource.current.toFixed(resource.suffix ? 1 : 0)} / ${resource.max}${resource.suffix}`}
+                        </span>
+                      </div>
+                      <Progress value={unlimited ? 0 : percent} className="h-[2px] bg-white/5 rounded-none" />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* PLAN DETAILS */}
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {planDetails.map((detail) => (
+                <div key={detail.label} className="border border-white/5 bg-white/[0.01] p-4 flex items-center justify-between gap-3 text-xs rounded-sm">
+                  <span className="text-white/40 text-xs">{detail.label}</span>
+                  <span className="text-xs text-white/70 tabular-nums">{detail.value}</span>
+                </div>
+              ))}
+
+              <div className="border border-white/5 bg-white/[0.01] p-4 flex items-center justify-between gap-3 text-xs rounded-sm">
+                <span className="text-white/40 text-xs">Export Data</span>
+                {user?.dataExport ? (
+                  <button
+                    type="button"
+                    onClick={handleExportData}
+                    disabled={exporting}
+                    className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white underline underline-offset-4 disabled:opacity-40 transition-colors"
+                  >
+                    <ArrowDownTrayIcon className="w-3 h-3" />
+                    {exporting ? "Exporting…" : "Download Backup"}
+                  </button>
+                ) : (
+                  <span className="text-white/20 text-xs">Locked</span>
+                )}
+              </div>
             </div>
-          </div>
-        </section>
-      </div>
+          </section>
+        </div>
     </AppLayout>
   );
 }
