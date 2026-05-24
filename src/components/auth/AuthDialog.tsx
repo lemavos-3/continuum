@@ -219,30 +219,30 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-muted-foreground">Username</label>
+        <label className="block text-sm font-medium text-[hsl(var(--popup-muted))]">Username</label>
         <input
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           placeholder="johndoe"
           required
-          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
+          className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] px-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/35 focus:bg-white/[0.06]"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-muted-foreground">Email</label>
+        <label className="block text-sm font-medium text-[hsl(var(--popup-muted))]">Email</label>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
+          className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] px-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/35 focus:bg-white/[0.06]"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-muted-foreground">Password</label>
+        <label className="block text-sm font-medium text-[hsl(var(--popup-muted))]">Password</label>
         <input
           type="password"
           value={password}
@@ -250,14 +250,14 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
           placeholder="At least 8 characters"
           required
           minLength={8}
-          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
+          className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] px-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/35 focus:bg-white/[0.06]"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-white text-black text-sm font-semibold transition hover:bg-white/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Creating…</span> : "Create account"}
       </button>
