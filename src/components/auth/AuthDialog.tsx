@@ -25,7 +25,7 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-md p-0 overflow-hidden rounded-2xl border-border bg-popover shadow-2xl">
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-md p-0 overflow-hidden rounded-2xl border-[hsl(var(--popup-border))] bg-[hsl(var(--popup-background))] text-[hsl(var(--popup-foreground))] shadow-2xl">
         <div className="relative">
           {/* Subtle top accent */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
@@ -40,7 +40,7 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
                   ? "Create your account"
                   : "Reset password"}
               </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
+              <DialogDescription className="text-sm text-[hsl(var(--popup-muted))]">
                 {activeTab === "login"
                   ? "Continue building your continuum."
                   : activeTab === "register"
@@ -51,7 +51,7 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
 
             {/* Tabs */}
             {activeTab !== "forgot" && (
-              <div className="grid grid-cols-2 rounded-xl border border-border bg-muted/40 p-1">
+              <div className="grid grid-cols-2 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] p-1">
                 {(["login", "register"] as AuthTab[]).map((tab) => (
                   <button
                     key={tab}
@@ -60,8 +60,8 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
                     className={
                       "rounded-lg px-3 py-1.5 text-xs sm:text-sm font-medium transition-all " +
                       (activeTab === tab
-                        ? "bg-foreground text-background shadow-sm"
-                        : "text-muted-foreground hover:text-foreground")
+                        ? "bg-white text-black shadow-sm"
+                        : "text-[hsl(var(--popup-muted))] hover:text-white")
                     }
                   >
                     {tab === "login" ? "Sign in" : "Register"}
@@ -75,11 +75,11 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
             {activeTab === "forgot" && <ForgotForm onSwitchToLogin={() => setActiveTab("login")} />}
 
             {/* Footer */}
-            <p className="text-[10px] text-center text-muted-foreground/60 pt-1">
+            <p className="text-[10px] text-center text-[hsl(var(--popup-muted))]/70 pt-1">
               By continuing you agree to our{" "}
-              <a href="#/terms" className="underline underline-offset-2 hover:text-foreground">Terms</a>
+              <a href="#/terms" className="underline underline-offset-2 hover:text-white">Terms</a>
               {" "}and{" "}
-              <a href="#/privacy" className="underline underline-offset-2 hover:text-foreground">Privacy</a>.
+              <a href="#/privacy" className="underline underline-offset-2 hover:text-white">Privacy</a>.
             </p>
           </div>
         </div>
