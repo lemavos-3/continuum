@@ -334,10 +334,21 @@ export default function Dashboard() {
         insightsApi.hotEntities(12),
         insightsApi.forgottenEntities(12),
       ]);
-      setHotNotes(hn.data || []);
-      setForgottenNotes(fn.data || []);
-      setHotEntities(he.data || []);
-      setForgottenEntities(fe.data || []);
+      
+      const extractData = (res: any) => {
+        if (!res) return [];
+        const d = res.data;
+        if (Array.isArray(d)) return d;
+        if (d && typeof d === 'object') {
+          return d.items || d.content || d.data || d.insights || [];
+        }
+        return [];
+      };
+
+      setHotNotes(extractData(hn));
+      setForgottenNotes(extractData(fn));
+      setHotEntities(extractData(he));
+      setForgottenEntities(extractData(fe));
     } catch (err) {
       toast({ title: "Couldn't load insights", description: "Please try again.", variant: "destructive" });
     } finally {
@@ -406,35 +417,66 @@ export default function Dashboard() {
     queryFn: () => vaultApi.list().then((r) => r.data),
   });
 
-  const vaultUsedMB = vaultFiles?.reduce((t, f) => t + f.size / (1024 * 1024), 0) ?? 0;
+  const vaultFilesList = useMemo(() => {
+    if (Array.isArray(vaultFiles)) return vaultFiles;
+    if (vaultFiles && typeof vaultFiles === 'object') {
+      return (vaultFiles as any).files || (vaultFiles as any).data || (vaultFiles as any).content || [];
+    }
+    return [];
+  }, [vaultFiles]);
+
+  const vaultUsedMB = useMemo(() => {
+    return vaultFilesList.reduce((t: number, f: any) => t + (f?.size ?? 0) / (1024 * 1024), 0) ?? 0;
+  }, [vaultFilesList]);
+
   const vaultMaxMB = limits.maxVaultSizeMB;
   const storageUsed = `${vaultUsedMB.toFixed(1)} MB`;
   const storageLimit = vaultMaxMB === -1 ? "Unlimited" : `${vaultMaxMB} MB`;
 
   useEffect(() => {
-    if (vaultFiles == null || usage == null) return;
+    if (vaultFilesList == null || usage == null || vaultFilesList.length === 0) return;
     const storageMB = Number(vaultUsedMB.toFixed(2));
     applyUsageDelta({ vaultSizeMB: storageMB - usage.vaultSizeMB });
-  }, [vaultFiles, vaultUsedMB, usage, applyUsageDelta]);
+  }, [vaultFilesList, vaultUsedMB, usage, applyUsageDelta]);
 
   const recentNotes = useMemo(() => {
-    if (summary?.recentNotes && summary.recentNotes.length > 0) {
-      return summary.recentNotes.slice(0, 6);
+    const summaryNotes = summary?.recentNotes || (summary && typeof summary === 'object' ? ((summary as any).notes || (summary as any).data) : null);
+    if (Array.isArray(summaryNotes) && summaryNotes.length > 0) {
+      return summaryNotes.slice(0, 6);
     }
-    if (!Array.isArray(notes)) return [];
-    return [...notes]
-      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    const notesList = Array.isArray(notes) ? notes : (notes && typeof notes === 'object' ? ((notes as any).notes || (notes as any).data || (notes as any).content || []) : []);
+    if (!Array.isArray(notesList) || notesList.length === 0) return [];
+    return [...notesList]
+      .filter((note: any) => note && (note.createdAt || note.updatedAt))
+      .sort((a: any, b: any) => new Date(b.createdAt || b.updatedAt).getTime() - new Date(a.createdAt || a.updatedAt).getTime())
       .slice(0, 6)
       .map((note: any) => ({
         id: note.id,
         title: note.title,
-        createdAtTimestamp: new Date(note.createdAt).getTime(),
+        createdAtTimestamp: new Date(note.createdAt || note.updatedAt).getTime(),
       }));
-  }, [summary?.recentNotes, notes]);
+  }, [summary, notes]);
 
-  const graphNodeCount = graphData?.nodes?.length ?? 0;
-  const totalNotes = summary?.stats?.totalNotes ?? 0;
-  const totalEntities = summary?.stats?.totalEntities ?? 0;
+  const graphNodeCount = useMemo(() => {
+    if (graphData?.nodes) return graphData.nodes.length;
+    if (Array.isArray(graphData)) return graphData.length;
+    if (graphData && typeof graphData === 'object') return (graphData as any).totalNodes || (graphData as any).count || 0;
+    return 0;
+  }, [graphData]);
+
+  const totalNotes = useMemo(() => {
+    if (summary?.stats?.totalNotes !== undefined) return summary.stats.totalNotes;
+    if ((summary as any)?.totalNotes !== undefined) return (summary as any).totalNotes;
+    const notesList = Array.isArray(notes) ? notes : (notes && typeof notes === 'object' ? ((notes as any).notes || (notes as any).data || (notes as any).content || []) : []);
+    if (Array.isArray(notesList)) return notesList.length;
+    return 0;
+  }, [summary, notes]);
+
+  const totalEntities = useMemo(() => {
+    if (summary?.stats?.totalEntities !== undefined) return summary.stats.totalEntities;
+    if ((summary as any)?.totalEntities !== undefined) return (summary as any).totalEntities;
+    return 0;
+  }, [summary]);
 
   // CORREÇÃO 1: Fallback realista (Gráfico zerado de forma autêntica se não houver dados históricos)
   const fallbackScoreTimelineData = useMemo(() => {
@@ -455,14 +497,29 @@ export default function Dashboard() {
     });
   }, [timeRange]);
 
-  // CORREÇÃO 2: Normalização segura contra fuso horário (Evita descartar dados válidos da API)
+  // CORREÇÃO 2: Normalização segura contra fuso horário e extração inteligente de objetos (DashboardMetrics)
   const scoreTimelineData = useMemo(() => {
-    if (!Array.isArray(scoreTimeline) || scoreTimeline.length === 0) return fallbackScoreTimelineData;
+    let list: any[] = [];
+    if (Array.isArray(scoreTimeline)) {
+      list = scoreTimeline;
+    } else if (scoreTimeline && typeof scoreTimeline === 'object') {
+      const potentialList = (scoreTimeline as any).timeline || 
+                            (scoreTimeline as any).points || 
+                            (scoreTimeline as any).history || 
+                            (scoreTimeline as any).data ||
+                            (scoreTimeline as any).scoreTimeline ||
+                            (scoreTimeline as any).metrics;
+      if (Array.isArray(potentialList)) {
+        list = potentialList;
+      }
+    }
+
+    if (list.length === 0) return fallbackScoreTimelineData;
     
-    const normalized = scoreTimeline.reduce((acc: any[], point: any) => {
+    const normalized = list.reduce((acc: any[], point: any) => {
       if (!point?.date) return acc;
       
-      const scoreValue = Number(point.score ?? 0);
+      const scoreValue = point.score !== undefined ? Number(point.score) : Number(point.value ?? 0);
       const dateStr = point.date.includes("T") ? point.date : `${point.date}T00:00:00`;
       const date = new Date(dateStr);
 
@@ -607,7 +664,7 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <>
-                  {/* CORREÇÃO 3: Alerta visual honesto de falha na sincronização */}
+                  {/* Alerta visual de falha na sincronização */}
                   {scoreTimelineError && (
                     <div className="absolute right-2 top-1 z-10 rounded-md border border-red-500/20 bg-red-500/10 px-2 py-1 text-[10px] text-red-400">
                       Failed to sync score
