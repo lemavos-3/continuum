@@ -39,7 +39,6 @@ export default function Profile() {
   const [exporting, setExporting] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
 
-
   const handleExportData = async () => {
     if (exporting) return;
     setExporting(true);
@@ -62,9 +61,6 @@ export default function Profile() {
       setExporting(false);
     }
   };
-
-
-
 
   useEffect(() => {
     setUsername(user?.username ?? "");
@@ -211,8 +207,6 @@ export default function Profile() {
             </div>
 
             <div className="border-t border-b border-white/5 divide-y divide-white/[0.04] dark:border-white/5 light:border-black/5">
-              {/* O bloco do "Theme toggle" que estava aqui foi removido */}
-
               <div className="flex items-center gap-4 py-4">
                 <CalendarIcon className="h-4 w-4 text-foreground/30 shrink-0" />
                 <div>
@@ -232,7 +226,7 @@ export default function Profile() {
           </div>
 
           {/* LIMITS SECTION */}
-          <section className="space-y-6 pt-4 border-t border-white/5">
+          <section className="space-y-6 pt-4 border-t border-white/5 lg:col-span-2">
             <div>
               <h2 className="text-sm font-semibold text-white/80">Plan Usage & Limits</h2>
             </div>
@@ -290,6 +284,7 @@ export default function Profile() {
             </div>
           </section>
         </div>
+      </div>
     </AppLayout>
   );
 }
