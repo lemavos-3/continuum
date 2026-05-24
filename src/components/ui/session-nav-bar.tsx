@@ -94,9 +94,9 @@ function SidebarLink({
       end={item.end}
       title={collapsed ? item.label : undefined}
       className={cn(
-        "flex h-9 w-full flex-row items-center rounded-md px-2 text-zinc-400 transition-colors",
-        "hover:bg-white/5 hover:text-white",
-        active && "bg-white/10 text-white",
+        "flex h-9 w-full flex-row items-center rounded-md px-2 text-sidebar-foreground transition-colors",
+        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        active && "bg-sidebar-accent text-sidebar-accent-foreground",
       )}
     >
       <Icon className="h-4 w-4 shrink-0" />
@@ -173,7 +173,7 @@ export function SessionNavBar() {
                     new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true, cancelable: true }),
                   );
                 }}
-                className="flex h-9 w-full items-center rounded-md px-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+                className="flex h-9 w-full items-center rounded-md px-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 title="Search"
               >
                 <Search className="h-4 w-4 shrink-0" />
@@ -182,25 +182,25 @@ export function SessionNavBar() {
                 </motion.span>
                 <motion.span
                   variants={labelVariants}
-                  className="ml-auto rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500"
+                  className="ml-auto rounded border border-sidebar-border px-1.5 py-0.5 font-mono text-[10px] text-sidebar-foreground/70"
                 >
                   {!isCollapsed && "Ctrl+K"}
                 </motion.span>
               </button>
 
-              <Separator className="my-2 bg-white/8" />
+              <Separator className="my-2 bg-sidebar-border" />
 
               {primaryNav.map((it) => (
                 <SidebarLink key={it.to} item={it} collapsed={isCollapsed} pathname={pathname} />
               ))}
 
-              <Separator className="my-2 bg-white/8" />
+              <Separator className="my-2 bg-sidebar-border" />
 
               {trackingNav.map((it) => (
                 <SidebarLink key={it.to} item={it} collapsed={isCollapsed} pathname={pathname} />
               ))}
 
-              <Separator className="my-2 bg-white/8" />
+              <Separator className="my-2 bg-sidebar-border" />
 
               {exploreNav.map((it) => (
                 <SidebarLink key={it.to} item={it} collapsed={isCollapsed} pathname={pathname} />
@@ -209,7 +209,7 @@ export function SessionNavBar() {
           </ScrollArea>
 
           {/* Footer */}
-          <div className="flex flex-col gap-1 border-t border-white/8 p-2">
+          <div className="flex flex-col gap-1 border-t border-sidebar-border p-2">
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button
