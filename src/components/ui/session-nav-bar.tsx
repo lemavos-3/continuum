@@ -214,9 +214,9 @@ export function SessionNavBar() {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-zinc-300 hover:bg-white/5 hover:text-white"
+                  className="flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 >
-                  <div className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white text-[10px] font-bold text-black">
+                  <div className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-sidebar-primary text-[10px] font-bold text-sidebar-primary-foreground">
                     {initial}
                   </div>
                   <motion.span
@@ -226,7 +226,7 @@ export function SessionNavBar() {
                     {!isCollapsed && (
                       <>
                         <span className="truncate text-sm font-medium">{display}</span>
-                        <ChevronsUpDown className="ml-auto h-3.5 w-3.5 text-zinc-500" />
+                        <ChevronsUpDown className="ml-auto h-3.5 w-3.5 text-sidebar-foreground/70" />
                       </>
                     )}
                   </motion.span>
@@ -239,9 +239,9 @@ export function SessionNavBar() {
                 className="w-56"
               >
                 <div className="flex flex-col gap-0.5 px-2 py-1.5">
-                  <span className="truncate text-sm font-medium text-white">{display}</span>
-                  <span className="truncate text-xs text-zinc-500">{user?.email}</span>
-                  <span className="mt-1 inline-flex w-fit items-center rounded border border-white/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-zinc-400">
+                  <span className="truncate text-sm font-medium text-[hsl(var(--popup-foreground))]">{display}</span>
+                  <span className="truncate text-xs text-[hsl(var(--popup-muted))]">{user?.email}</span>
+                  <span className="mt-1 inline-flex w-fit items-center rounded border border-[hsl(var(--popup-border))] px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[hsl(var(--popup-muted))]">
                     {user?.plan || "FREE"}
                   </span>
                 </div>
