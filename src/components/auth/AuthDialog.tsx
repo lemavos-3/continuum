@@ -297,34 +297,34 @@ function ForgotForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   };
 
   return sent ? (
-    <div className="rounded-xl border border-border bg-muted/40 p-5 text-sm text-foreground/80">
-      A recovery link has been sent to <span className="font-medium text-foreground">{email}</span>. Check your inbox and spam folder.
+    <div className="rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] p-5 text-sm text-white/80">
+      A recovery link has been sent to <span className="font-medium text-white">{email}</span>. Check your inbox and spam folder.
     </div>
   ) : (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-muted-foreground">Email</label>
+        <label className="block text-sm font-medium text-[hsl(var(--popup-muted))]">Email</label>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
+          className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] px-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/35 focus:bg-white/[0.06]"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-white text-black text-sm font-semibold transition hover:bg-white/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Sending…</span> : "Send recovery link"}
       </button>
 
-      <div className="text-center text-xs text-muted-foreground">
+      <div className="text-center text-xs text-[hsl(var(--popup-muted))]">
         Remember it?{' '}
-        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-foreground hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-white hover:underline">
           Sign in
         </button>
       </div>
