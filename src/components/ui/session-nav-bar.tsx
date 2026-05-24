@@ -131,7 +131,7 @@ export function SessionNavBar() {
     <motion.aside
       className={cn(
         "fixed inset-y-0 left-0 z-30 hidden h-full shrink-0 lg:flex",
-        "border-r border-white/8 bg-black/70 backdrop-blur-xl",
+        "border-r border-sidebar-border bg-sidebar/85 backdrop-blur-xl",
       )}
       initial={false}
       animate={isCollapsed ? "closed" : "open"}
@@ -140,13 +140,13 @@ export function SessionNavBar() {
       onMouseEnter={() => setIsCollapsed(false)}
       onMouseLeave={() => setIsCollapsed(true)}
     >
-      <div className="relative z-40 flex h-full w-full flex-col text-zinc-300">
+      <div className="relative z-40 flex h-full w-full flex-col text-sidebar-foreground">
         {/* Brand / search trigger */}
-        <div className="flex h-[54px] w-full shrink-0 items-center border-b border-white/8 px-2">
+        <div className="flex h-[54px] w-full shrink-0 items-center border-b border-sidebar-border px-2">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-white/5"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent"
           >
             <img
               src="/favicon.ico"
@@ -155,7 +155,7 @@ export function SessionNavBar() {
             />
             <motion.span
               variants={labelVariants}
-              className="truncate text-sm font-semibold tracking-tight text-white"
+              className="truncate text-sm font-semibold tracking-tight text-sidebar-accent-foreground"
             >
               {!isCollapsed && "Continuum"}
             </motion.span>
