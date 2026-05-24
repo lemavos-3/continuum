@@ -340,7 +340,7 @@ export default function Dashboard() {
       setForgottenEntities(fe.data || []);
     } catch (err) {
       toast({ title: "Couldn't load insights", description: "Please try again.", variant: "destructive" });
-    } finaly {
+    } finally {
       setInsightsLoading(false);
       setRefreshingInsights(false);
     }
@@ -368,7 +368,7 @@ export default function Dashboard() {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error("Export failed", e);
-    } finaly {
+    } finally {
       setExporting(false);
     }
   };
