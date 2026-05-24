@@ -8,8 +8,6 @@ import tech.lemnova.continuum.controller.dto.metrics.EntityTimeline;
 import tech.lemnova.continuum.controller.dto.metrics.MentionEntry;
 import tech.lemnova.continuum.controller.dto.metrics.TopEntity;
 import tech.lemnova.continuum.controller.dto.metrics.UserScoreSnapshotResponse;
-import tech.lemnova.continuum.controller.dto.insights.EntityInsightDTO;
-import tech.lemnova.continuum.controller.dto.insights.NoteInsightDTO;
 import tech.lemnova.continuum.domain.connection.NoteReference;
 import tech.lemnova.continuum.domain.metrics.UserScoreSnapshot;
 import tech.lemnova.continuum.domain.note.Note;
@@ -24,7 +22,6 @@ import tech.lemnova.continuum.infra.persistence.EntityRepository;
 import tech.lemnova.continuum.infra.persistence.NoteRepository;
 import tech.lemnova.continuum.infra.persistence.UserScoreSnapshotRepository;
 import tech.lemnova.continuum.infra.vault.VaultDataService;
-import tech.lemnova.continuum.application.service.InsightsService;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
@@ -43,7 +40,6 @@ public class MetricsService {
     private final PlanConfiguration planConfig;
     private final EntityService entityService;
     private final TrackingService trackingService;
-    private final InsightsService insightsService;
     private final UserScoreSnapshotRepository scoreSnapshotRepo;
 
     public MetricsService(UserRepository userRepo,
@@ -53,7 +49,6 @@ public class MetricsService {
                           PlanConfiguration planConfig,
                           EntityService entityService,
                           TrackingService trackingService,
-                          InsightsService insightsService,
                           UserScoreSnapshotRepository scoreSnapshotRepo) {
         this.userRepo   = userRepo;
         this.noteRepo   = noteRepo;
@@ -62,7 +57,6 @@ public class MetricsService {
         this.planConfig = planConfig;
         this.entityService = entityService;
         this.trackingService = trackingService;
-        this.insightsService = insightsService;
         this.scoreSnapshotRepo = scoreSnapshotRepo;
     }
 
