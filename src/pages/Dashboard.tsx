@@ -14,7 +14,6 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
-  ResponsiveContainer,
   AreaChart,
   Area,
   XAxis,
@@ -557,6 +556,15 @@ export default function Dashboard() {
                   </div>
                   <button
                     type="button"
+                    onClick={() => refetchScoreTimeline()}
+                    disabled={scoreTimelineFetching}
+                    className="text-xs text-neutral-500 hover:text-white hidden sm:flex items-center gap-1 transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={cn("h-3 w-3", scoreTimelineFetching && "animate-spin")} />
+                    Score
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => navigate("/insights")}
                     className="text-xs text-neutral-500 hover:text-white hidden sm:block transition-colors"
                   >
@@ -596,7 +604,7 @@ export default function Dashboard() {
             </div>
 
             <div className="h-[200px] sm:h-[250px] w-full -mx-2 relative">
-              {scoreTimelineData.length === 0 ? (
+              {scoreTimelineLoading && scoreTimelineData.length === 0 ? (
                 <div className="absolute inset-0 flex items-center justify-center text-xs text-neutral-500">
                   Loading score history…
                 </div>
@@ -606,8 +614,13 @@ export default function Dashboard() {
                   <p className="text-[11px] text-neutral-600">Create notes and entities to build your knowledge gravity.</p>
                 </div>
               ) : (
-                <ChartContainer config={{}} className="h-full w-full">
-                  <ResponsiveContainer width="100%" height="100%">
+                <>
+                  {scoreTimelineError && (
+                    <div className="absolute right-2 top-1 z-10 rounded-md border border-white/10 bg-black/80 px-2 py-1 text-[10px] text-neutral-400">
+                      Showing local score
+                    </div>
+                  )}
+                  <ChartContainer config={{}} className="h-full w-full">
                     <AreaChart data={scoreTimelineData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="scoreFill" x1="0" y1="0" x2="0" y2="1">
@@ -641,8 +654,8 @@ export default function Dashboard() {
                         isAnimationActive
                       />
                     </AreaChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
+                  </ChartContainer>
+                </>
               )}
             </div>
           </div>
