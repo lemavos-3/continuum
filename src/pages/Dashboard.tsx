@@ -69,9 +69,8 @@ const rangeDaysMap = {
   "3mo": 90,
   "6mo": 180,
   "1y": 365,
-  "total": 3650, // Representando tempo total por um limite alto reconhecido pela API
+  "total": 3650,
 };
-
 type TimeRange = keyof typeof rangeDaysMap;
 
 const formatHours = (h: number) => {
@@ -341,7 +340,7 @@ export default function Dashboard() {
       setForgottenEntities(fe.data || []);
     } catch (err) {
       toast({ title: "Couldn't load insights", description: "Please try again.", variant: "destructive" });
-    } finally {
+    } finaly {
       setInsightsLoading(false);
       setRefreshingInsights(false);
     }
@@ -369,7 +368,7 @@ export default function Dashboard() {
       URL.revokeObjectURL(url);
     } catch (e) {
       console.error("Export failed", e);
-    } finally {
+    } finaly {
       setExporting(false);
     }
   };
@@ -389,7 +388,6 @@ export default function Dashboard() {
     queryFn: () => graphApi.data().then((r) => r.data),
   });
 
-  // Atualiza dinamicamente baseado na escolha do período
   const {
     data: scoreTimeline,
     isLoading: scoreTimelineLoading,
@@ -438,52 +436,46 @@ export default function Dashboard() {
   const totalNotes = summary?.stats?.totalNotes ?? 0;
   const totalEntities = summary?.stats?.totalEntities ?? 0;
 
+  // CORREÇÃO 1: Fallback realista (Gráfico zerado de forma autêntica se não houver dados históricos)
   const fallbackScoreTimelineData = useMemo(() => {
     const days = rangeDaysMap[timeRange];
     const cappedDays = Math.min(days, 365);
     const today = new Date();
-    const dailyCompletions = summary?.activityStats?.dailyCompletions ?? {};
-    const completionValues = Object.values(dailyCompletions).map((v: any) => Number(v || 0));
-    const activeDays = completionValues.filter((v) => v > 0).length;
-    const connectionCount = Array.isArray(graphData?.links) ? graphData.links.length : 0;
-    const linkedRatio = totalNotes > 0 ? Math.min(1, connectionCount / Math.max(totalNotes, 1)) : 0;
-    const recentRatio = totalNotes > 0 ? Math.min(1, recentNotes.length / totalNotes) : 0;
-    const estimatedCurrent = Math.min(100,
-      (totalNotes ? Math.min(35, totalNotes * 1.4) : 0) +
-      (totalEntities ? Math.min(25, totalEntities * 1.8) : 0) +
-      (linkedRatio * 25) +
-      (recentRatio * 10) +
-      Math.min(5, activeDays / 6)
-    );
 
     return Array.from({ length: cappedDays }, (_, index) => {
       const date = new Date(today);
       date.setDate(today.getDate() - (cappedDays - 1 - index));
       const key = date.toISOString().slice(0, 10);
-      const activityBump = Number(dailyCompletions[key] || 0) * 0.25;
-      const progress = cappedDays <= 1 ? 1 : index / (cappedDays - 1);
-      const score = Math.max(0, estimatedCurrent * (0.72 + progress * 0.28) + activityBump);
+
       return {
         date: key,
         label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        score: Number(score.toFixed(2)),
+        score: 0,
       };
     });
-  }, [graphData?.links, recentNotes.length, summary?.activityStats?.dailyCompletions, timeRange, totalEntities, totalNotes]);
+  }, [timeRange]);
 
+  // CORREÇÃO 2: Normalização segura contra fuso horário (Evita descartar dados válidos da API)
   const scoreTimelineData = useMemo(() => {
     if (!Array.isArray(scoreTimeline) || scoreTimeline.length === 0) return fallbackScoreTimelineData;
-    const normalized = scoreTimeline.flatMap((point: any) => {
-      if (!point?.date) return [];
+    
+    const normalized = scoreTimeline.reduce((acc: any[], point: any) => {
+      if (!point?.date) return acc;
+      
       const scoreValue = Number(point.score ?? 0);
-      const date = new Date(point.date);
-      if (Number.isNaN(date.getTime()) || Number.isNaN(scoreValue)) return [];
-      return {
-        ...point,
-        label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        score: Number(scoreValue.toFixed(2)),
-      };
-    });
+      const dateStr = point.date.includes("T") ? point.date : `${point.date}T00:00:00`;
+      const date = new Date(dateStr);
+
+      if (!Number.isNaN(date.getTime()) && !Number.isNaN(scoreValue)) {
+        acc.push({
+          ...point,
+          label: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+          score: Number(scoreValue.toFixed(2)),
+        });
+      }
+      return acc;
+    }, []);
+
     return normalized.length > 0 ? normalized : fallbackScoreTimelineData;
   }, [fallbackScoreTimelineData, scoreTimeline]);
 
@@ -573,7 +565,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* BARRA SELETORA DE PERÍODO (Responsiva com scroll horizontal no mobile) */}
+              {/* BARRA SELETORA DE PERÍODO */}
               <div className="flex items-center -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto scrollbar-none gap-1 border-y sm:border border-white/5 sm:rounded-xl bg-white/[0.01] p-1.5">
                 {(Object.keys(rangeDaysMap) as TimeRange[]).map((range) => {
                   const labels: Record<TimeRange, string> = {
@@ -615,9 +607,10 @@ export default function Dashboard() {
                 </div>
               ) : (
                 <>
+                  {/* CORREÇÃO 3: Alerta visual honesto de falha na sincronização */}
                   {scoreTimelineError && (
-                    <div className="absolute right-2 top-1 z-10 rounded-md border border-white/10 bg-black/80 px-2 py-1 text-[10px] text-neutral-400">
-                      Showing local score
+                    <div className="absolute right-2 top-1 z-10 rounded-md border border-red-500/20 bg-red-500/10 px-2 py-1 text-[10px] text-red-400">
+                      Failed to sync score
                     </div>
                   )}
                   <ChartContainer config={{}} className="h-full w-full">
