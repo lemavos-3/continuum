@@ -420,6 +420,25 @@ export default function Dashboard() {
     applyUsageDelta({ vaultSizeMB: storageMB - usage.vaultSizeMB });
   }, [vaultFiles, vaultUsedMB, usage, applyUsageDelta]);
 
+  const recentNotes = useMemo(() => {
+    if (summary?.recentNotes && summary.recentNotes.length > 0) {
+      return summary.recentNotes.slice(0, 6);
+    }
+    if (!Array.isArray(notes)) return [];
+    return [...notes]
+      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 6)
+      .map((note: any) => ({
+        id: note.id,
+        title: note.title,
+        createdAtTimestamp: new Date(note.createdAt).getTime(),
+      }));
+  }, [summary?.recentNotes, notes]);
+
+  const graphNodeCount = graphData?.nodes?.length ?? 0;
+  const totalNotes = summary?.stats?.totalNotes ?? 0;
+  const totalEntities = summary?.stats?.totalEntities ?? 0;
+
   const fallbackScoreTimelineData = useMemo(() => {
     const days = rangeDaysMap[timeRange];
     const cappedDays = Math.min(days, 365);
@@ -477,25 +496,6 @@ export default function Dashboard() {
     const hasData = values.some((v: number) => v > 0);
     return { current, max, hasData };
   }, [scoreTimelineData]);
-
-  const recentNotes = useMemo(() => {
-    if (summary?.recentNotes && summary.recentNotes.length > 0) {
-      return summary.recentNotes.slice(0, 6);
-    }
-    if (!Array.isArray(notes)) return [];
-    return [...notes]
-      .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 6)
-      .map((note: any) => ({
-        id: note.id,
-        title: note.title,
-        createdAtTimestamp: new Date(note.createdAt).getTime(),
-      }));
-  }, [summary?.recentNotes, notes]);
-
-  const graphNodeCount = graphData?.nodes?.length ?? 0;
-  const totalNotes = summary?.stats?.totalNotes ?? 0;
-  const totalEntities = summary?.stats?.totalEntities ?? 0;
 
   if (summaryLoading) return <DashboardSkeleton />;
 
