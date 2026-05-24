@@ -75,7 +75,7 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
             {activeTab === "forgot" && <ForgotForm onSwitchToLogin={() => setActiveTab("login")} />}
 
             {/* Footer */}
-            <p className="text-[10px] text-center text-[hsl(var(--popup-muted))]/70 pt-1">
+            <p className="text-[10px] text-center text-[hsl(var(--popup-muted))] opacity-70 pt-1">
               By continuing you agree to our{" "}
               <a href="#/terms" className="underline underline-offset-2 hover:text-white">Terms</a>
               {" "}and{" "}
@@ -262,9 +262,9 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Creating…</span> : "Create account"}
       </button>
 
-      <div className="text-center text-xs text-muted-foreground">
+      <div className="text-center text-xs text-[hsl(var(--popup-muted))]">
         Already have an account?{' '}
-        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-foreground hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-white hover:underline">
           Sign in
         </button>
       </div>
