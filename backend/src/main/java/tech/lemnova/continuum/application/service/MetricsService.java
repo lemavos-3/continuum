@@ -238,20 +238,45 @@ public class MetricsService {
     }
 
     private double computeCurrentScore(String userId) {
-        List<NoteInsightDTO> noteInsights = insightsService.computeAllNoteInsights();
-        List<EntityInsightDTO> entityInsights = insightsService.computeAllEntityInsights();
+        User user = getUser(userId);
+        String vaultId = user.getVaultId();
 
-        double noteScore = noteInsights.isEmpty() ? 0.0 : noteInsights.stream()
-                .mapToDouble(NoteInsightDTO::score)
-                .average().orElse(0.0);
+        List<Note> notes = noteRepo.findByUserId(userId).stream()
+                .filter(n -> vaultId == null || vaultId.equals(n.getVaultId()))
+                .toList();
+        List<Entity> entities = entityRepo.findByUserIdAndArchivedAtIsNull(userId).stream()
+                .filter(e -> vaultId == null || vaultId.equals(e.getVaultId()))
+                .toList();
+        List<TrackingEvent> trackingEvents = vaultData.readTrackingEvents(vaultId == null ? userId : vaultId).stream()
+                .filter(e -> userId.equals(e.getUserId()))
+                .toList();
 
-        double entityScore = entityInsights.isEmpty() ? 0.0 : entityInsights.stream()
-                .mapToDouble(EntityInsightDTO::score)
-                .average().orElse(0.0);
+        LocalDate today = LocalDate.now();
+        Instant thirtyDaysAgo = today.minusDays(30).atStartOfDay().toInstant(ZoneOffset.UTC);
 
-        if (noteInsights.isEmpty()) return entityScore;
-        if (entityInsights.isEmpty()) return noteScore;
-        return (noteScore + entityScore) / 2.0;
+        long linkedNotes = notes.stream()
+                .filter(n -> n.getEntityIds() != null && !n.getEntityIds().isEmpty())
+                .count();
+        long recentNotes = notes.stream()
+                .filter(n -> {
+                    Instant updatedAt = n.getUpdatedAt() != null ? n.getUpdatedAt() : n.getCreatedAt();
+                    return updatedAt != null && !updatedAt.isBefore(thirtyDaysAgo);
+                })
+                .count();
+        long activeTrackingDays = trackingEvents.stream()
+                .map(TrackingEvent::getDate)
+                .filter(Objects::nonNull)
+                .filter(d -> !d.isBefore(today.minusDays(29)) && !d.isAfter(today))
+                .distinct()
+                .count();
+
+        double noteDensity = notes.isEmpty() ? 0.0 : Math.min(35.0, notes.size() * 1.4);
+        double entityDensity = entities.isEmpty() ? 0.0 : Math.min(25.0, entities.size() * 1.8);
+        double connectionDensity = notes.isEmpty() ? 0.0 : Math.min(25.0, ((double) linkedNotes / notes.size()) * 25.0);
+        double freshness = notes.isEmpty() ? 0.0 : Math.min(10.0, ((double) recentNotes / notes.size()) * 10.0);
+        double continuity = Math.min(5.0, activeTrackingDays / 6.0);
+
+        return round(noteDensity + entityDensity + connectionDensity + freshness + continuity);
     }
 
     // ── private ───────────────────────────────────────────────────────────────
