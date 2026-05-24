@@ -64,15 +64,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const display = user?.username || user?.email?.split("@")[0] || "Guest";
 
   return (
-    <div className="flex min-h-screen bg-black text-white">
+    <div className="flex min-h-screen bg-background text-foreground">
       <CommandPalette />
 
       {/* Mobile top bar */}
-      <div className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between gap-3 border-b border-white/8 bg-black/70 px-4 py-3 backdrop-blur-xl lg:hidden">
+      <div className="fixed left-0 right-0 top-0 z-40 flex items-center justify-between gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur-xl lg:hidden">
         <button
           type="button"
           onClick={() => setSidebarOpen(true)}
-          className="grid h-10 w-10 place-items-center rounded-md bg-white/5 text-white transition-colors hover:bg-white/10"
+            className="grid h-10 w-10 place-items-center rounded-md bg-muted text-foreground transition-colors hover:bg-accent"
           aria-label="Open navigation"
         >
           <Menu className="h-5 w-5" />
@@ -85,15 +85,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile drawer */}
       <MobileSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)}>
-        <div className="flex h-full flex-col bg-black/95 backdrop-blur-xl">
-          <div className="flex h-[54px] items-center justify-between border-b border-white/8 px-4">
+        <div className="flex h-full flex-col bg-sidebar backdrop-blur-xl">
+          <div className="flex h-[54px] items-center justify-between border-b border-sidebar-border px-4">
             <div className="flex items-center gap-2">
               <img src="/favicon.ico" alt="Continuum" className="h-6 w-6 rounded object-contain" />
               <span className="text-sm font-semibold">Continuum</span>
             </div>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="grid h-8 w-8 place-items-center rounded-md text-zinc-400 hover:bg-white/5 hover:text-white"
+              className="grid h-8 w-8 place-items-center rounded-md text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               aria-label="Close"
             >
               <X className="h-4 w-4" />
@@ -108,8 +108,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 onClick={() => setSidebarOpen(false)}
                 className={({ isActive }) =>
                   cn(
-                    "flex h-10 items-center gap-3 rounded-md px-3 text-sm text-zinc-400 transition-colors hover:bg-white/5 hover:text-white",
-                    isActive && "bg-white/10 text-white",
+                    "flex h-10 items-center gap-3 rounded-md px-3 text-sm text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    isActive && "bg-sidebar-accent text-sidebar-accent-foreground",
                   )
                 }
               >
@@ -118,16 +118,16 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               </NavLink>
             ))}
           </nav>
-          <div className="border-t border-white/8 p-2">
+          <div className="border-t border-sidebar-border p-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-white/5">
-                  <div className="grid h-7 w-7 place-items-center rounded-full bg-white text-[11px] font-bold text-black">
+                <button className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors hover:bg-sidebar-accent">
+                  <div className="grid h-7 w-7 place-items-center rounded-full bg-sidebar-primary text-[11px] font-bold text-sidebar-primary-foreground">
                     {initial}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-white">{display}</p>
-                    <p className="truncate text-[11px] text-zinc-500">{user?.plan || "FREE"}</p>
+                    <p className="truncate text-sm font-medium text-sidebar-accent-foreground">{display}</p>
+                    <p className="truncate text-[11px] text-sidebar-foreground/70">{user?.plan || "FREE"}</p>
                   </div>
                 </button>
               </DropdownMenuTrigger>
@@ -165,7 +165,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       {/* Desktop hover-expand sidebar */}
       <SessionNavBar />
 
-      <main className="min-w-0 flex-1 overflow-auto bg-black lg:ml-[3.25rem]">
+      <main className="min-w-0 flex-1 overflow-auto bg-background lg:ml-[3.25rem]">
         <div className="h-14 lg:hidden" />
         {children}
       </main>

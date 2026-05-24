@@ -251,12 +251,12 @@ export const entitiesApi = {
 export const metricsApi = {
   dashboard: () => api.get("/api/metrics/dashboard"),
   timeline: (entityId: string) => api.get(`/api/metrics/entities/${entityId}/timeline`),
-  scoreTimeline: (days = 14) => api.get("/api/metrics/score/timeline", { params: { days } }),
+  scoreTimeline: (days = 14) => api.get("/api/metrics/score/timeline", { params: { days }, timeout: 15000 }),
   usage: (month: number, year: number) => api.get("/api/metrics/usage", { params: { month, year } }),
 };
 
 export const dashboardApi = {
-  summary: () => api.get("/api/dashboard/summary"),
+  summary: () => api.get("/api/dashboard/summary", { timeout: 15000 }),
 };
 
 export const searchApi = {

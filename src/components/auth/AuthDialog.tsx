@@ -25,7 +25,7 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-md p-0 overflow-hidden rounded-2xl border-border bg-popover shadow-2xl">
+      <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-md p-0 overflow-hidden rounded-2xl border-[hsl(var(--popup-border))] bg-[hsl(var(--popup-background))] text-[hsl(var(--popup-foreground))] shadow-2xl">
         <div className="relative">
           {/* Subtle top accent */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/20 to-transparent" />
@@ -40,7 +40,7 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
                   ? "Create your account"
                   : "Reset password"}
               </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground">
+              <DialogDescription className="text-sm text-[hsl(var(--popup-muted))]">
                 {activeTab === "login"
                   ? "Continue building your continuum."
                   : activeTab === "register"
@@ -51,7 +51,7 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
 
             {/* Tabs */}
             {activeTab !== "forgot" && (
-              <div className="grid grid-cols-2 rounded-xl border border-border bg-muted/40 p-1">
+              <div className="grid grid-cols-2 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] p-1">
                 {(["login", "register"] as AuthTab[]).map((tab) => (
                   <button
                     key={tab}
@@ -60,8 +60,8 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
                     className={
                       "rounded-lg px-3 py-1.5 text-xs sm:text-sm font-medium transition-all " +
                       (activeTab === tab
-                        ? "bg-foreground text-background shadow-sm"
-                        : "text-muted-foreground hover:text-foreground")
+                        ? "bg-white text-black shadow-sm"
+                        : "text-[hsl(var(--popup-muted))] hover:text-white")
                     }
                   >
                     {tab === "login" ? "Sign in" : "Register"}
@@ -75,11 +75,11 @@ export default function AuthDialog({ open, onOpenChange, initialTab = "login" }:
             {activeTab === "forgot" && <ForgotForm onSwitchToLogin={() => setActiveTab("login")} />}
 
             {/* Footer */}
-            <p className="text-[10px] text-center text-muted-foreground/60 pt-1">
+            <p className="text-[10px] text-center text-[hsl(var(--popup-muted))] opacity-70 pt-1">
               By continuing you agree to our{" "}
-              <a href="#/terms" className="underline underline-offset-2 hover:text-foreground">Terms</a>
+              <a href="#/terms" className="underline underline-offset-2 hover:text-white">Terms</a>
               {" "}and{" "}
-              <a href="#/privacy" className="underline underline-offset-2 hover:text-foreground">Privacy</a>.
+              <a href="#/privacy" className="underline underline-offset-2 hover:text-white">Privacy</a>.
             </p>
           </div>
         </div>
@@ -132,24 +132,24 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: () => void; onForgot: (
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-muted-foreground">Email</label>
+        <label className="block text-sm font-medium text-[hsl(var(--popup-muted))]">Email</label>
         <input
           type="email"
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
-          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
+          className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] px-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/35 focus:bg-white/[0.06]"
         />
       </div>
 
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-4">
-          <label className="text-sm font-medium text-muted-foreground">Password</label>
+          <label className="text-sm font-medium text-[hsl(var(--popup-muted))]">Password</label>
           <button
             type="button"
             onClick={onForgot}
-            className="text-xs font-medium text-muted-foreground hover:text-foreground hover:underline"
+            className="text-xs font-medium text-[hsl(var(--popup-muted))] hover:text-white hover:underline"
           >
             Forgot?
           </button>
@@ -160,25 +160,25 @@ function LoginForm({ onSuccess, onForgot }: { onSuccess: () => void; onForgot: (
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           placeholder="••••••••"
-          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
+          className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] px-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/35 focus:bg-white/[0.06]"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-white text-black text-sm font-semibold transition hover:bg-white/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Signing in…</span> : "Sign in"}
       </button>
 
-      <div className="text-center text-xs text-muted-foreground">or</div>
+      <div className="text-center text-xs text-[hsl(var(--popup-muted))]">or</div>
 
       <button
         type="button"
         onClick={handleGoogle}
         disabled={loading}
-        className="w-full h-11 rounded-xl border border-border bg-transparent text-sm font-semibold text-foreground transition hover:bg-muted/40 disabled:opacity-60"
+        className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-transparent text-sm font-semibold text-white transition hover:bg-white/[0.06] disabled:opacity-60"
       >
         Continue with Google
       </button>
@@ -219,30 +219,30 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-muted-foreground">Username</label>
+        <label className="block text-sm font-medium text-[hsl(var(--popup-muted))]">Username</label>
         <input
           value={username}
           onChange={(event) => setUsername(event.target.value)}
           placeholder="johndoe"
           required
-          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
+          className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] px-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/35 focus:bg-white/[0.06]"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-muted-foreground">Email</label>
+        <label className="block text-sm font-medium text-[hsl(var(--popup-muted))]">Email</label>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
+          className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] px-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/35 focus:bg-white/[0.06]"
         />
       </div>
 
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-muted-foreground">Password</label>
+        <label className="block text-sm font-medium text-[hsl(var(--popup-muted))]">Password</label>
         <input
           type="password"
           value={password}
@@ -250,21 +250,21 @@ function RegisterForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
           placeholder="At least 8 characters"
           required
           minLength={8}
-          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
+          className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] px-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/35 focus:bg-white/[0.06]"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-white text-black text-sm font-semibold transition hover:bg-white/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Creating…</span> : "Create account"}
       </button>
 
-      <div className="text-center text-xs text-muted-foreground">
+      <div className="text-center text-xs text-[hsl(var(--popup-muted))]">
         Already have an account?{' '}
-        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-foreground hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-white hover:underline">
           Sign in
         </button>
       </div>
@@ -297,34 +297,34 @@ function ForgotForm({ onSwitchToLogin }: { onSwitchToLogin: () => void }) {
   };
 
   return sent ? (
-    <div className="rounded-xl border border-border bg-muted/40 p-5 text-sm text-foreground/80">
-      A recovery link has been sent to <span className="font-medium text-foreground">{email}</span>. Check your inbox and spam folder.
+    <div className="rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] p-5 text-sm text-white/80">
+      A recovery link has been sent to <span className="font-medium text-white">{email}</span>. Check your inbox and spam folder.
     </div>
   ) : (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <label className="block text-sm font-medium text-muted-foreground">Email</label>
+        <label className="block text-sm font-medium text-[hsl(var(--popup-muted))]">Email</label>
         <input
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           placeholder="you@example.com"
           required
-          className="w-full h-11 rounded-xl border border-border bg-muted/40 px-3.5 text-sm text-foreground outline-none transition placeholder:text-muted-foreground/60 focus:border-foreground/40 focus:bg-muted/60"
+          className="w-full h-11 rounded-xl border border-[hsl(var(--popup-border))] bg-white/[0.03] px-3.5 text-sm text-white outline-none transition placeholder:text-white/35 focus:border-white/35 focus:bg-white/[0.06]"
         />
       </div>
 
       <button
         type="submit"
         disabled={loading}
-        className="w-full h-11 rounded-xl bg-foreground text-background text-sm font-semibold transition hover:bg-foreground/90 disabled:opacity-60"
+        className="w-full h-11 rounded-xl bg-white text-black text-sm font-semibold transition hover:bg-white/90 disabled:opacity-60"
       >
         {loading ? <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Sending…</span> : "Send recovery link"}
       </button>
 
-      <div className="text-center text-xs text-muted-foreground">
+      <div className="text-center text-xs text-[hsl(var(--popup-muted))]">
         Remember it?{' '}
-        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-foreground hover:underline">
+        <button type="button" onClick={onSwitchToLogin} className="font-semibold text-white hover:underline">
           Sign in
         </button>
       </div>

@@ -8,8 +8,6 @@ import tech.lemnova.continuum.controller.dto.metrics.EntityTimeline;
 import tech.lemnova.continuum.controller.dto.metrics.MentionEntry;
 import tech.lemnova.continuum.controller.dto.metrics.TopEntity;
 import tech.lemnova.continuum.controller.dto.metrics.UserScoreSnapshotResponse;
-import tech.lemnova.continuum.controller.dto.insights.EntityInsightDTO;
-import tech.lemnova.continuum.controller.dto.insights.NoteInsightDTO;
 import tech.lemnova.continuum.domain.connection.NoteReference;
 import tech.lemnova.continuum.domain.metrics.UserScoreSnapshot;
 import tech.lemnova.continuum.domain.note.Note;
@@ -24,7 +22,7 @@ import tech.lemnova.continuum.infra.persistence.EntityRepository;
 import tech.lemnova.continuum.infra.persistence.NoteRepository;
 import tech.lemnova.continuum.infra.persistence.UserScoreSnapshotRepository;
 import tech.lemnova.continuum.infra.vault.VaultDataService;
-import tech.lemnova.continuum.application.service.InsightsService;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 
@@ -42,7 +40,6 @@ public class MetricsService {
     private final PlanConfiguration planConfig;
     private final EntityService entityService;
     private final TrackingService trackingService;
-    private final InsightsService insightsService;
     private final UserScoreSnapshotRepository scoreSnapshotRepo;
 
     public MetricsService(UserRepository userRepo,
@@ -52,7 +49,6 @@ public class MetricsService {
                           PlanConfiguration planConfig,
                           EntityService entityService,
                           TrackingService trackingService,
-                          InsightsService insightsService,
                           UserScoreSnapshotRepository scoreSnapshotRepo) {
         this.userRepo   = userRepo;
         this.noteRepo   = noteRepo;
@@ -61,7 +57,6 @@ public class MetricsService {
         this.planConfig = planConfig;
         this.entityService = entityService;
         this.trackingService = trackingService;
-        this.insightsService = insightsService;
         this.scoreSnapshotRepo = scoreSnapshotRepo;
     }
 
@@ -238,20 +233,45 @@ public class MetricsService {
     }
 
     private double computeCurrentScore(String userId) {
-        List<NoteInsightDTO> noteInsights = insightsService.computeAllNoteInsights();
-        List<EntityInsightDTO> entityInsights = insightsService.computeAllEntityInsights();
+        User user = getUser(userId);
+        String vaultId = user.getVaultId();
 
-        double noteScore = noteInsights.isEmpty() ? 0.0 : noteInsights.stream()
-                .mapToDouble(NoteInsightDTO::score)
-                .average().orElse(0.0);
+        List<Note> notes = noteRepo.findByUserId(userId).stream()
+                .filter(n -> vaultId == null || vaultId.equals(n.getVaultId()))
+                .toList();
+        List<Entity> entities = entityRepo.findByUserIdAndArchivedAtIsNull(userId).stream()
+                .filter(e -> vaultId == null || vaultId.equals(e.getVaultId()))
+                .toList();
+        List<TrackingEvent> trackingEvents = vaultData.readTrackingEvents(vaultId == null ? userId : vaultId).stream()
+                .filter(e -> userId.equals(e.getUserId()))
+                .toList();
 
-        double entityScore = entityInsights.isEmpty() ? 0.0 : entityInsights.stream()
-                .mapToDouble(EntityInsightDTO::score)
-                .average().orElse(0.0);
+        LocalDate today = LocalDate.now();
+        Instant thirtyDaysAgo = today.minusDays(30).atStartOfDay().toInstant(ZoneOffset.UTC);
 
-        if (noteInsights.isEmpty()) return entityScore;
-        if (entityInsights.isEmpty()) return noteScore;
-        return (noteScore + entityScore) / 2.0;
+        long linkedNotes = notes.stream()
+                .filter(n -> n.getEntityIds() != null && !n.getEntityIds().isEmpty())
+                .count();
+        long recentNotes = notes.stream()
+                .filter(n -> {
+                    Instant updatedAt = n.getUpdatedAt() != null ? n.getUpdatedAt() : n.getCreatedAt();
+                    return updatedAt != null && !updatedAt.isBefore(thirtyDaysAgo);
+                })
+                .count();
+        long activeTrackingDays = trackingEvents.stream()
+                .map(TrackingEvent::getDate)
+                .filter(Objects::nonNull)
+                .filter(d -> !d.isBefore(today.minusDays(29)) && !d.isAfter(today))
+                .distinct()
+                .count();
+
+        double noteDensity = notes.isEmpty() ? 0.0 : Math.min(35.0, notes.size() * 1.4);
+        double entityDensity = entities.isEmpty() ? 0.0 : Math.min(25.0, entities.size() * 1.8);
+        double connectionDensity = notes.isEmpty() ? 0.0 : Math.min(25.0, ((double) linkedNotes / notes.size()) * 25.0);
+        double freshness = notes.isEmpty() ? 0.0 : Math.min(10.0, ((double) recentNotes / notes.size()) * 10.0);
+        double continuity = Math.min(5.0, activeTrackingDays / 6.0);
+
+        return round(noteDensity + entityDensity + connectionDensity + freshness + continuity);
     }
 
     // ── private ───────────────────────────────────────────────────────────────

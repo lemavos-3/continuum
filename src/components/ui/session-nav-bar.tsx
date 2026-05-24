@@ -94,9 +94,9 @@ function SidebarLink({
       end={item.end}
       title={collapsed ? item.label : undefined}
       className={cn(
-        "flex h-9 w-full flex-row items-center rounded-md px-2 text-zinc-400 transition-colors",
-        "hover:bg-white/5 hover:text-white",
-        active && "bg-white/10 text-white",
+        "flex h-9 w-full flex-row items-center rounded-md px-2 text-sidebar-foreground transition-colors",
+        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        active && "bg-sidebar-accent text-sidebar-accent-foreground",
       )}
     >
       <Icon className="h-4 w-4 shrink-0" />
@@ -131,7 +131,7 @@ export function SessionNavBar() {
     <motion.aside
       className={cn(
         "fixed inset-y-0 left-0 z-30 hidden h-full shrink-0 lg:flex",
-        "border-r border-white/8 bg-black/70 backdrop-blur-xl",
+        "border-r border-sidebar-border bg-sidebar/85 backdrop-blur-xl",
       )}
       initial={false}
       animate={isCollapsed ? "closed" : "open"}
@@ -140,13 +140,13 @@ export function SessionNavBar() {
       onMouseEnter={() => setIsCollapsed(false)}
       onMouseLeave={() => setIsCollapsed(true)}
     >
-      <div className="relative z-40 flex h-full w-full flex-col text-zinc-300">
+      <div className="relative z-40 flex h-full w-full flex-col text-sidebar-foreground">
         {/* Brand / search trigger */}
-        <div className="flex h-[54px] w-full shrink-0 items-center border-b border-white/8 px-2">
+        <div className="flex h-[54px] w-full shrink-0 items-center border-b border-sidebar-border px-2">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-white/5"
+            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent"
           >
             <img
               src="/favicon.ico"
@@ -155,7 +155,7 @@ export function SessionNavBar() {
             />
             <motion.span
               variants={labelVariants}
-              className="truncate text-sm font-semibold tracking-tight text-white"
+              className="truncate text-sm font-semibold tracking-tight text-sidebar-accent-foreground"
             >
               {!isCollapsed && "Continuum"}
             </motion.span>
@@ -173,7 +173,7 @@ export function SessionNavBar() {
                     new KeyboardEvent("keydown", { key: "k", ctrlKey: true, bubbles: true, cancelable: true }),
                   );
                 }}
-                className="flex h-9 w-full items-center rounded-md px-2 text-zinc-400 transition-colors hover:bg-white/5 hover:text-white"
+                className="flex h-9 w-full items-center rounded-md px-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 title="Search"
               >
                 <Search className="h-4 w-4 shrink-0" />
@@ -182,25 +182,25 @@ export function SessionNavBar() {
                 </motion.span>
                 <motion.span
                   variants={labelVariants}
-                  className="ml-auto rounded border border-white/10 px-1.5 py-0.5 font-mono text-[10px] text-zinc-500"
+                  className="ml-auto rounded border border-sidebar-border px-1.5 py-0.5 font-mono text-[10px] text-sidebar-foreground/70"
                 >
                   {!isCollapsed && "Ctrl+K"}
                 </motion.span>
               </button>
 
-              <Separator className="my-2 bg-white/8" />
+              <Separator className="my-2 bg-sidebar-border" />
 
               {primaryNav.map((it) => (
                 <SidebarLink key={it.to} item={it} collapsed={isCollapsed} pathname={pathname} />
               ))}
 
-              <Separator className="my-2 bg-white/8" />
+              <Separator className="my-2 bg-sidebar-border" />
 
               {trackingNav.map((it) => (
                 <SidebarLink key={it.to} item={it} collapsed={isCollapsed} pathname={pathname} />
               ))}
 
-              <Separator className="my-2 bg-white/8" />
+              <Separator className="my-2 bg-sidebar-border" />
 
               {exploreNav.map((it) => (
                 <SidebarLink key={it.to} item={it} collapsed={isCollapsed} pathname={pathname} />
@@ -209,14 +209,14 @@ export function SessionNavBar() {
           </ScrollArea>
 
           {/* Footer */}
-          <div className="flex flex-col gap-1 border-t border-white/8 p-2">
+          <div className="flex flex-col gap-1 border-t border-sidebar-border p-2">
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
-                  className="flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-zinc-300 hover:bg-white/5 hover:text-white"
+                  className="flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 >
-                  <div className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white text-[10px] font-bold text-black">
+                  <div className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-sidebar-primary text-[10px] font-bold text-sidebar-primary-foreground">
                     {initial}
                   </div>
                   <motion.span
@@ -226,7 +226,7 @@ export function SessionNavBar() {
                     {!isCollapsed && (
                       <>
                         <span className="truncate text-sm font-medium">{display}</span>
-                        <ChevronsUpDown className="ml-auto h-3.5 w-3.5 text-zinc-500" />
+                        <ChevronsUpDown className="ml-auto h-3.5 w-3.5 text-sidebar-foreground/70" />
                       </>
                     )}
                   </motion.span>
@@ -239,9 +239,9 @@ export function SessionNavBar() {
                 className="w-56"
               >
                 <div className="flex flex-col gap-0.5 px-2 py-1.5">
-                  <span className="truncate text-sm font-medium text-white">{display}</span>
-                  <span className="truncate text-xs text-zinc-500">{user?.email}</span>
-                  <span className="mt-1 inline-flex w-fit items-center rounded border border-white/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-zinc-400">
+                  <span className="truncate text-sm font-medium text-[hsl(var(--popup-foreground))]">{display}</span>
+                  <span className="truncate text-xs text-[hsl(var(--popup-muted))]">{user?.email}</span>
+                  <span className="mt-1 inline-flex w-fit items-center rounded border border-[hsl(var(--popup-border))] px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[hsl(var(--popup-muted))]">
                     {user?.plan || "FREE"}
                   </span>
                 </div>

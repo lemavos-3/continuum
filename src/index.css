@@ -62,6 +62,11 @@
     --bento-border: 0 0% 100% / 0.06;
     --bento-hover-shadow: 0 0% 100% / 0.04;
     --bento-gradient-via: 0 0% 100% / 0.02;
+
+    --popup-background: 0 0% 1%;
+    --popup-foreground: 0 0% 98%;
+    --popup-muted: 0 0% 64%;
+    --popup-border: 0 0% 100% / 0.10;
   }
 
   /* Light theme — soft paper aesthetic, hairline borders @ 8% black. */
@@ -108,6 +113,11 @@
     --bento-border: 0 0% 0% / 0.08;
     --bento-hover-shadow: 0 0% 0% / 0.05;
     --bento-gradient-via: 0 0% 0% / 0.03;
+
+    --popup-background: 0 0% 1%;
+    --popup-foreground: 0 0% 98%;
+    --popup-muted: 0 0% 64%;
+    --popup-border: 0 0% 100% / 0.10;
   }
 
   .dark { color-scheme: dark; }
@@ -240,6 +250,12 @@
   .ProseMirror code { @apply rounded bg-accent px-1.5 py-0.5 text-xs font-mono; }
   .ProseMirror hr { @apply border-border my-6; }
   .ProseMirror a { @apply text-white underline underline-offset-4 cursor-pointer; }
+
+  .continuum-popup-black {
+    background: hsl(var(--popup-background));
+    color: hsl(var(--popup-foreground));
+    border-color: hsl(var(--popup-border));
+  }
 }
 
 @layer utilities {
@@ -247,6 +263,29 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: hsl(0 0% 100% / 0.10); border-radius: 3px; }
   ::-webkit-scrollbar-thumb:hover { background: hsl(0 0% 100% / 0.22); }
+
+  .light :where(:not(.continuum-popup-black):not(.continuum-popup-black *))[class*="bg-black"],
+  .light :where(:not(.continuum-popup-black):not(.continuum-popup-black *))[class*="bg-neutral-900"],
+  .light :where(:not(.continuum-popup-black):not(.continuum-popup-black *))[class*="bg-zinc-900"],
+  .light :where(:not(.continuum-popup-black):not(.continuum-popup-black *))[class*="bg-slate-900"] {
+    background-color: hsl(var(--background) / 0.92) !important;
+  }
+
+  .light :where(:not(.continuum-popup-black):not(.continuum-popup-black *))[class*="bg-white/"] {
+    background-color: hsl(var(--foreground) / 0.05) !important;
+  }
+
+  .light :where(:not(.continuum-popup-black):not(.continuum-popup-black *))[class*="text-white/"] {
+    color: hsl(var(--muted-foreground)) !important;
+  }
+
+  .light :where(:not(.continuum-popup-black):not(.continuum-popup-black *))[class~="text-white"] {
+    color: hsl(var(--foreground)) !important;
+  }
+
+  .light :where(:not(.continuum-popup-black):not(.continuum-popup-black *))[class*="border-white/"] {
+    border-color: hsl(var(--border)) !important;
+  }
 }
 
 /* Continuum editor */
