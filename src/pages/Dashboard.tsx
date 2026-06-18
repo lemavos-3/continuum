@@ -589,10 +589,30 @@ export default function Dashboard() {
               Here's what's happening across your knowledge graph.
             </p>
           </div>
-          <Button onClick={() => void createNote()} disabled={creating} className="gap-2 self-start sm:self-auto">
-            {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-            {creating ? "Creating…" : "New note"}
-          </Button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => navigate("/activities")}
+              className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.02] px-3 py-2 text-xs font-medium text-white/70 hover:text-white hover:bg-white/[0.06] hover:border-white/20 transition-colors"
+              title="Activities"
+            >
+              <Flame className="h-3.5 w-3.5" />
+              Activities
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/projects")}
+              className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/[0.02] px-3 py-2 text-xs font-medium text-white/70 hover:text-white hover:bg-white/[0.06] hover:border-white/20 transition-colors"
+              title="Timers"
+            >
+              <Clock className="h-3.5 w-3.5" />
+              Timers
+            </button>
+            <Button onClick={() => void createNote()} disabled={creating} className="gap-2">
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              {creating ? "Creating…" : "New note"}
+            </Button>
+          </div>
         </header>
 
 
