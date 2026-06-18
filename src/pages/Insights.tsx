@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   SparklesIcon,
@@ -12,11 +12,13 @@ import {
 } from "@heroicons/react/24/outline";
 import AppLayout from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { insightsApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /* ── Types ────────────────────────────────────────────────────────────── */
 
@@ -202,6 +204,7 @@ function InsightRow({ item }: { item: InsightItem }) {
 /* ── Componente Principal ─────────────────────────────────────────────── */
 
 export default function Insights() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -216,6 +219,26 @@ export default function Insights() {
   const [view, setView] = useState<View>("all");
   const [search, setSearch] = useState("");
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
+  // Edge swipe to open mobile filter drawer
+  const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
+
+  const onSwipeStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    if (t.clientX > 96) return; // Only left edge (0-96px)
+    swipeRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+  };
+
+  const onSwipeEnd = (e: React.TouchEvent) => {
+    const s = swipeRef.current;
+    if (!s) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - s.x; // Δx (horizontal)
+    const dy = Math.abs(t.clientY - s.y); // Δy (vertical)
+    // Opens drawer if: >50px horizontal, <80px vertical, <700ms
+    if (dx > 50 && dy < 80 && Date.now() - s.t < 700) setFilterDrawerOpen(true);
+    swipeRef.current = null;
+  };
 
   const load = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -351,7 +374,17 @@ export default function Insights() {
 
   return (
     <AppLayout>
-      <div className="relative min-h-full">
+      <div
+        className="relative min-h-full"
+        onTouchStart={onSwipeStart}
+        onTouchEnd={onSwipeEnd}
+      >
+        {/* Edge swipe hint (mobile only) */}
+        <div
+          aria-hidden
+          className="pointer-events-none fixed left-0 top-1/2 z-20 hidden h-24 w-[3px] -translate-y-1/2 rounded-r bg-white/15 max-lg:block"
+        />
+
         {/* Menu Lateral Mobile */}
         <Sheet open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
           <SheetContent side="left" className="w-[280px] border-white/10 bg-black/95 p-6">
@@ -372,7 +405,7 @@ export default function Insights() {
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">Intelligence</p>
-                  <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">Insights</h1>
+                  <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">{t("insights_title")}</h1>
                   <p className="mt-2 text-sm text-white/50">
                     Surface structures that matter most across your graph.
                   </p>
@@ -385,14 +418,15 @@ export default function Insights() {
                   >
                     <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
                   </button>
-                  <button
+                  <Button
                     onClick={() => load(true)}
                     disabled={refreshing}
-                    className="flex items-center gap-2 h-9 border border-white/15 bg-transparent hover:border-white/40 text-white/80 hover:text-white px-4 rounded-sm text-sm font-medium transition-colors disabled:opacity-40"
+                    size="sm"
+                    className="gap-2"
                   >
                     <ArrowPathIcon className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
                     Refresh
-                  </button>
+                  </Button>
                 </div>
               </div>
             </header>

@@ -1,9 +1,11 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 import AppLayout from "@/components/AppLayout";
 import { Button } from "@/components/ui/button";
 import { notesApi, vaultApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
+import { useCreateNote } from "@/hooks/useCreateNote";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import UpgradeModal from "@/components/UpgradeModal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -18,6 +20,8 @@ import {
   ChevronDown,
   ChevronRight,
   SlidersHorizontal,
+  Check,
+  X,
 } from "@/lib/heroicons";
 import { InsightSignalBadge } from "@/components/InsightSignal";
 
@@ -118,10 +122,12 @@ function NavItem({ label, count, active, onClick }: NavItemProps) {
 /* ── Page ─────────────────────────────────────────────────────────────── */
 
 export default function Notes() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { loading: authLoading } = useRequireAuth();
-  const { canCreateNote, getLimitMessage, refresh, applyUsageDelta } = usePlanGate();
+  const { getLimitMessage, refresh, applyUsageDelta } = usePlanGate();
+  const { createNote, creating } = useCreateNote({ onLimitReached: () => setUpgradeOpen(true) });
 
   const [notes, setNotes] = useState<NoteSummary[]>([]);
   const [types, setTypes] = useState<string[]>([]);
@@ -134,6 +140,12 @@ export default function Notes() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
+  // Multiselect
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+
   // Estados de Ordenação Dinâmica
   const [sortBy, setSortBy] = useState<"createdAt" | "updatedAt">("updatedAt");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
@@ -141,14 +153,8 @@ export default function Notes() {
   // Drag-drop upload to vault
   const [dragActive, setDragActive] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [creating, setCreating] = useState(false);
-  const creatingRef = useRef(false);
 
-  useEffect(() => {
-    return () => {
-      creatingRef.current = false;
-    };
-  }, []);
+
 
   // Edge swipe to open mobile filter drawer
   const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
@@ -200,43 +206,10 @@ export default function Notes() {
     }
   };
 
-  const handleCreate = async () => {
-    if (!canCreateNote) {
-      setUpgradeOpen(true);
-      return;
-    }
-
-    const tempId = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : `temp-${Math.random().toString(36).slice(2, 10)}`;
-
-    applyUsageDelta({ notesCount: 1 });
-    setCreating(true);
-    creatingRef.current = true;
-    navigate(`/notes/${tempId}?optimistic=true&tempId=${tempId}`);
-
-    notesApi.create("Untitled", "")
-      .then(({ data }) => {
-        if (data?.id) {
-          void refresh();
-          navigate(`/notes/${data.id}?tempId=${tempId}`, { replace: true });
-        } else {
-          throw new Error("Invalid response from server");
-        }
-      })
-      .catch((err: any) => {
-        applyUsageDelta({ notesCount: -1 });
-        if (err.response?.status === 403) {
-          setUpgradeOpen(true);
-        } else {
-          toast({ title: "Error", description: err.response?.data?.message, variant: "destructive" });
-        }
-        navigate("/notes");
-      })
-      .finally(() => {
-        if (creatingRef.current) setCreating(false);
-      });
+  const handleCreate = () => {
+    void createNote();
   };
+
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
@@ -251,6 +224,42 @@ export default function Notes() {
       setPendingDelete(null);
     }
   };
+
+  /* Multiselect */
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const confirmBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    setBulkDeleting(true);
+    try {
+      await Promise.all(ids.map((id) => notesApi.delete(id)));
+      setNotes((prev) => prev.filter((n) => !selectedIds.has(n.id)));
+      applyUsageDelta({ notesCount: -ids.length });
+      void refresh();
+      toast({ title: `${ids.length} ${ids.length === 1 ? "entry" : "entries"} removed` });
+      exitSelectMode();
+    } catch {
+      toast({ title: "Error deleting entries", variant: "destructive" });
+    } finally {
+      setBulkDeleting(false);
+      setBulkDeleteOpen(false);
+    }
+  };
+
+
 
   /* Filter + group */
   const counts = useMemo(() => {
@@ -443,20 +452,32 @@ export default function Notes() {
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">{viewLabel}</p>
-                  <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">Notes</h1>
+                  <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">{t("notes_title")}</h1>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <button
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setFilterDrawerOpen(true)}
-                    className="grid h-9 w-9 place-items-center rounded-sm border border-white/15 text-white/80 transition-colors hover:border-white/40 hover:text-white lg:hidden"
+                    className="lg:hidden h-9 w-9 p-0 text-white/80"
                     aria-label="Open filters"
                   >
-                    <SlidersHorizontal className="h-3.5 w-3.5" />
-                  </button>
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                  {selectMode ? (
+                    <Button size="sm" className="gap-2" onClick={exitSelectMode}>
+                      <X className="h-3.5 w-3.5" /> Done
+                    </Button>
+                  ) : (
+                    <Button size="sm" className="gap-2" onClick={() => setSelectMode(true)}>
+                      <Check className="h-3.5 w-3.5" /> Select
+                    </Button>
+                  )}
                   <Button onClick={handleCreate} className="gap-2" disabled={creating}>
-                    <Plus className="h-3.5 w-3.5" /> {creating ? "Creating..." : "New entry"}
+                    <Plus className="h-3.5 w-3.5" /> {creating ? "Creating..." : "New note"}
                   </Button>
                 </div>
+
               </div>
               {limitMsg && <p className="mt-3 text-xs text-white/40">{limitMsg}</p>}
             </header>
@@ -468,7 +489,7 @@ export default function Notes() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Navigate your memory…"
+                  placeholder={t("notes_searchPlaceholder")}
                   className="w-full border-0 bg-transparent pl-6 text-sm text-white placeholder:italic placeholder:text-white/30 focus:outline-none focus:ring-0"
                 />
               </div>
@@ -502,7 +523,36 @@ export default function Notes() {
               </div>
             </div>
 
+            {/* Selection action bar */}
+            {selectMode && (
+              <div className="sticky top-[7.5rem] z-20 mb-6 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-white/15 bg-black/80 px-3 py-2.5 backdrop-blur-xl">
+                <span className="text-sm text-white/70">
+                  {selectedIds.size} selected
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const allIds = filtered.map((n) => n.id);
+                      const allSelected = allIds.every((id) => selectedIds.has(id));
+                      setSelectedIds(allSelected ? new Set() : new Set(allIds));
+                    }}
+                    className="rounded-sm border border-white/15 px-3 py-1.5 text-xs text-white/70 transition-colors hover:border-white/40 hover:text-white"
+                  >
+                    {filtered.length > 0 && filtered.every((n) => selectedIds.has(n.id)) ? "Clear all" : "Select all"}
+                  </button>
+                  <button
+                    onClick={() => setBulkDeleteOpen(true)}
+                    disabled={selectedIds.size === 0}
+                    className="inline-flex items-center gap-1.5 rounded-sm border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-40"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Content */}
+
             {loading ? (
               <div className="flex justify-center py-24">
                 <Loader2 className="h-5 w-5 animate-spin text-white/30" />
@@ -546,16 +596,32 @@ export default function Notes() {
                             const preview = extractPreview(note.content);
                             const targetDate = sortBy === "createdAt" ? note.createdAt : note.updatedAt;
 
+                            const selected = selectedIds.has(note.id);
                             return (
                               <li key={note.id}>
                                 <button
-                                  onClick={() => navigate(`/notes/${note.id}`)}
-                                  className="group relative flex w-full items-start gap-4 py-5 text-left transition-colors hover:bg-white/[0.02]"
+                                  onClick={() => selectMode ? toggleSelect(note.id) : navigate(`/notes/${note.id}`)}
+                                  className={cn(
+                                    "group relative flex w-full items-start gap-4 py-5 text-left transition-colors hover:bg-white/[0.02]",
+                                    selected && "bg-white/[0.04]"
+                                  )}
                                 >
                                   <span
                                     aria-hidden
                                     className="absolute left-0 top-1/2 h-8 w-px -translate-x-3 -translate-y-1/2 bg-white opacity-0 transition-opacity group-hover:opacity-100"
                                   />
+
+                                  {selectMode && (
+                                    <span
+                                      className={cn(
+                                        "mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-sm border transition-colors",
+                                        selected ? "border-white bg-white text-black" : "border-white/30 text-transparent"
+                                      )}
+                                    >
+                                      <Check className="h-3.5 w-3.5" />
+                                    </span>
+                                  )}
+
 
                                   <div className="hidden w-20 shrink-0 pt-1 sm:block">
                                     <p className="font-mono text-[10px] uppercase tracking-wider text-white/30">
@@ -582,7 +648,9 @@ export default function Notes() {
                                   </div>
 
 
+                                  {!selectMode && (
                                   <div className="flex shrink-0 items-center gap-1 pt-1">
+
                                     <span
                                       role="button"
                                       tabIndex={0}
@@ -621,7 +689,9 @@ export default function Notes() {
                                       <Trash2 className="h-3.5 w-3.5" />
                                     </span>
                                   </div>
+                                  )}
                                 </button>
+
                               </li>
                             );
                           })}
@@ -649,6 +719,15 @@ export default function Notes() {
         confirmText="Remove"
         destructive
         onConfirm={confirmDelete}
+      />
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(open) => !open && !bulkDeleting && setBulkDeleteOpen(false)}
+        title={`Remove ${selectedIds.size} ${selectedIds.size === 1 ? "entry" : "entries"}?`}
+        description="The selected entries will be permanently removed from your archive."
+        confirmText={bulkDeleting ? "Removing…" : "Remove"}
+        destructive
+        onConfirm={confirmBulkDelete}
       />
     </AppLayout>
   );

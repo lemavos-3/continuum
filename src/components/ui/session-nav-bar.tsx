@@ -9,9 +9,9 @@ import {
   HardDrive,
   LayoutDashboard,
   LogOut,
+  GlobeAlt,
   Search,
   Settings,
-  Sparkles,
   StickyNote,
   Tag,
   Timer,
@@ -19,8 +19,19 @@ import {
   Lock,
   Clock,
   FolderOpen,
-  Layers,
+  BarChart3,
+  Squares2x2,
 } from "@/lib/heroicons";
+import {
+  Squares2X2Icon as Squares2x2Solid,
+  DocumentTextIcon as StickyNoteSolid,
+  TagIcon as TagSolid,
+  LockClosedIcon as LockSolid,
+  FolderOpenIcon as FolderOpenSolid,
+  ClockIcon as ClockSolid,
+  ChartBarIcon as BarChart3Solid,
+  GlobeAltIcon as GlobeAltSolid,
+} from "@heroicons/react/24/solid";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -34,6 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const sidebarVariants = {
   open: { width: "15rem" },
@@ -55,24 +67,25 @@ interface NavItem {
   to: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+  iconSolid?: React.ComponentType<{ className?: string }>;
   end?: boolean;
 }
 
 const primaryNav: NavItem[] = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/notes", label: "Notes", icon: StickyNote },
-  { to: "/entities", label: "Entities", icon: Tag },
-  { to: "/vault", label: "Vault", icon: Lock },
+  { to: "/", label: "nav_dashboard", icon: Squares2x2, iconSolid: Squares2x2Solid, end: true },
+  { to: "/notes", label: "nav_notes", icon: StickyNote, iconSolid: StickyNoteSolid },
+  { to: "/entities", label: "nav_entities", icon: Tag, iconSolid: TagSolid },
+  { to: "/vault", label: "nav_vault", icon: Lock, iconSolid: LockSolid },
 ];
 
 const trackingNav: NavItem[] = [
-  { to: "/projects", label: "Projects", icon: FolderOpen },
-  { to: "/activities", label: "Activities", icon: Clock },
+  { to: "/projects", label: "nav_projects", icon: FolderOpen, iconSolid: FolderOpenSolid },
+  { to: "/activities", label: "nav_activities", icon: Clock, iconSolid: ClockSolid },
 ];
 
 const exploreNav: NavItem[] = [
-  { to: "/insights", label: "Insights", icon: Sparkles },
-  { to: "/graph", label: "Graph", icon: Layers },
+  { to: "/insights", label: "nav_insights", icon: BarChart3, iconSolid: BarChart3Solid },
+  { to: "/graph", label: "nav_graph", icon: GlobeAlt, iconSolid: GlobeAltSolid },
 ];
 
 function SidebarLink({
@@ -84,19 +97,22 @@ function SidebarLink({
   collapsed: boolean;
   pathname: string;
 }) {
+  const { t } = useLanguage();
   const active = item.end
     ? pathname === item.to
     : pathname === item.to || pathname.startsWith(item.to + "/");
-  const Icon = item.icon;
+  const Icon = active && item.iconSolid ? item.iconSolid : item.icon;
+  const label = t(item.label);
   return (
     <NavLink
       to={item.to}
       end={item.end}
-      title={collapsed ? item.label : undefined}
+      title={collapsed ? label : undefined}
       className={cn(
-        "flex h-9 w-full flex-row items-center rounded-md px-2 text-sidebar-foreground transition-colors",
-        "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-        active && "bg-sidebar-accent text-sidebar-accent-foreground",
+        "flex h-9 w-full flex-row items-center rounded-md px-2 transition-colors",
+        active
+          ? "text-sidebar-accent-foreground"
+          : "text-sidebar-foreground/70 hover:text-sidebar-foreground",
       )}
     >
       <Icon className="h-4 w-4 shrink-0" />
@@ -104,7 +120,7 @@ function SidebarLink({
         variants={labelVariants}
         className="ml-2 truncate text-sm font-medium"
       >
-        {!collapsed && item.label}
+        {!collapsed && label}
       </motion.span>
     </NavLink>
   );
@@ -116,6 +132,7 @@ export function SessionNavBar() {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const { t } = useLanguage();
 
   const initial = (user?.username || user?.email || "U").trim().charAt(0).toUpperCase();
   const display = user?.username || user?.email?.split("@")[0] || "Guest";
@@ -155,7 +172,7 @@ export function SessionNavBar() {
             />
             <motion.span
               variants={labelVariants}
-              className="truncate text-sm font-semibold tracking-tight text-sidebar-accent-foreground"
+              className="truncate text-sm font-serif tracking-tight text-sidebar-accent-foreground"
             >
               {!isCollapsed && "Continuum"}
             </motion.span>
@@ -174,11 +191,11 @@ export function SessionNavBar() {
                   );
                 }}
                 className="flex h-9 w-full items-center rounded-md px-2 text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                title="Search"
+                title={t("common_search")}
               >
                 <Search className="h-4 w-4 shrink-0" />
                 <motion.span variants={labelVariants} className="ml-2 truncate text-sm font-medium">
-                  {!isCollapsed && "Search"}
+                  {!isCollapsed && t("common_search")}
                 </motion.span>
                 <motion.span
                   variants={labelVariants}
@@ -225,7 +242,7 @@ export function SessionNavBar() {
                   >
                     {!isCollapsed && (
                       <>
-                        <span className="truncate text-sm font-medium">{display}</span>
+                        <span className="truncate text-sm font-medium normal-case tracking-normal">{display}</span>
                         <ChevronsUpDown className="ml-auto h-3.5 w-3.5 text-sidebar-foreground/70" />
                       </>
                     )}
@@ -239,22 +256,22 @@ export function SessionNavBar() {
                 className="w-56"
               >
                 <div className="flex flex-col gap-0.5 px-2 py-1.5">
-                  <span className="truncate text-sm font-medium text-[hsl(var(--popup-foreground))]">{display}</span>
+                  <span className="truncate text-sm font-medium normal-case tracking-normal text-[hsl(var(--popup-foreground))]">{display}</span>
                   <span className="truncate text-xs text-[hsl(var(--popup-muted))]">{user?.email}</span>
-                  <span className="mt-1 inline-flex w-fit items-center rounded border border-[hsl(var(--popup-border))] px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[hsl(var(--popup-muted))]">
+                  <span className="hidden mt-1 inline-flex w-fit items-center rounded border border-[hsl(var(--popup-border))] px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[hsl(var(--popup-muted))]">
                     {user?.plan || "FREE"}
                   </span>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/profile")}>
-                  <UserCircle className="mr-2 h-4 w-4" /> Profile
+                  <UserCircle className="mr-2 h-4 w-4" /> {t("nav_profile")}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/subscription")}>
-                  <Settings className="mr-2 h-4 w-4" /> Subscription
+                <DropdownMenuItem className="hidden" onClick={() => navigate("/subscription")}>
+                  <Settings className="mr-2 h-4 w-4" /> {t("nav_subscription")}
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="hidden" />
                 <DropdownMenuItem onClick={handleLogoutRequest}>
-                  <LogOut className="mr-2 h-4 w-4" /> Sign out
+                  <LogOut className="mr-2 h-4 w-4" /> {t("nav_logout")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -264,9 +281,9 @@ export function SessionNavBar() {
       <ConfirmDialog
         open={confirmLogoutOpen}
         onOpenChange={setConfirmLogoutOpen}
-        title="Sign out?"
-        description="You will be signed out of your account and returned to the landing page."
-        confirmText="Logout"
+        title={t("auth_signOut")}
+        description={t("auth_signOutDesc")}
+        confirmText={t("nav_logout")}
         destructive
         onConfirm={async () => {
           setConfirmLogoutOpen(false);

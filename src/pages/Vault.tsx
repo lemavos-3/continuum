@@ -10,13 +10,14 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   FileText, Image as ImageIcon, File as FileGeneric,
   Loader2, HardDrive, Trash2, Music, ExternalLink,
 } from "@/lib/heroicons";
 import type { VaultFile } from "@/types";
 import { useAuth } from "@/contexts/AuthContext";
-import { getPlanLimits } from "@/lib/plan";
+import { getPlanLimits, isUnlimited } from "@/lib/plan";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import { resolveVaultBlob, invalidateVaultBlob } from "@/lib/vault-blob";
 
@@ -180,6 +181,7 @@ function OtherFileRow({ file, onDelete }: { file: VaultFile; onDelete: (f: Vault
 /* ── Main Vault Page Component ────────────────────────────────────────── */
 
 export default function Vault() {
+  const { t } = useLanguage();
   const [files, setFiles] = useState<VaultFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<VaultFile | null>(null);
@@ -239,7 +241,7 @@ export default function Vault() {
 
   const vaultUsedMB = files.reduce((t, f) => t + f.size / (1024 * 1024), 0);
   const vaultMaxMB = limits.maxVaultSizeMB;
-  const vaultPct = vaultMaxMB === -1 ? 0 : Math.min((vaultUsedMB / vaultMaxMB) * 100, 100);
+  const vaultPct = isUnlimited(vaultMaxMB) ? 0 : Math.min((vaultUsedMB / vaultMaxMB) * 100, 100);
 
   return (
     <AppLayout>
@@ -253,7 +255,7 @@ export default function Vault() {
                 Storage
               </p>
               <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">
-                Vault
+                {t("vault_title")}
               </h1>
             </div>
             <p className="mt-3 text-sm text-white/40">
@@ -269,10 +271,10 @@ export default function Vault() {
                 <span>VOLUME CAPACITY</span>
               </div>
               <span>
-                {vaultMaxMB === -1 ? `${vaultUsedMB.toFixed(1)} MB` : `${vaultUsedMB.toFixed(1)} / ${vaultMaxMB} MB`}
+                {isUnlimited(vaultMaxMB) ? `${vaultUsedMB.toFixed(1)} MB` : `${vaultUsedMB.toFixed(1)} / ${vaultMaxMB} MB`}
               </span>
             </div>
-            <Progress value={vaultMaxMB === -1 ? 0 : vaultPct} className="h-[2px] bg-white/5 text-white" />
+            <Progress value={isUnlimited(vaultMaxMB) ? 0 : vaultPct} className="h-[2px] bg-white/5 text-white" />
           </div>
 
           {loading ? (
@@ -283,7 +285,7 @@ export default function Vault() {
             /* Empty State poético e limpo igual ao do seu Notes */
             <div className="py-24 text-center">
               <p className="font-serif text-2xl italic text-white/40">
-                Your vault is still empty.
+                {t("vault_empty")}
               </p>
             </div>
           ) : (

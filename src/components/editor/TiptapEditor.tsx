@@ -16,6 +16,12 @@ import Typography from "@tiptap/extension-typography";
 import CharacterCount from "@tiptap/extension-character-count";
 import Dropcursor from "@tiptap/extension-dropcursor";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
+import Highlight from "@tiptap/extension-highlight";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
+import Underline from "@tiptap/extension-underline";
+import { Mathematics } from "@tiptap/extension-mathematics";
+import "katex/dist/katex.min.css";
 import { common, createLowlight } from "lowlight";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useCallback } from "react";
@@ -33,6 +39,12 @@ import { SlashCommands } from "./SlashCommands";
 import { VaultImage } from "./VaultImage";
 import { VaultPdf } from "./VaultPdf";
 import { VaultAudio } from "./VaultAudio";
+import { AutoPair } from "./extensions/AutoPair";
+import { EditorShortcuts } from "./extensions/EditorShortcuts";
+import { LinkHover } from "./extensions/LinkHover";
+import { SearchHighlight } from "./extensions/SearchHighlight";
+import { FindReplace } from "./FindReplace";
+import { StatusBar } from "./StatusBar";
 
 const IMAGE_MIME_RE = /^image\//i;
 const IMAGE_EXT_RE = /\.(png|jpe?g|webp|gif|svg)$/i;
@@ -44,6 +56,23 @@ const AUDIO_EXT_RE = /\.(mp3|m4a|wav|ogg|aac)$/i;
 const isAudioFile = (file: File) => AUDIO_MIME_RE.test(file.type) || AUDIO_EXT_RE.test(file.name);
 
 const lowlight = createLowlight(common);
+
+const isSafeEditorUrl = (href: string) => {
+  const trimmed = href.trim();
+  if (!trimmed) return false;
+
+  const lowered = trimmed.toLowerCase();
+  if (lowered.startsWith("javascript:") || lowered.startsWith("data:") || lowered.startsWith("vbscript:")) return false;
+  if (lowered.startsWith("mailto:") || lowered.startsWith("tel:")) return true;
+  if (trimmed.startsWith("/") || trimmed.startsWith("#")) return true;
+
+  try {
+    const parsed = new URL(trimmed, typeof window !== "undefined" ? window.location.origin : "http://localhost");
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
 
 const NoteMention = Mention.extend({
   name: "noteMention",
@@ -65,7 +94,10 @@ type Cache<T> = { token: string | null; at: number; data: T[]; pending: Promise<
 const entityCache: Cache<Entity> = { token: null, at: 0, data: [], pending: null };
 const noteCache: Cache<{ id: string; title: string }> = { token: null, at: 0, data: [], pending: null };
 
-const getToken = () => (typeof window !== "undefined" ? window.localStorage.getItem("access_token") : null);
+const getToken = () => {
+  if (typeof window === "undefined") return null;
+  return window.sessionStorage.getItem("access_token") ?? window.localStorage.getItem("access_token");
+};
 
 export const resetEditorCaches = () => {
   Object.assign(entityCache, { token: null, at: 0, data: [], pending: null });
@@ -213,16 +245,20 @@ interface Props {
   editable?: boolean;
   className?: string;
   currentNoteId?: string;
+  onSave?: () => void;
 }
 
 export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
-  ({ content, onChange, editable = true, className, currentNoteId }, ref) => {
+  ({ content, onChange, editable = true, className, currentNoteId, onSave }, ref) => {
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
+    const onSaveRef = useRef(onSave);
+    onSaveRef.current = onSave;
     const navigate = useNavigate();
 
     const [isUploading, setIsUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [findOpen, setFindOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const { toast } = useToast();
 
@@ -231,9 +267,21 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
     const editor = useEditor({
       extensions: [
         StarterKit.configure({
-          heading: { levels: [1, 2, 3] },
+          heading: { levels: [1, 2, 3, 4, 5, 6] },
           codeBlock: false,
           dropcursor: false,
+        }),
+        Underline,
+        Highlight.configure({ multicolor: false }),
+        Subscript,
+        Superscript,
+        Mathematics,
+        AutoPair,
+        LinkHover,
+        SearchHighlight,
+        EditorShortcuts.configure({
+          onSave: () => onSaveRef.current?.(),
+          onFind: () => setFindOpen(true),
         }),
         Placeholder.configure({
           placeholder: ({ node }) => {
@@ -249,6 +297,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         LinkExtension.configure({
           openOnClick: false,
           autolink: true,
+          validate: (href) => isSafeEditorUrl(href),
           HTMLAttributes: { class: "text-primary underline underline-offset-4 cursor-pointer" },
         }),
         Image.configure({ HTMLAttributes: { class: "rounded-lg my-4 max-w-full shadow-lg" } }),
@@ -471,6 +520,18 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               <div className="w-[1px] h-4 bg-white/10 mx-1" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} icon={Heading1} label="H1" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })} icon={Heading2} label="H2" />
+              <button
+                type="button"
+                title="H3"
+                onMouseDown={(ev) => { ev.preventDefault(); editor.chain().focus().toggleHeading({ level: 3 }).run(); }}
+                className={`px-1.5 h-7 text-[11px] font-semibold rounded-lg transition-colors ${editor.isActive("heading", { level: 3 }) ? "bg-primary/20 text-primary" : "text-neutral-400 hover:bg-white/10 hover:text-white"}`}
+              >H3</button>
+              <button
+                type="button"
+                title="Highlight"
+                onMouseDown={(ev) => { ev.preventDefault(); editor.chain().focus().toggleHighlight().run(); }}
+                className={`px-1.5 h-7 text-[11px] rounded-lg transition-colors ${editor.isActive("highlight") ? "bg-yellow-300/30 text-yellow-200" : "text-neutral-400 hover:bg-white/10 hover:text-white"}`}
+              >==</button>
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} icon={Quote} label="Quote" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} icon={List} label="Bullets" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} icon={ListOrdered} label="Numbered" />
@@ -481,6 +542,14 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
                   const url = window.prompt("URL", e.getAttributes("link").href || "https://");
                   if (url === null) return;
                   if (url === "") { e.chain().focus().unsetLink().run(); return; }
+                  if (!isSafeEditorUrl(url)) {
+                    toast({
+                      title: "Invalid link",
+                      description: "Only http(s), mailto, tel, or internal paths are allowed.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
                   e.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
                 }}
                 active={editor.isActive("link")} icon={LinkIcon} label="Link" />
@@ -553,7 +622,9 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
             </div>
           )}
           <EditorContent editor={editor} />
+          <StatusBar editor={editor} />
         </div>
+        <FindReplace editor={editor} open={findOpen} onClose={() => setFindOpen(false)} />
       </>
     );
   }

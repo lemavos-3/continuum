@@ -54,7 +54,7 @@ const Privacy = () => {
         </section>
 
         <p className="mt-16 text-sm text-zinc-500">
-          Any questions about your privacy? Reach out to lemavos.noreply@gmail.com
+          Any questions about your privacy? Reach out to continuumnodes@gmail.com
         </p>
       </div>
     </div>

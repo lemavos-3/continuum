@@ -3,6 +3,7 @@ import AppLayout from "@/components/AppLayout";
 import { plansApi, subscriptionApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { isUnlimited } from "@/lib/plan";
 import { type Plan, type PlanLimits } from "@/types";
 import { cn } from "@/lib/utils";
 import {
@@ -103,11 +104,11 @@ export default function Subscription() {
   };
 
   const currentPlan = ((sub?.effectivePlan || user?.plan) as Plan) || "FREE";
-  const formatLimit = (val: number, suffix = "") => val === -1 ? "Unlimited" : `${val}${suffix}`;
+  const formatLimit = (val: number, suffix = "") => isUnlimited(val) ? "∞" : `${val}${suffix}`;
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-5xl px-6 py-10 lg:px-12 lg:py-16 space-y-12">
+      <div className="hidden mx-auto max-w-5xl px-6 py-10 lg:px-12 lg:py-16 space-y-12">
         
         {/* HEADER */}
         <header>

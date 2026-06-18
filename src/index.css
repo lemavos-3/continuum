@@ -314,6 +314,10 @@
   .continuum-editor th, .continuum-editor td { @apply border border-border px-3 py-2 align-top; }
   .continuum-editor th { @apply bg-muted/50 font-medium text-left; }
   .continuum-editor .ProseMirror-selectednode { @apply ring-1 ring-white/40 rounded; }
+  .continuum-editor mark { background: hsl(50 95% 60% / 0.35); color: inherit; padding: 0 2px; border-radius: 2px; }
+  .continuum-editor sub, .continuum-editor sup { font-size: 0.75em; line-height: 0; }
+  .continuum-editor .search-hit { background: hsl(45 95% 55% / 0.35); border-radius: 2px; }
+  .continuum-editor .search-hit-current { background: hsl(25 95% 60% / 0.6); outline: 1px solid hsl(25 95% 60%); }
 
   .continuum-editor p.is-editor-empty:first-child::before,
   .continuum-editor h1.is-empty::before,

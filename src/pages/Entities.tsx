@@ -5,13 +5,17 @@ import { entitiesApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import UpgradeModal from "@/components/UpgradeModal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Button } from "@/components/ui/button";
 import { CreateEntityDialog } from "@/components/CreateEntityDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Plus,
   Search,
   Loader2,
   Trash2,
   SlidersHorizontal,
+  Check,
+  X,
 } from "@/lib/heroicons";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -89,6 +93,7 @@ function NavItem({ label, count, active, onClick }: NavItemProps) {
 /* ── Page ─────────────────────────────────────────────────────────────── */
 
 export default function Entities() {
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { refresh: refreshUsage, applyUsageDelta } = usePlanGate();
@@ -106,6 +111,12 @@ export default function Entities() {
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [pendingDeleteEntity, setPendingDeleteEntity] = useState<Entity | null>(null);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
+  // Multiselect
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   // Controle de Swipe Lateral para Mobile
   const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
@@ -162,6 +173,43 @@ export default function Entities() {
       setPendingDeleteEntity(null);
     }
   };
+
+  /* Multiselect */
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const confirmBulkDelete = async () => {
+    const targets = entities.filter((e) => selectedIds.has(e.id));
+    if (targets.length === 0) return;
+    setBulkDeleting(true);
+    try {
+      await Promise.all(targets.map((e) => entitiesApi.delete(e.id)));
+      setEntities((prev) => prev.filter((x) => !selectedIds.has(x.id)));
+      const activities = targets.filter((e) => e.type === "ACTIVITY").length;
+      applyUsageDelta({ entitiesCount: -targets.length, activitiesCount: -activities });
+      void refreshUsage();
+      toast({ title: `${targets.length} ${targets.length === 1 ? "entity" : "entities"} removed` });
+      exitSelectMode();
+    } catch {
+      toast({ title: "Error deleting entities", variant: "destructive" });
+    } finally {
+      setBulkDeleting(false);
+      setBulkDeleteOpen(false);
+    }
+  };
+
+
 
   /* Contadores da Barra Lateral */
   const counts = useMemo(() => {
@@ -260,23 +308,35 @@ export default function Entities() {
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">{viewLabel}</p>
-                  <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">Entities</h1>
+                  <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">{t("entities_title")}</h1>
                   <p className="mt-2 text-sm text-white/50">
                     The atoms of your knowledge graph.
                   </p>
                 </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <button
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
                     onClick={() => setFilterDrawerOpen(true)}
-                    className="grid h-9 w-9 place-items-center rounded-sm border border-white/15 text-white/80 transition-colors hover:border-white/40 hover:text-white lg:hidden"
+                    className="lg:hidden h-9 w-9 p-0 text-white/80"
                     aria-label="Open filters"
                   >
-                    <SlidersHorizontal className="h-3.5 w-3.5" />
-                  </button>
-                  <button onClick={() => setCreateOpen(true)} className="btn-primary flex items-center gap-2 h-9 px-4 rounded-sm text-sm">
+                    <SlidersHorizontal className="h-4 w-4" />
+                  </Button>
+                  {selectMode ? (
+                    <Button size="sm" className="gap-2" onClick={exitSelectMode}>
+                      <X className="h-3.5 w-3.5" /> Done
+                    </Button>
+                  ) : (
+                    <Button size="sm" className="gap-2" onClick={() => setSelectMode(true)}>
+                      <Check className="h-3.5 w-3.5" /> Select
+                    </Button>
+                  )}
+                  <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
                     <Plus className="h-3.5 w-3.5" /> New entity
-                  </button>
+                  </Button>
                 </div>
+
               </div>
             </header>
 
@@ -287,7 +347,7 @@ export default function Entities() {
                 <input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search by name, type or description…"
+                  placeholder={t("common_search") + "…"}
                   className="w-full border-0 bg-transparent pl-6 text-sm text-white placeholder:italic placeholder:text-white/30 focus:outline-none focus:ring-0"
                 />
               </div>
@@ -323,7 +383,34 @@ export default function Entities() {
               </div>
             </div>
 
+            {/* Selection action bar */}
+            {selectMode && (
+              <div className="sticky top-[7.5rem] z-20 mb-6 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-white/15 bg-black/80 px-3 py-2.5 backdrop-blur-xl">
+                <span className="text-sm text-white/70">{selectedIds.size} selected</span>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => {
+                      const allIds = filteredAndSorted.map((e) => e.id);
+                      const allSelected = allIds.every((id) => selectedIds.has(id));
+                      setSelectedIds(allSelected ? new Set() : new Set(allIds));
+                    }}
+                    className="rounded-sm border border-white/15 px-3 py-1.5 text-xs text-white/70 transition-colors hover:border-white/40 hover:text-white"
+                  >
+                    {filteredAndSorted.length > 0 && filteredAndSorted.every((e) => selectedIds.has(e.id)) ? "Clear all" : "Select all"}
+                  </button>
+                  <button
+                    onClick={() => setBulkDeleteOpen(true)}
+                    disabled={selectedIds.size === 0}
+                    className="inline-flex items-center gap-1.5 rounded-sm border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-40"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" /> Delete
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Listagem Contínua */}
+
             {loading ? (
               <div className="flex justify-center py-24">
                 <Loader2 className="h-5 w-5 animate-spin text-white/30" />
@@ -338,17 +425,33 @@ export default function Entities() {
               <ul className="divide-y divide-white/[0.06]">
                 {filteredAndSorted.map((entity) => {
                   const targetDate = sortBy === "updatedAt" ? (entity.updatedAt || entity.createdAt) : entity.createdAt;
+                  const selected = selectedIds.has(entity.id);
                   return (
                     <li key={entity.id}>
                       <button
-                        onClick={() => navigate(`/entities/${entity.id}`)}
-                        className="group relative flex w-full items-start gap-4 py-5 text-left transition-colors hover:bg-white/[0.02]"
+                        onClick={() => selectMode ? toggleSelect(entity.id) : navigate(`/entities/${entity.id}`)}
+                        className={cn(
+                          "group relative flex w-full items-start gap-4 py-5 text-left transition-colors hover:bg-white/[0.02]",
+                          selected && "bg-white/[0.04]"
+                        )}
                       >
                         {/* Linha de realce no Hover */}
                         <span
                           aria-hidden
                           className="absolute left-0 top-1/2 h-8 w-px -translate-x-3 -translate-y-1/2 bg-white opacity-0 transition-opacity group-hover:opacity-100"
                         />
+
+                        {selectMode && (
+                          <span
+                            className={cn(
+                              "mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-sm border transition-colors",
+                              selected ? "border-white bg-white text-black" : "border-white/30 text-transparent"
+                            )}
+                          >
+                            <Check className="h-3.5 w-3.5" />
+                          </span>
+                        )}
+
 
                         {/* Coluna da Data Relativa */}
                         <div className="hidden w-20 shrink-0 pt-1 sm:block">
@@ -374,6 +477,7 @@ export default function Entities() {
                         </div>
 
                         {/* Ações de Deleção no Hover */}
+                        {!selectMode && (
                         <div className="flex shrink-0 items-center gap-1 pt-1">
                           <span
                             role="button"
@@ -391,6 +495,8 @@ export default function Entities() {
                             <Trash2 className="h-3.5 w-3.5" />
                           </span>
                         </div>
+                        )}
+
                       </button>
                     </li>
                   );
@@ -424,6 +530,15 @@ export default function Entities() {
         confirmText="Delete"
         destructive
         onConfirm={confirmDelete}
+      />
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={(open) => !open && !bulkDeleting && setBulkDeleteOpen(false)}
+        title={`Delete ${selectedIds.size} ${selectedIds.size === 1 ? "entity" : "entities"}?`}
+        description="The selected entities will be permanently removed."
+        confirmText={bulkDeleting ? "Deleting…" : "Delete"}
+        destructive
+        onConfirm={confirmBulkDelete}
       />
     </AppLayout>
   );
