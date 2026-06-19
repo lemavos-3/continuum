@@ -136,7 +136,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           className="fixed inset-x-3 z-40 lg:hidden"
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
-          <div className="flex items-stretch justify-around gap-1 rounded-2xl border border-white/10 bg-background/40 px-2 py-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.45)] backdrop-blur-2xl supports-[backdrop-filter]:bg-background/30">
+          <div className="flex items-stretch justify-around gap-1 rounded-2xl border border-white/15 bg-background/75 px-2 py-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.45)] backdrop-blur-md supports-[backdrop-filter]:bg-background/65">
             {mobileTabs.map((it) => (
               <NavLink
                 key={it.to}
