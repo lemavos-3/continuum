@@ -590,19 +590,20 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto">
-            <Button variant="outline" onClick={() => navigate("/activities")} className="gap-2">
-              <Flame className="h-4 w-4" />
+            <Button size="sm" variant="outline" onClick={() => navigate("/activities")} className="gap-1.5 h-8 px-3 text-xs">
+              <Flame className="h-3.5 w-3.5" />
               Activities
             </Button>
-            <Button variant="outline" onClick={() => navigate("/projects")} className="gap-2">
-              <Clock className="h-4 w-4" />
+            <Button size="sm" variant="outline" onClick={() => navigate("/projects")} className="gap-1.5 h-8 px-3 text-xs">
+              <Clock className="h-3.5 w-3.5" />
               Timers
             </Button>
-            <Button onClick={() => void createNote()} disabled={creating} className="gap-2">
-              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+            <Button size="sm" onClick={() => void createNote()} disabled={creating} className="gap-1.5 h-8 px-3 text-xs">
+              {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
               {creating ? "Creating…" : "New note"}
             </Button>
           </div>
+
 
         </header>
 
