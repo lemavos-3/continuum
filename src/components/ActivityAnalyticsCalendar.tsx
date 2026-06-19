@@ -19,24 +19,15 @@ export function ActivityAnalyticsCalendar({ trackingDates = [] }: ActivityAnalyt
   const now = today(getLocalTimeZone());
 
   const stats = useMemo(() => {
-    // current month stats
     const ymCurrent = `${now.year}-${String(now.month).padStart(2, "0")}`;
     let monthActive = 0;
     completionSet.forEach((d) => {
       if (d.startsWith(ymCurrent)) monthActive += 1;
     });
-    // streak: consecutive days ending today
-    let streak = 0;
-    let cursor = now;
-    while (completionSet.has(cursor.toString())) {
-      streak += 1;
-      cursor = cursor.subtract({ days: 1 });
-    }
     const daysInMonth = now.calendar.getDaysInMonth(now);
     return {
       total: trackingDates.length,
       monthActive,
-      streak,
       monthPct: daysInMonth ? Math.round((monthActive / daysInMonth) * 100) : 0,
     };
   }, [completionSet, trackingDates.length, now]);
@@ -55,13 +46,13 @@ export function ActivityAnalyticsCalendar({ trackingDates = [] }: ActivityAnalyt
           </span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/5">
+        <div className="grid grid-cols-3 gap-px bg-white/5">
           <SummaryStat label="Total" value={stats.total} />
           <SummaryStat label="This month" value={stats.monthActive} />
-          <SummaryStat label="Streak" value={stats.streak} suffix={stats.streak === 1 ? "day" : "days"} />
           <SummaryStat label="Month rate" value={`${stats.monthPct}%`} />
         </div>
       </div>
+
 
       {/* Calendar */}
       <div className="border border-white/5 bg-white/[0.01] rounded-sm p-5">
