@@ -79,9 +79,9 @@ export interface DashboardMetrics {
   totalEntities: number;
   totalHabits: number;
   notesThisWeek: number;
-  currentStreak: number;
   completedToday: number;
 }
+
 
 export interface Subscription {
   id: string;
