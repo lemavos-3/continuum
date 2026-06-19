@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Calendar as Cal, CalendarCell, CalendarGrid, CalendarGridBody, CalendarGridHeader, CalendarHeaderCell, Heading, Button as RACButton } from "react-aria-components";
-import { getLocalTimeZone, today, parseDate } from "@internationalized/date";
+import { getLocalTimeZone, today } from "@internationalized/date";
 import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 import { cn } from "@/lib/utils";
 
