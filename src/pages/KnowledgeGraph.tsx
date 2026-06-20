@@ -171,6 +171,28 @@ export default function KnowledgeGraph() {
   const tappedAtRef = useRef(0);
   const focusModeRef = useRef(false);
   const clusterRef = useRef(false);
+  const openTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pressOriginRef = useRef<{ x: number; y: number } | null>(null);
+
+  const cancelPendingOpen = useCallback(() => {
+    if (openTimeoutRef.current) {
+      clearTimeout(openTimeoutRef.current);
+      openTimeoutRef.current = null;
+    }
+    pressOriginRef.current = null;
+  }, []);
+
+  const schedulePanelOpen = useCallback((node: GraphNode) => {
+    if (openTimeoutRef.current) clearTimeout(openTimeoutRef.current);
+    openTimeoutRef.current = setTimeout(() => {
+      openTimeoutRef.current = null;
+      pressOriginRef.current = null;
+      // call focusNode via ref to avoid stale closure issues
+      focusNodeRef.current?.(node);
+    }, 700);
+  }, []);
+
+  const focusNodeRef = useRef<((n: GraphNode) => void) | null>(null);
 
   // Re-aquecer a simulação ao mudar seleções
   useEffect(() => { selectedRef.current = selectedNode; alphaRef.current = Math.max(alphaRef.current, 0.4); }, [selectedNode]);
