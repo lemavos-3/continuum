@@ -13,8 +13,6 @@ import { getLocalTimeZone, today } from "@internationalized/date";
 import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
 import { ArrowRight } from "@/lib/heroicons";
 import { Button } from "@/components/ui/button";
-import { entitiesApi } from "@/lib/api";
-import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 
 interface ActivityCompletionCalendarProps {
@@ -34,7 +32,8 @@ export function ActivityCompletionCalendar({
   onMarkComplete,
   onOpenDetail,
 }: ActivityCompletionCalendarProps) {
-  const queryClient = useQueryClient();
+  void entityId;
+  void onMarkComplete;
 
   const completionSet = useMemo(() => {
     const s = new Set<string>();
@@ -43,11 +42,6 @@ export function ActivityCompletionCalendar({
   }, [trackingDates]);
 
   const now = today(getLocalTimeZone());
-
-  // kept for backward compatibility with consumers that still trigger completion
-  void entityId;
-  void onMarkComplete;
-  void queryClient;
 
   return (
     <div className="w-full max-w-sm border border-white/5 bg-white/[0.01] rounded-sm p-4">
