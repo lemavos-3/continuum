@@ -589,17 +589,17 @@ export default function Dashboard() {
               Here's what's happening across your knowledge graph.
             </p>
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <Button size="sm" variant="outline" onClick={() => navigate("/activities")} className="gap-1.5 h-8 px-3 text-xs">
-              <Flame className="h-3.5 w-3.5" />
+          <div className="flex items-center gap-1.5 self-start sm:self-auto">
+            <Button size="sm" variant="outline" onClick={() => navigate("/activities")} className="gap-1 h-7 px-2.5 text-[11px]">
+              <Flame className="h-3 w-3" />
               Activities
             </Button>
-            <Button size="sm" variant="outline" onClick={() => navigate("/projects")} className="gap-1.5 h-8 px-3 text-xs">
-              <Clock className="h-3.5 w-3.5" />
-              Timers
+            <Button size="sm" variant="outline" onClick={() => navigate("/projects")} className="gap-1 h-7 px-2.5 text-[11px]">
+              <Clock className="h-3 w-3" />
+              Project
             </Button>
-            <Button size="sm" onClick={() => void createNote()} disabled={creating} className="gap-1.5 h-8 px-3 text-xs">
-              {creating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
+            <Button size="sm" onClick={() => void createNote()} disabled={creating} className="gap-1 h-7 px-2.5 text-[11px]">
+              {creating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
               {creating ? "Creating…" : "New note"}
             </Button>
           </div>
