@@ -11,7 +11,7 @@ import {
 } from "react-aria-components";
 import { getLocalTimeZone, today } from "@internationalized/date";
 import { ChevronLeftIcon, ChevronRightIcon } from "@radix-ui/react-icons";
-import { Check } from "@/lib/heroicons";
+import { ArrowRight } from "@/lib/heroicons";
 import { Button } from "@/components/ui/button";
 import { entitiesApi } from "@/lib/api";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,6 +21,7 @@ interface ActivityCompletionCalendarProps {
   entityId: string;
   trackingDates?: string[];
   onMarkComplete?: () => void;
+  onOpenDetail?: () => void;
 }
 
 /**
@@ -31,6 +32,7 @@ export function ActivityCompletionCalendar({
   entityId,
   trackingDates = [],
   onMarkComplete,
+  onOpenDetail,
 }: ActivityCompletionCalendarProps) {
   const queryClient = useQueryClient();
 
@@ -41,18 +43,11 @@ export function ActivityCompletionCalendar({
   }, [trackingDates]);
 
   const now = today(getLocalTimeZone());
-  const todayStr = now.toString();
-  const isTrackedToday = completionSet.has(todayStr);
 
-  const handleMarkComplete = async () => {
-    try {
-      await entitiesApi.track(entityId);
-      queryClient.invalidateQueries({ queryKey: ["entities"] });
-      onMarkComplete?.();
-    } catch (error) {
-      console.error("Failed to mark activity as complete:", error);
-    }
-  };
+  // kept for backward compatibility with consumers that still trigger completion
+  void entityId;
+  void onMarkComplete;
+  void queryClient;
 
   return (
     <div className="w-full max-w-sm border border-white/5 bg-white/[0.01] rounded-sm p-4">
