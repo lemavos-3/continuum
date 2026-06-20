@@ -409,3 +409,13 @@ export function TimerWidget({
   );
 }
 
+function SummaryStat({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="bg-black/40 p-3">
+      <p className="font-mono text-[9px] uppercase tracking-[0.28em] text-white/30">{label}</p>
+      <p className="mt-1.5 font-serif text-lg text-white tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+
