@@ -105,13 +105,12 @@ export function ActivityCompletionCalendar({
         </div>
         <Button
           size="sm"
-          variant={isTrackedToday ? "default" : "outline"}
+          variant="outline"
           className="gap-1.5 h-7 px-3 text-[11px]"
-          onClick={handleMarkComplete}
-          disabled={isTrackedToday}
+          onClick={onOpenDetail}
         >
-          <Check className="w-3 h-3" />
-          {isTrackedToday ? "Done today" : "Complete"}
+          Open detail
+          <ArrowRight className="w-3 h-3" />
         </Button>
       </div>
     </div>
