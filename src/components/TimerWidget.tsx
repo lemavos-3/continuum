@@ -136,9 +136,28 @@ export function TimerWidget({
     if (isFullscreen) {
       const elem = fullscreenContainerRef.current;
       if (elem?.requestFullscreen) {
-        elem.requestFullscreen().catch((err) => console.warn('Erro ao forçar fullscreen:', err));
+        elem.requestFullscreen()
+          .then(() => {
+            // After entering fullscreen, lock to landscape on mobile devices.
+            const isCoarse =
+              typeof window !== 'undefined' &&
+              (window.matchMedia?.('(pointer: coarse)').matches || window.innerWidth < 768);
+            if (isCoarse) {
+              const orientation = (screen as any)?.orientation;
+              if (orientation && typeof orientation.lock === 'function') {
+                orientation.lock('landscape').catch((err: unknown) => {
+                  console.warn('Orientation lock unavailable:', err);
+                });
+              }
+            }
+          })
+          .catch((err) => console.warn('Erro ao forçar fullscreen:', err));
       }
     } else {
+      const orientation = (screen as any)?.orientation;
+      if (orientation && typeof orientation.unlock === 'function') {
+        try { orientation.unlock(); } catch (err) { console.warn(err); }
+      }
       if (document.fullscreenElement) {
         document.exitFullscreen().catch((err) => console.warn(err));
       }
