@@ -850,6 +850,11 @@ export default function KnowledgeGraph() {
     if (!rect) return;
     const sx = touch.clientX - rect.left, sy = touch.clientY - rect.top;
     if (draggingRef.current) {
+      if (pressOriginRef.current) {
+        const ddx = touch.clientX - pressOriginRef.current.x;
+        const ddy = touch.clientY - pressOriginRef.current.y;
+        if (ddx * ddx + ddy * ddy > 36) cancelPendingOpen();
+      }
       const w = screenToWorld(sx, sy);
       draggingRef.current.x = w.x; draggingRef.current.y = w.y;
       draggingRef.current.vx = 0; draggingRef.current.vy = 0;
