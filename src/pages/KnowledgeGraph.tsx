@@ -813,12 +813,16 @@ export default function KnowledgeGraph() {
       return;
     }
     tappedAtRef.current = now;
-    if (node) { 
-      draggingRef.current = node; 
-      focusNode(node); 
+    if (node) {
+      draggingRef.current = node;
       alphaRef.current = Math.max(alphaRef.current, 0.5);
+      pressOriginRef.current = { x: touch.clientX, y: touch.clientY };
+      schedulePanelOpen(node);
     }
-    else { panningRef.current = true; setSelectedNode(null); closeInspector(); }
+    else {
+      cancelPendingOpen();
+      panningRef.current = true; setSelectedNode(null); closeInspector();
+    }
     lastMouseRef.current = { x: touch.clientX, y: touch.clientY };
   };
 
