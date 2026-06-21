@@ -283,11 +283,6 @@ export default function EntityDetail() {
             </div>
           )}
 
-          {isHabit && (
-            <div className="mt-5 flex flex-wrap gap-2 text-xs uppercase tracking-wider">
-              <span className="px-3 py-1 rounded-md border border-white/10 text-white/60">Total {totalCompletions}</span>
-            </div>
-          )}
 
         </header>
 
