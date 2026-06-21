@@ -969,8 +969,8 @@ export default function KnowledgeGraph() {
           )}
 
           {optionsOpen && (
-            <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/50 px-4 py-6 sm:p-6">
-              <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/95 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl">
+            <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/30 backdrop-blur-sm px-4 py-6 sm:p-6">
+              <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-black/40 backdrop-blur-2xl">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold">Graph options</p>
@@ -979,10 +979,10 @@ export default function KnowledgeGraph() {
                   <button
                     type="button"
                     onClick={() => setOptionsOpen(false)}
-                    className="grid h-9 w-9 place-items-center rounded-full bg-white/5 text-white transition hover:bg-white/10"
+                    className="grid h-10 w-10 place-items-center rounded-md bg-white/5 text-white transition hover:bg-white/10"
                     aria-label="Close graph options"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
 
