@@ -189,7 +189,7 @@ export default function KnowledgeGraph() {
       pressOriginRef.current = null;
       // call focusNode via ref to avoid stale closure issues
       focusNodeRef.current?.(node);
-    }, 700);
+    }, 300);
   }, []);
 
   const focusNodeRef = useRef<((n: GraphNode) => void) | null>(null);
