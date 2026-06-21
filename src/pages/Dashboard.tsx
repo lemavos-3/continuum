@@ -840,7 +840,14 @@ export default function Dashboard() {
                         {exporting ? "Exporting…" : "Download backup"}
                       </button>
                     ) : (
-                      <span className="text-neutral-600 text-[10px]">Upgrade required</span>
+                      <button
+                        type="button"
+                        onClick={() => navigate("/subscription")}
+                        className="text-neutral-500 hover:text-white underline underline-offset-4 transition-colors text-[10px] uppercase tracking-wider"
+                        title="Available on Vision plan"
+                      >
+                        Upgrade to export
+                      </button>
                     )}
                   </div>
                 </div>

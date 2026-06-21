@@ -189,7 +189,7 @@ export default function KnowledgeGraph() {
       pressOriginRef.current = null;
       // call focusNode via ref to avoid stale closure issues
       focusNodeRef.current?.(node);
-    }, 700);
+    }, 300);
   }, []);
 
   const focusNodeRef = useRef<((n: GraphNode) => void) | null>(null);
@@ -969,8 +969,8 @@ export default function KnowledgeGraph() {
           )}
 
           {optionsOpen && (
-            <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/50 px-4 py-6 sm:p-6">
-              <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/95 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl">
+            <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/30 backdrop-blur-sm px-4 py-6 sm:p-6">
+              <div className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-5 shadow-2xl shadow-black/40 backdrop-blur-2xl">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold">Graph options</p>
@@ -979,10 +979,10 @@ export default function KnowledgeGraph() {
                   <button
                     type="button"
                     onClick={() => setOptionsOpen(false)}
-                    className="grid h-9 w-9 place-items-center rounded-full bg-white/5 text-white transition hover:bg-white/10"
+                    className="grid h-10 w-10 place-items-center rounded-md bg-white/5 text-white transition hover:bg-white/10"
                     aria-label="Close graph options"
                   >
-                    <X className="h-4 w-4" />
+                    <X className="h-5 w-5" />
                   </button>
                 </div>
 
@@ -1137,7 +1137,7 @@ export default function KnowledgeGraph() {
             )}
 
             {legendOpen && (
-              <div className="absolute left-4 top-4 z-20 rounded-3xl border border-white/10 bg-black/80 p-4 text-sm text-white shadow-lg shadow-black/30 backdrop-blur-xl">
+              <div className="absolute left-4 top-4 z-20 rounded-3xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white shadow-lg shadow-black/30 backdrop-blur-2xl">
                 <p className="mb-3 text-xs uppercase tracking-[0.24em] text-muted-foreground">Legend</p>
                 <div className="grid gap-2">
                   {availableTypes.map(({ label, color, type }) => (
@@ -1152,7 +1152,7 @@ export default function KnowledgeGraph() {
 
             {hoveredNode && tooltipPos && !selectedNode && (
               <div
-                className="absolute z-20 pointer-events-none px-2.5 py-1.5 rounded-md bg-black/90 backdrop-blur-sm border border-white/10 shadow-lg"
+                className="absolute z-20 pointer-events-none px-2.5 py-1.5 rounded-md bg-white/[0.04] backdrop-blur-2xl border border-white/10 shadow-lg"
                 style={{
                   left: Math.min(tooltipPos.x + 12, (containerRef.current?.clientWidth || 300) - 180),
                   top: Math.max(8, tooltipPos.y - 40),

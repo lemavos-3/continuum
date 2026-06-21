@@ -217,9 +217,11 @@ export default function EntityDetail() {
   if (!entity) return null;
 
   const isHabit = entity.type === "ACTIVITY";
+  void isHabit;
   const today = new Date().toISOString().split("T")[0];
+  void today;
   const trackedToday = entity.trackingDates?.some((date) => date.startsWith(today));
-  const totalCompletions = entity.trackingDates?.length ?? stats?.totalCompletions ?? 0;
+  void trackedToday;
 
 
   const typeLabel = entity.type.charAt(0) + entity.type.slice(1).toLowerCase();
@@ -283,11 +285,6 @@ export default function EntityDetail() {
             </div>
           )}
 
-          {isHabit && (
-            <div className="mt-5 flex flex-wrap gap-2 text-xs uppercase tracking-wider">
-              <span className="px-3 py-1 rounded-md border border-white/10 text-white/60">Total {totalCompletions}</span>
-            </div>
-          )}
 
         </header>
 
