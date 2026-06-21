@@ -979,7 +979,7 @@ export default function KnowledgeGraph() {
                   <button
                     type="button"
                     onClick={() => setOptionsOpen(false)}
-                    className="grid h-10 w-10 place-items-center rounded-md bg-white/5 text-white transition hover:bg-white/10"
+                    className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10"
                     aria-label="Close graph options"
                   >
                     <X className="h-5 w-5" />
