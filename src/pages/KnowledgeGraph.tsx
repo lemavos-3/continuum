@@ -1137,7 +1137,7 @@ export default function KnowledgeGraph() {
             )}
 
             {legendOpen && (
-              <div className="absolute left-4 top-4 z-20 rounded-3xl border border-white/10 bg-black/80 p-4 text-sm text-white shadow-lg shadow-black/30 backdrop-blur-xl">
+              <div className="absolute left-4 top-4 z-20 rounded-3xl border border-white/10 bg-white/[0.04] p-4 text-sm text-white shadow-lg shadow-black/30 backdrop-blur-2xl">
                 <p className="mb-3 text-xs uppercase tracking-[0.24em] text-muted-foreground">Legend</p>
                 <div className="grid gap-2">
                   {availableTypes.map(({ label, color, type }) => (
@@ -1152,7 +1152,7 @@ export default function KnowledgeGraph() {
 
             {hoveredNode && tooltipPos && !selectedNode && (
               <div
-                className="absolute z-20 pointer-events-none px-2.5 py-1.5 rounded-md bg-black/90 backdrop-blur-sm border border-white/10 shadow-lg"
+                className="absolute z-20 pointer-events-none px-2.5 py-1.5 rounded-md bg-white/[0.04] backdrop-blur-2xl border border-white/10 shadow-lg"
                 style={{
                   left: Math.min(tooltipPos.x + 12, (containerRef.current?.clientWidth || 300) - 180),
                   top: Math.max(8, tooltipPos.y - 40),
