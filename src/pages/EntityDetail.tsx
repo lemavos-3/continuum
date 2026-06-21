@@ -217,9 +217,11 @@ export default function EntityDetail() {
   if (!entity) return null;
 
   const isHabit = entity.type === "ACTIVITY";
+  void isHabit;
   const today = new Date().toISOString().split("T")[0];
+  void today;
   const trackedToday = entity.trackingDates?.some((date) => date.startsWith(today));
-  const totalCompletions = entity.trackingDates?.length ?? stats?.totalCompletions ?? 0;
+  void trackedToday;
 
 
   const typeLabel = entity.type.charAt(0) + entity.type.slice(1).toLowerCase();
