@@ -73,15 +73,15 @@ export function ActivityAnalyticsCalendar({ trackingDates = [] }: ActivityAnalyt
             </RACButton>
           </header>
 
-          <CalendarGrid className="w-full">
+          <CalendarGrid className="w-full table-fixed">
             <CalendarGridHeader>
               {(day) => (
-                <CalendarHeaderCell className="pb-2 font-mono text-[9px] uppercase tracking-widest text-white/30">
+                <CalendarHeaderCell className="pb-2 font-mono text-[9px] uppercase tracking-widest text-white/30 text-center">
                   {day}
                 </CalendarHeaderCell>
               )}
             </CalendarGridHeader>
-            <CalendarGridBody className="[&_td]:p-0.5">
+            <CalendarGridBody className="[&_td]:p-0.5 [&_td]:text-center">
               {(date) => {
                 const dateStr = date.toString();
                 const isCompleted = completionSet.has(dateStr);
@@ -90,7 +90,7 @@ export function ActivityAnalyticsCalendar({ trackingDates = [] }: ActivityAnalyt
                   <CalendarCell
                     date={date}
                     className={cn(
-                      "relative mx-auto flex aspect-square size-9 items-center justify-center rounded-sm border text-xs outline-none transition-colors",
+                      "relative mx-auto flex aspect-square w-full max-w-[44px] items-center justify-center rounded-sm border text-xs outline-none transition-colors",
                       "data-[outside-month]:opacity-30 data-[focus-visible]:ring-1 data-[focus-visible]:ring-white/40",
                       isCompleted
                         ? "border-white/30 bg-white/15 text-white"
