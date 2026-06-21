@@ -264,7 +264,7 @@ export function TimerWidget({
   }
 
   return (
-    <div className="border border-white/5 bg-white/[0.01] rounded-sm p-5 text-white max-w-sm">
+    <div className="border border-white/5 bg-white/[0.01] rounded-sm p-5 text-white w-full">
       {/* Header — Activity aesthetic */}
       <div className="flex items-center justify-between mb-5">
         <div>
