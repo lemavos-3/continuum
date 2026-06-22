@@ -175,7 +175,7 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
           animate={{ opacity: 1, x: 0 }}
           exit={{ opacity: 0, x: 320 }}
           transition={{ duration: 0.25 }}
-          className="fixed right-0 top-0 bottom-0 z-40 w-[22rem] border-l border-white/15 bg-white/[0.08] backdrop-blur-md shadow-2xl"
+          className="fixed right-0 top-0 bottom-0 z-40 w-[22rem] border-l border-white/10 bg-black/95 backdrop-blur-md shadow-2xl"
         >
           <ScrollArea className="h-full">
             <div className="space-y-4 p-6">
