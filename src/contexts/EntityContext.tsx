@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext, useState, useCallback } from 'react';
+import { ReactNode, createContext, useContext, useMemo, useState, useCallback } from 'react';
 import type { Entity, Note } from '@/types';
 
 export interface MentionedEntity {
@@ -92,7 +92,7 @@ export function EntityProvider({ children }: { children: ReactNode }) {
     // Placeholder for future graph update logic.
   }, []);
 
-  const value: EntityContextState = {
+  const value = useMemo<EntityContextState>(() => ({
     activeMention,
     setActiveMention,
     hoveredMentionId,
@@ -110,7 +110,21 @@ export function EntityProvider({ children }: { children: ReactNode }) {
     removeEntityFromNote,
     fetchEntities,
     updateGraph,
-  };
+  }), [
+    activeMention,
+    hoveredMentionId,
+    entitiesInNote,
+    inspectorOpen,
+    inspectorEntity,
+    loadingEntityId,
+    openInspector,
+    closeInspector,
+    addEntityToNote,
+    addEntity,
+    removeEntityFromNote,
+    fetchEntities,
+    updateGraph,
+  ]);
 
   return (
     <EntityContext.Provider value={value}>
