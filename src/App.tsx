@@ -8,34 +8,55 @@ import { UsageProvider } from "@/contexts/UsageContext";
 import { EntityProvider } from "@/contexts/EntityContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import GoogleCallback from "./pages/GoogleCallback";
-import LoginSuccess from "./pages/LoginSuccess";
-import Dashboard from "./pages/Dashboard";
-import LandingPage from "./pages/LandingPage";
-import Notes from "./pages/Notes";
-import NoteEditor from "./pages/NoteEditor";
-import Entities from "./pages/Entities";
-import EntityDetail from "./pages/EntityDetail";
-import KnowledgeGraph from "./pages/KnowledgeGraph";
-import Vault from "./pages/Vault";
-import VaultDownload from "./pages/VaultDownload";
-import Activities from "./pages/Activities";
-import Projects from "./pages/Projects";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
-import Subscription from "./pages/Subscription";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import Insights from "./pages/Insights";
+import { Suspense, lazy } from "react";
 import { Loader2 } from "@/lib/heroicons";
 import { extractAuthTokensFromLocation, sanitizeAuthRedirectUrl } from "@/lib/auth-redirect";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
-const queryClient = new QueryClient();
+// Eager: tiny entry routes used on first paint
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+import LoginSuccess from "./pages/LoginSuccess";
+import LandingPage from "./pages/LandingPage";
+import Dashboard from "./pages/Dashboard";
+
+// Lazy: heavy or rarely-visited routes
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const GoogleCallback = lazy(() => import("./pages/GoogleCallback"));
+const Notes = lazy(() => import("./pages/Notes"));
+const NoteEditor = lazy(() => import("./pages/NoteEditor"));
+const Entities = lazy(() => import("./pages/Entities"));
+const EntityDetail = lazy(() => import("./pages/EntityDetail"));
+const KnowledgeGraph = lazy(() => import("./pages/KnowledgeGraph"));
+const Vault = lazy(() => import("./pages/Vault"));
+const VaultDownload = lazy(() => import("./pages/VaultDownload"));
+const Activities = lazy(() => import("./pages/Activities"));
+const Projects = lazy(() => import("./pages/Projects"));
+const Terms = lazy(() => import("./pages/Terms"));
+const Privacy = lazy(() => import("./pages/Privacy"));
+const Subscription = lazy(() => import("./pages/Subscription"));
+const Profile = lazy(() => import("./pages/Profile"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Insights = lazy(() => import("./pages/Insights"));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      retry: 1,
+    },
+  },
+});
+
+const RouteFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+  </div>
+);
 
 function HomeRoute() {
   const { user, loading } = useAuth();
@@ -46,76 +67,60 @@ function HomeRoute() {
     return <LoginSuccess />;
   }
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (loading) return <RouteFallback />;
   if (user) return <Dashboard />;
   return <LandingPage />;
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (loading) return <RouteFallback />;
   if (!user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (loading) return <RouteFallback />;
   if (user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 const AppRoutes = () => (
-  <Routes>
-    <Route path="/" element={<HomeRoute />} />
-    <Route path="/index" element={<HomeRoute />} />
-    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-    <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-    <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-    <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-    <Route path="/google-callback" element={<GoogleCallback />} />
-    <Route path="/login-successful" element={<LoginSuccess />} />
-    <Route path="/login-token" element={<LoginSuccess />} />
-    <Route path="/terms" element={<Terms />} />
-    <Route path="/privacy" element={<Privacy />} />
-    <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
-    <Route path="/notes/:id" element={<ProtectedRoute><NoteEditor /></ProtectedRoute>} />
-    <Route path="/entities" element={<ProtectedRoute><Entities /></ProtectedRoute>} />
-    <Route path="/entities/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
-    {/* Activity Routes */}
-    <Route path="/tracking" element={<Navigate to="/activities" replace />} />
-    <Route path="/activities" element={<ProtectedRoute><Activities /></ProtectedRoute>} />
-    <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-    {/* Analytics Routes */}
-    <Route path="/tracking/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
-    <Route path="/activities/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
-    <Route path="/projects/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
-    <Route path="/graph" element={<ProtectedRoute><KnowledgeGraph /></ProtectedRoute>} />
-    <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
-    <Route path="/vault" element={<ProtectedRoute><Vault /></ProtectedRoute>} />
-    <Route path="/vault/download/:fileId" element={<ProtectedRoute><VaultDownload /></ProtectedRoute>} />
-    <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
-    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-    <Route path="*" element={<NotFound />} />
-  </Routes>
+  <Suspense fallback={<RouteFallback />}>
+    <Routes>
+      <Route path="/" element={<HomeRoute />} />
+      <Route path="/index" element={<HomeRoute />} />
+      <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+      <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+      <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+      <Route path="/google-callback" element={<GoogleCallback />} />
+      <Route path="/login-successful" element={<LoginSuccess />} />
+      <Route path="/login-token" element={<LoginSuccess />} />
+      <Route path="/terms" element={<Terms />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
+      <Route path="/notes/:id" element={<ProtectedRoute><NoteEditor /></ProtectedRoute>} />
+      <Route path="/entities" element={<ProtectedRoute><Entities /></ProtectedRoute>} />
+      <Route path="/entities/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
+      {/* Activity Routes */}
+      <Route path="/tracking" element={<Navigate to="/activities" replace />} />
+      <Route path="/activities" element={<ProtectedRoute><Activities /></ProtectedRoute>} />
+      <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+      {/* Analytics Routes */}
+      <Route path="/tracking/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
+      <Route path="/activities/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
+      <Route path="/projects/:id" element={<ProtectedRoute><EntityDetail /></ProtectedRoute>} />
+      <Route path="/graph" element={<ProtectedRoute><KnowledgeGraph /></ProtectedRoute>} />
+      <Route path="/insights" element={<ProtectedRoute><Insights /></ProtectedRoute>} />
+      <Route path="/vault" element={<ProtectedRoute><Vault /></ProtectedRoute>} />
+      <Route path="/vault/download/:fileId" element={<ProtectedRoute><VaultDownload /></ProtectedRoute>} />
+      <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
+      <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  </Suspense>
 );
 
 const App = () => (
