@@ -46,9 +46,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async (opts: { silent?: boolean } = {}) => {
     try {
+      const storedAccessToken = typeof window !== "undefined"
+        ? sessionStorage.getItem("access_token") ?? localStorage.getItem("access_token")
+        : null;
+      const storedRefreshToken = typeof window !== "undefined"
+        ? localStorage.getItem("refresh_token")
+        : null;
+
+      // No credentials -> skip backend call so landing/login renders immediately.
+      if (!storedAccessToken && !storedRefreshToken) {
+        setUser(null);
+        return;
+      }
+
       const { data } = await authApi.me();
       if (data) {
-        // Derive a sensible username fallback from the email if backend didn't return one
         const emailLocal = typeof data.email === "string" ? data.email.split("@")[0] : "";
         const next: AppUser = {
           id: data.id ?? data.userId,
@@ -71,8 +83,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: unknown) {
       const status = (error as any)?.response?.status;
-      // Only 401 means the session is truly invalid. 403 = business rule (plan limits etc).
-      // Network errors / 5xx / 403 must NOT clear the session — keep cached user.
       if (status === 401) {
         sessionStorage.removeItem("access_token");
         sessionStorage.removeItem("refresh_token");
