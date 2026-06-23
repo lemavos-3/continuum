@@ -14,18 +14,6 @@ export default defineConfig(({ mode }) => ({
       input: {
         main: path.resolve(__dirname, 'index.html'),
       },
-      output: {
-        manualChunks(id) {
-          if (!id.includes('node_modules')) return;
-          if (id.includes('react-dom') || id.match(/[\\/]react[\\/]/)) return 'react';
-          if (id.includes('@tanstack')) return 'query';
-          if (id.includes('@tiptap') || id.includes('prosemirror')) return 'editor';
-          if (id.includes('recharts') || id.includes('d3-')) return 'charts';
-          if (id.includes('framer-motion')) return 'motion';
-          if (id.includes('@radix-ui')) return 'radix';
-          return 'vendor';
-        },
-      },
     },
   },
 
