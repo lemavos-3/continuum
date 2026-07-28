@@ -165,7 +165,7 @@ function WeeklySummary({ notes, totalNotes, totalEntities, graphNodeCount, curre
   const notesDelta = thisWeek - lastWeek;
 
   return (
-    <section className="border border-white/5 bg-white/[0.01] rounded-sm p-5 sm:p-8">
+    <section className="rounded-sm bg-white/[0.02] p-5 sm:p-8">
       <div className="flex items-center justify-between mb-6">
         <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">Weekly summary</p>
         <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono hidden sm:block">Last 7 days</p>
@@ -195,23 +195,23 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-2.5 overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 p-3.5 text-left shadow-sm",
-        "transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/60",
+        "group relative flex w-full flex-col gap-2.5 overflow-hidden rounded-xl bg-neutral-900/50 p-4 text-left shadow-sm",
+        "transition-all duration-300 hover:bg-neutral-900/70",
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <Badge variant="outline" className={cn("border text-[9px] font-medium px-1.5 py-0 shadow-sm", badgeStyle(item.badge))}>
+        <Badge variant="outline" className={cn("text-[9px] font-medium px-1.5 py-0 shadow-sm", badgeStyle(item.badge))}>
           {item.badge}
         </Badge>
         <span className="font-mono text-[9px] text-white/50">{item.score.toFixed(1)}</span>
       </div>
       <div className="flex items-start gap-2 flex-1 min-w-0">
-        <div className="mt-0.5 rounded-lg bg-white/[0.06] p-1 border border-white/5 shrink-0">
+        <div className="mt-0.5 rounded-lg bg-white/[0.06] p-1 shrink-0">
           <StickyNote className="h-3.5 w-3.5 text-neutral-400" />
         </div>
         <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{item.note.title || "Untitled"}</h3>
       </div>
-      <div className="mt-auto flex flex-wrap gap-1 pt-2 border-t border-white/5">
+      <div className="mt-auto flex flex-wrap gap-1 pt-2">
         {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
         {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)}</StatChip>}
         <StatChip>{formatDays(item.daysSinceLastInteraction)}</StatChip>
@@ -271,14 +271,14 @@ function DashboardInsightSection({
   const showAccordion = !loading && !empty && items.length > 4;
 
   return (
-    <div className={cn("border border-white/5 bg-white/[0.01] rounded-sm p-4 sm:p-6 flex flex-col", className)}>
+    <div className={cn("rounded-sm bg-neutral-950/70 p-4 sm:p-6 flex flex-col shadow-sm", className)}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">Signal</p>
+          <p className="text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono">Signal</p>
           <h2 className="mt-1 font-serif text-xl text-white">{title}</h2>
           {subtitle && <p className="mt-1 text-xs text-white/50">{subtitle}</p>}
         </div>
-        <div className="flex items-center justify-between sm:justify-end gap-4 mt-1 sm:mt-0 border-t border-white/5 sm:border-none pt-2 sm:pt-0">
+        <div className="flex items-center justify-end gap-4 mt-1 sm:mt-0">
           {onRefresh && (
             <button
               type="button"
@@ -305,11 +305,11 @@ function DashboardInsightSection({
         {loading ? (
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             {[0, 1].map((i) => (
-              <div key={i} className="h-[120px] w-full animate-pulse rounded-xl border border-white/5 bg-neutral-900/30" />
+              <div key={i} className="h-[120px] w-full animate-pulse rounded-xl bg-neutral-900/40" />
             ))}
           </div>
         ) : empty ? (
-          <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.01] p-6 text-center text-xs text-white/30 h-full flex flex-col items-center justify-center min-h-[120px]">
+          <div className="rounded-xl bg-neutral-900/50 p-6 text-center text-xs text-white/40 h-full flex flex-col items-center justify-center min-h-[120px]">
             Nothing to show yet.
           </div>
         ) : (
@@ -319,7 +319,7 @@ function DashboardInsightSection({
               <Accordion type="single" collapsible className="mt-3">
                 <AccordionItem value={title} className="border-none">
                   <AccordionTrigger className="px-0 py-0 hover:no-underline">
-                    <div className="flex w-full items-center justify-between gap-3 rounded-xl border border-white/5 bg-white/[0.01] px-3 py-2 text-xs font-medium text-white/50 hover:bg-white/[0.02] transition-colors">
+                    <div className="flex w-full items-center justify-between gap-3 rounded-xl bg-neutral-900/50 px-3 py-2 text-xs font-medium text-white/50 hover:bg-neutral-900/60 transition-colors">
                       <span>Show {visibleCount - previewItems.length} more</span>
                       <span>{visibleCount} of {totalCount}</span>
                     </div>
@@ -328,7 +328,7 @@ function DashboardInsightSection({
                     <div className={cn("grid gap-3 mb-3", gridColsClass)}>
                       {expandedItems}
                     </div>
-                    <div className="flex items-center justify-between gap-3 text-[10px] text-white/40 pt-2 border-t border-white/5">
+                    <div className="flex items-center justify-between gap-3 text-[10px] text-white/40 pt-2 border-t border-white/10">
                       <span>{totalCount > visibleCount ? `Showing ${visibleCount} of ${totalCount}` : `Showing all ${visibleCount}`}</span>
                       {viewMoreHref && (
                         <button
