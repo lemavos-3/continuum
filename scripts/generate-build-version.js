@@ -22,6 +22,19 @@ const parseNumeric = (value) => {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
 };
 
+const readExistingBuildVersion = () => {
+  if (!fs.existsSync(buildEnvPath)) return undefined;
+  const content = fs.readFileSync(buildEnvPath, "utf-8");
+  const match = content.match(/^VITE_BUILD_VERSION=(.+)$/m);
+  return match ? match[1].trim() : undefined;
+};
+
+const parseVersionParts = (version) => {
+  const match = /^v(\d{4}\.\d{2}\.\d{2})-(\d+)$/.exec(version);
+  if (!match) return undefined;
+  return { date: match[1], count: Number(match[2]) };
+};
+
 const asUtcDay = (value) => {
   const date = typeof value === "number" ? new Date(value * 1000) : new Date(value);
   if (Number.isNaN(date.getTime())) return undefined;
@@ -100,6 +113,14 @@ const run = async () => {
   if (!buildNumber && process.env.VERCEL_PROJECT_ID) {
     const maybeNumber = await getBuildNumberFromVercelApi(process.env.VERCEL_PROJECT_ID, process.env.VERCEL_TEAM_ID);
     if (maybeNumber) buildNumber = maybeNumber;
+  }
+
+  if (!buildNumber) {
+    const existingVersion = readExistingBuildVersion();
+    const parsed = existingVersion ? parseVersionParts(existingVersion) : undefined;
+    if (parsed?.date === dateString) {
+      buildNumber = parsed.count + 1;
+    }
   }
 
   if (!buildNumber) {
