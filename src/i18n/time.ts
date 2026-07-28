@@ -2,6 +2,7 @@ import type { Module } from "./index";
 
 export const dict: Module = {
   en: {
+    tm_tracked_word: "tracked",
     tm_project: "Project",
     tm_activity: "Activity",
     tm_timer: "Timer",
@@ -121,6 +122,7 @@ export const dict: Module = {
     tm_day_sat: "Sat",
   },
   es: {
+    tm_tracked_word: "registrados",
     tm_project: "Proyecto",
     tm_activity: "Actividad",
     tm_timer: "Cronómetro",
@@ -240,6 +242,7 @@ export const dict: Module = {
     tm_day_sat: "Sáb",
   },
   pt: {
+    tm_tracked_word: "registrados",
     tm_project: "Projeto",
     tm_activity: "Atividade",
     tm_timer: "Cronômetro",
@@ -359,6 +362,7 @@ export const dict: Module = {
     tm_day_sat: "Sáb",
   },
   fr: {
+    tm_tracked_word: "suivis",
     tm_project: "Projet",
     tm_activity: "Activité",
     tm_timer: "Minuteur",
