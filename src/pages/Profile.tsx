@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi } from "@/lib/api";
+import { version } from "@/lib/version";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { getCurrentPlan, getPlanLimits, isUnlimited } from "@/lib/plan";
 import { Button } from "@/components/ui/button";
@@ -411,6 +412,9 @@ export default function Profile() {
             </div>
           </section>
         </div>
+      </div>
+      <div className="mx-auto max-w-5xl px-6 pb-6 text-right text-[10px] text-white/30">
+        {version}
       </div>
       <MarkdownImportDialog
         open={importOpen}
