@@ -4,6 +4,7 @@ import AppLayout from "@/components/AppLayout";
 import api, { plansApi, subscriptionApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { isUnlimited } from "@/lib/plan";
 import { type Plan, type PlanLimits } from "@/types";
 import { cn } from "@/lib/utils";
@@ -21,24 +22,25 @@ interface SubInfo {
   cancelAtPeriodEnd?: boolean;
 }
 
-// Only PRO benefits — no AI, no yearly mentions
-const VISION_BENEFITS = [
-  "Unlimited notes & entities",
-  "Unlimited history",
-  "4096MB Storage",
-  "Data export",
-  "Priority email support",
-];
-
 export default function Subscription() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [sub, setSub] = useState<SubInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [plans, setPlans] = useState<Array<{ plan: Plan; limits: PlanLimits; priceId?: string }>>([]);
   const [prices, setPrices] = useState<{ monthly?: string }>({});
+
+  // Only PRO benefits — no AI, no yearly mentions
+  const VISION_BENEFITS = [
+    t("bill_benefit_unlimited_notes_entities"),
+    t("bill_benefit_unlimited_history"),
+    t("bill_benefit_storage"),
+    t("bill_benefit_data_export"),
+    t("bill_benefit_priority_support"),
+  ];
 
   useEffect(() => {
     subscriptionApi.me()
@@ -69,8 +71,8 @@ export default function Subscription() {
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err.response?.data?.message || "Please try again",
+        title: t("bill_error"),
+        description: err.response?.data?.message || t("bill_try_again"),
         variant: "destructive",
       });
       setCheckoutLoading(false);
@@ -84,8 +86,8 @@ export default function Subscription() {
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       toast({
-        title: "Error",
-        description: err.response?.data?.message || "Could not open portal",
+        title: t("bill_error"),
+        description: err.response?.data?.message || t("bill_portal_error"),
         variant: "destructive",
       });
     } finally {
@@ -102,13 +104,13 @@ export default function Subscription() {
         {/* HEADER */}
         <header className="mb-8 sm:mb-12">
           <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">
-            Plans & Billing
+            {t("bill_plans_billing")}
           </p>
           <h1 className="mt-3 font-serif text-4xl leading-tight tracking-tight text-white sm:text-5xl">
-            Subscription
+            {t("bill_subscription")}
           </h1>
           <p className="mt-3 text-sm text-white/50">
-            One tier. Everything unlocked.
+            {t("bill_one_tier")}
           </p>
         </header>
 
@@ -117,7 +119,7 @@ export default function Subscription() {
           <div className="mb-8 flex items-baseline gap-6 border-t border-white/10 pt-5 sm:mb-10">
             <div className="flex items-baseline gap-2">
               <span className="text-[10px] uppercase tracking-[0.28em] text-white/30">
-                Current
+                {t("bill_current")}
               </span>
               <span className="text-sm text-white/90">
                 {isPro ? "PRO" : "FREE"}
@@ -131,7 +133,7 @@ export default function Subscription() {
                 disabled={portalLoading}
                 className="text-[11px] uppercase tracking-[0.22em] text-white/40 underline underline-offset-4 transition-colors hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {portalLoading ? "Opening..." : "Manage billing"}
+                {portalLoading ? t("bill_opening") : t("bill_manage_billing")}
               </button>
             )}
           </div>
@@ -164,13 +166,13 @@ export default function Subscription() {
               <div className="text-right">
                 <p className="font-serif text-3xl text-white sm:text-4xl">$7.90</p>
                 <p className="mt-1 text-[10px] uppercase tracking-[0.28em] text-white/40">
-                  per month
+                  {t("bill_per_month")}
                 </p>
               </div>
             </div>
 
             <p className="mt-6 max-w-md text-sm leading-relaxed text-white/55">
-              Remove every limit. Build your second brain without ceilings.
+              {t("bill_vision_tagline")}
             </p>
 
             {/* Benefits */}
@@ -193,10 +195,10 @@ export default function Subscription() {
             {visionLimits && (
               <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-white/10 pt-6 text-xs sm:grid-cols-4">
                 {[
-                  { k: "Notes", v: formatLimit(visionLimits.maxNotes) },
-                  { k: "Entities", v: formatLimit(visionLimits.maxEntities) },
-                  { k: "Vault", v: formatLimit(visionLimits.maxVaultSizeMB, " MB") },
-                  { k: "History", v: formatLimit(visionLimits.historyDays, "d") },
+                  { k: t("bill_notes"), v: formatLimit(visionLimits.maxNotes) },
+                  { k: t("bill_entities"), v: formatLimit(visionLimits.maxEntities) },
+                  { k: t("bill_vault"), v: formatLimit(visionLimits.maxVaultSizeMB, " MB") },
+                  { k: t("bill_history"), v: formatLimit(visionLimits.historyDays, "d") },
                 ].map((row) => (
                   <div key={row.k}>
                     <dt className="text-[10px] uppercase tracking-[0.22em] text-white/30">
@@ -214,7 +216,7 @@ export default function Subscription() {
             <div className="mt-10">
               {isPro ? (
                 <div className="flex h-11 items-center justify-center rounded-sm border border-dashed border-white/10 text-[11px] uppercase tracking-[0.28em] text-white/40">
-                  Active
+                  {t("bill_active")}
                 </div>
               ) : (
                 <button
@@ -229,14 +231,14 @@ export default function Subscription() {
                     <ArrowPathIcon className="h-4 w-4 animate-spin" />
                   ) : (
                     <>
-                      Upgrade to VISION
+                      {t("bill_upgrade_to_vision")}
                       <ArrowRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
                     </>
                   )}
                 </button>
               )}
               <p className="mt-4 text-center text-[10px] uppercase tracking-[0.22em] text-white/30">
-                Cancel anytime · Secure checkout
+                {t("bill_cancel_secure")}
               </p>
             </div>
           </div>

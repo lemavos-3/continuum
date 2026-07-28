@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Plus, ChevronDown, FolderOpen, Loader2, Check } from "@/lib/heroicons";
 import { CreateEntityDialog } from '@/components/CreateEntityDialog';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { ActivityCompletionCalendar } from '@/components/ActivityCompletionCalendar';
 import type { Entity } from '@/types';
 
@@ -46,6 +47,7 @@ export function TimeTrackingList({
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
@@ -71,7 +73,7 @@ export function TimeTrackingList({
     summaries?.find((s: TimeEntitySummary) => s.entityId === entityId);
 
   const isLoading = entitiesLoading || summariesLoading;
-  const typeLabels: Record<string, string> = { PROJECT: 'Project', ACTIVITY: 'Activity' };
+  const typeLabels: Record<string, string> = { PROJECT: t('tm_project'), ACTIVITY: t('tm_activity') };
 
   const all = useMemo(() => trackableEntities ?? [], [trackableEntities]);
   const visible = useMemo(() => {
@@ -81,7 +83,7 @@ export function TimeTrackingList({
     );
   }, [lower, all]);
 
-  const placeholder = `Search ${filterType === 'PROJECT' ? 'projects' : filterType === 'ACTIVITY' ? 'activities' : 'entities'}…`;
+  const placeholder = filterType === 'PROJECT' ? t('tm_search_projects') : filterType === 'ACTIVITY' ? t('tm_search_activities') : t('tm_search_entities');
 
   const handleQuickComplete = async (entity: Entity) => {
     if (markingId) return;
@@ -89,9 +91,9 @@ export function TimeTrackingList({
     try {
       await entitiesApi.track(entity.id);
       await queryClient.invalidateQueries({ queryKey: ['entities'] });
-      toast({ title: 'Marked as done', description: entity.title || 'Activity' });
+      toast({ title: t('tm_marked_done_title'), description: entity.title || t('tm_activity') });
     } catch {
-      toast({ title: 'Could not mark complete', variant: 'destructive' });
+      toast({ title: t('tm_could_not_mark_title'), variant: 'destructive' });
     } finally {
       setMarkingId(null);
     }
@@ -108,7 +110,7 @@ export function TimeTrackingList({
             className="w-full max-w-sm bg-transparent border-0 border-b border-white/15 focus:border-white pb-2 text-sm outline-none transition-colors placeholder:text-white/30"
           />
           <button onClick={() => setCreateDialogOpen(true)} className="btn-primary shrink-0">
-            <Plus className="w-4 h-4" /> New {filterType ? typeLabels[filterType] : 'Entity'}
+            <Plus className="w-4 h-4" /> {filterType === 'PROJECT' ? t('tm_new_project') : filterType === 'ACTIVITY' ? t('tm_new_activity') : t('tm_new_entity')}
           </button>
         </div>
       )}
@@ -121,7 +123,7 @@ export function TimeTrackingList({
         <div className="border border-dashed border-white/10 rounded-md py-16 text-center">
           <FolderOpen className="w-10 h-10 text-white/20 mx-auto mb-3" />
           <p className="text-sm text-white/40">
-            No {filterType ? typeLabels[filterType].toLowerCase() + 's' : 'entities'} yet.
+            {filterType === 'PROJECT' ? t('tm_no_projects_yet') : filterType === 'ACTIVITY' ? t('tm_no_activities_yet') : t('tm_no_entities_yet')}
           </p>
         </div>
       ) : (
@@ -147,13 +149,13 @@ export function TimeTrackingList({
                   >
                     <ChevronDown className={cn('w-4 h-4 shrink-0 text-white/40 transition-transform', isOpen && 'rotate-180')} />
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-white">{entity.title || 'Untitled'}</p>
+                      <p className="truncate font-medium text-white">{entity.title || t('tm_untitled')}</p>
                       <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-white/40">
                         <span className="uppercase tracking-wider">{typeLabels[entity.type] ?? entity.type}</span>
                         {isProject ? (
                           <span className="font-mono">{summary?.formattedTotal || '00:00:00'}</span>
                         ) : (
-                          <span>{entity.trackingDates?.length ?? 0} done</span>
+                          <span>{t('tm_done_count', { count: entity.trackingDates?.length ?? 0 })}</span>
                         )}
                       </div>
                     </div>
@@ -176,7 +178,7 @@ export function TimeTrackingList({
                       ) : (
                         <Check className="h-3.5 w-3.5" />
                       )}
-                      <span>{doneToday ? 'Done today' : 'Complete'}</span>
+                      <span>{doneToday ? t('tm_done_today') : t('tm_complete')}</span>
                     </button>
                   )}
                 </div>
@@ -188,11 +190,11 @@ export function TimeTrackingList({
                       {isProject ? (
                         <div className="grid grid-cols-2 gap-3 max-w-md">
                           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                            <p className="label-caps text-white/50">Total time</p>
+                            <p className="label-caps text-white/50">{t('tm_total_time')}</p>
                             <p className="mt-2 font-mono text-white/90">{summary?.formattedTotal || '00:00:00'}</p>
                           </div>
                           <div className="rounded-xl border border-white/10 bg-white/5 p-4">
-                            <p className="label-caps text-white/50">Sessions</p>
+                            <p className="label-caps text-white/50">{t('tm_sessions_cap')}</p>
                             <p className="mt-2 text-white/90">{summary?.entriesCount ?? 0}</p>
                           </div>
                         </div>
@@ -210,7 +212,7 @@ export function TimeTrackingList({
                             onClick={() => navigate(`/entities/${entity.id}`)}
                             className="text-xs px-3 py-1.5 rounded-md border border-white/10 text-white/70 hover:text-white hover:border-white/30 transition-colors"
                           >
-                            Open detail →
+                            {t('tm_open_detail')}
                           </button>
                         </div>
                       )}

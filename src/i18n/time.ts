@@ -2,6 +2,8 @@ import type { Module } from "./index";
 
 export const dict: Module = {
   en: {
+    tm_project: "Project",
+    tm_activity: "Activity",
     tm_timer: "Timer",
     tm_idle: "Idle",
     tm_running: "Running",
@@ -119,6 +121,8 @@ export const dict: Module = {
     tm_day_sat: "Sat",
   },
   es: {
+    tm_project: "Proyecto",
+    tm_activity: "Actividad",
     tm_timer: "Cronómetro",
     tm_idle: "Inactivo",
     tm_running: "En curso",
@@ -236,6 +240,8 @@ export const dict: Module = {
     tm_day_sat: "Sáb",
   },
   pt: {
+    tm_project: "Projeto",
+    tm_activity: "Atividade",
     tm_timer: "Cronômetro",
     tm_idle: "Ocioso",
     tm_running: "Em execução",
@@ -353,6 +359,8 @@ export const dict: Module = {
     tm_day_sat: "Sáb",
   },
   fr: {
+    tm_project: "Projet",
+    tm_activity: "Activité",
     tm_timer: "Minuteur",
     tm_idle: "Inactif",
     tm_running: "En cours",

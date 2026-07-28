@@ -57,6 +57,7 @@ function useBlobUrl(fileId: string | null) {
 
 function ImageThumb({ file, onDelete }: { file: VaultFile; onDelete: (f: VaultFile) => void }) {
   const { url, error } = useBlobUrl(file.id);
+  const { t } = useLanguage();
   return (
     <div className="group relative rounded-sm overflow-hidden border border-white/5 bg-black/10 aspect-square transition-colors hover:border-white/20">
       {error ? (
@@ -87,6 +88,7 @@ function ImageThumb({ file, onDelete }: { file: VaultFile; onDelete: (f: VaultFi
 
 function AudioPlayer({ file, onDelete }: { file: VaultFile; onDelete: (f: VaultFile) => void }) {
   const { url, error } = useBlobUrl(file.id);
+  const { t } = useLanguage();
   return (
     <div className="group relative flex flex-col justify-between rounded-sm border border-white/5 bg-black/10 p-4 transition-colors hover:border-white/10">
       <div className="flex items-start justify-between gap-4">
@@ -106,12 +108,12 @@ function AudioPlayer({ file, onDelete }: { file: VaultFile; onDelete: (f: VaultF
       </div>
       <div className="mt-4">
         {error ? (
-          <p className="text-[11px] font-mono text-red-400/60">Failed to load audio source</p>
+          <p className="text-[11px] font-mono text-red-400/60">{t("gr_vault_audio_error")}</p>
         ) : url ? (
           <audio src={url} controls className="w-full h-8 accent-white filter invert opacity-40 hover:opacity-70 transition-opacity" />
         ) : (
           <div className="flex items-center gap-2 text-[11px] font-mono text-white/30">
-            <Loader2 className="h-3 w-3 animate-spin" /> Fetching payload...
+            <Loader2 className="h-3 w-3 animate-spin" /> {t("gr_vault_audio_fetching")}
           </div>
         )}
       </div>
@@ -121,6 +123,7 @@ function AudioPlayer({ file, onDelete }: { file: VaultFile; onDelete: (f: VaultF
 
 function PdfCard({ file, onDelete, onOpen }: { file: VaultFile; onDelete: (f: VaultFile) => void; onOpen: (f: VaultFile) => void }) {
   const { url, error } = useBlobUrl(file.id);
+  const { t } = useLanguage();
   return (
     <div className="rounded-sm border border-white/5 bg-black/10 overflow-hidden flex flex-col transition-colors hover:border-white/10 group">
       <button type="button" onClick={() => onOpen(file)} className="aspect-[4/3] bg-black/40 relative overflow-hidden border-b border-white/5 flex items-center justify-center">
@@ -132,7 +135,7 @@ function PdfCard({ file, onDelete, onOpen }: { file: VaultFile; onDelete: (f: Va
           <Loader2 className="h-3 w-3 animate-spin text-white/20" />
         )}
         <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="text-[11px] bg-black border border-white/10 px-2.5 py-1 text-white/80 rounded-sm">View Document</span>
+          <span className="text-[11px] bg-black border border-white/10 px-2.5 py-1 text-white/80 rounded-sm">{t("gr_vault_view_document")}</span>
         </div>
       </button>
       <div className="p-3 flex items-center justify-between gap-2">
