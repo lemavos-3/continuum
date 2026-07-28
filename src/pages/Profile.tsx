@@ -413,8 +413,10 @@ export default function Profile() {
           </section>
         </div>
       </div>
-      <div className="mx-auto max-w-5xl w-full px-6 pb-6 flex justify-end text-[10px] text-white/30">
-        <span>{version}</span>
+      <div className="mx-auto max-w-5xl px-6 pb-6">
+        <div className="w-full text-right text-[10px] text-white/30">
+          {version}
+        </div>
       </div>
       <MarkdownImportDialog
         open={importOpen}
