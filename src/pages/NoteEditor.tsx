@@ -323,24 +323,24 @@ export default function NoteEditor() {
     };
   }, [id, navigate, searchParams, toast]);
 
-  const doSave = useCallback(async (t: string, json: any, newType: string) => {
+  const doSave = useCallback(async (nextTitle: string, json: any, newType: string) => {
     if (!id) return;
     const jsonStr = JSON.stringify(json);
-    if (t === lastSavedTitle.current && jsonStr === lastSavedJSON.current && newType === lastSavedType.current) return;
+    if (nextTitle === lastSavedTitle.current && jsonStr === lastSavedJSON.current && newType === lastSavedType.current) return;
 
     setSaveStatus("saving");
     try {
       const entityIds = extractMentionIds(json);
       await notesApi.update(id, {
-        title: t,
+        title: nextTitle,
         content: json,
         entityIds,
         type: newType,
       });
 
-      setNote((prev) => prev ? { ...prev, title: t, content: json, entityIds, type: newType } : null);
+      setNote((prev) => prev ? { ...prev, title: nextTitle, content: json, entityIds, type: newType } : null);
 
-      lastSavedTitle.current = t;
+      lastSavedTitle.current = nextTitle;
       lastSavedJSON.current = jsonStr;
       lastSavedType.current = newType;
       setSaveStatus("saved");
