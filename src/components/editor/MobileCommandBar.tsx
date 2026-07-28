@@ -76,7 +76,7 @@ const COMMANDS: Cmd[] = [
 
 export function MobileCommandBar({ editor }: Props) {
   const isMobile = useIsMobile();
-  const { t } = useLanguage();
+  const { t } = useLanguage(); 
   const [offset, setOffset] = useState(0);
   const [kbOpen, setKbOpen] = useState(false);
   const pointerState = useRef<{ x: number; y: number; pointerId: number | null; cancelled: boolean }>({
