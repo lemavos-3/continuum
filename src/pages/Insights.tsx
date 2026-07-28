@@ -170,6 +170,7 @@ function NavItem({ label, count, active, onClick }: NavItemProps) {
 /* ── Linha do Insight ───────────────────────────────────────────────── */
 
 function InsightRow({ item }: { item: InsightItem }) {
+  const { t } = useLanguage();
   return (
     <li>
       <button
@@ -190,7 +191,7 @@ function InsightRow({ item }: { item: InsightItem }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2.5">
             <Badge variant="outline" className={cn("rounded-sm px-1.5 py-0 text-[9px] font-mono tracking-wider uppercase", badgeStyle(item.badge))}>
-              {item.badge}
+              {translateBadge(item.badge, t)}
             </Badge>
             <span className="font-mono text-[10px] uppercase tracking-widest text-white/30">
               {item.subtitle}
@@ -202,10 +203,10 @@ function InsightRow({ item }: { item: InsightItem }) {
           </h3>
 
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            {item.metaDetails.mentions ? <StatChip>{item.metaDetails.mentions} mentions</StatChip> : null}
-            {item.metaDetails.links ? <StatChip>{item.metaDetails.links} links</StatChip> : null}
-            {item.metaDetails.hours ? <StatChip>{formatHours(item.metaDetails.hours)} tracked</StatChip> : null}
-            <StatChip>{formatDays(item.metaDetails.daysAgo)}</StatChip>
+            {item.metaDetails.mentions ? <StatChip>{t("ins_mentions", { count: item.metaDetails.mentions })}</StatChip> : null}
+            {item.metaDetails.links ? <StatChip>{t("ins_links", { count: item.metaDetails.links })}</StatChip> : null}
+            {item.metaDetails.hours ? <StatChip>{t("ins_hours_tracked", { hours: formatHours(item.metaDetails.hours) })}</StatChip> : null}
+            <StatChip>{formatDays(item.metaDetails.daysAgo, t)}</StatChip>
           </div>
         </div>
       </button>
@@ -270,7 +271,7 @@ export default function Insights() {
       setHotEntities(he.data || []);
       setForgottenEntities(fe.data || []);
     } catch {
-      toast({ title: "Could not load insights", variant: "destructive" });
+      toast({ title: t("ins_could_not_load"), variant: "destructive" });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -291,8 +292,8 @@ export default function Insights() {
         category: "hotNotes",
         score: item.score,
         badge: item.badge,
-        title: item.note.title || "Untitled",
-        subtitle: "Note",
+        title: item.note.title || t("ins_untitled"),
+        subtitle: t("ins_note"),
         metaDetails: { mentions: item.mentionCount, links: item.entityConnections, hours: item.hoursTracked, daysAgo: item.daysSinceLastInteraction },
         onOpen: () => navigate(`/notes/${item.note.id}`),
       });
@@ -305,8 +306,8 @@ export default function Insights() {
         category: "hotEntities",
         score: item.score,
         badge: item.badge,
-        title: item.entity.title || "Untitled",
-        subtitle: item.entity.type || "Atom",
+        title: item.entity.title || t("ins_untitled"),
+        subtitle: item.entity.type || t("ins_atom"),
         metaDetails: { mentions: item.mentionCount, links: item.relationsCount, hours: item.hoursTracked, daysAgo: item.daysSinceLastMention },
         onOpen: () => navigate(`/entities/${item.entity.id}`),
       });
@@ -319,8 +320,8 @@ export default function Insights() {
         category: "worthRevisiting",
         score: item.score,
         badge: item.badge,
-        title: item.note.title || "Untitled",
-        subtitle: "Note",
+        title: item.note.title || t("ins_untitled"),
+        subtitle: t("ins_note"),
         metaDetails: { mentions: item.mentionCount, links: item.entityConnections, hours: item.hoursTracked, daysAgo: item.daysSinceLastInteraction },
         onOpen: () => navigate(`/notes/${item.note.id}`),
       });
@@ -333,8 +334,8 @@ export default function Insights() {
         category: "forgottenGems",
         score: item.score,
         badge: item.badge,
-        title: item.entity.title || "Untitled",
-        subtitle: item.entity.type || "Atom",
+        title: item.entity.title || t("ins_untitled"),
+        subtitle: item.entity.type || t("ins_atom"),
         metaDetails: { mentions: item.mentionCount, links: item.relationsCount, hours: item.hoursTracked, daysAgo: item.daysSinceLastMention },
         onOpen: () => navigate(`/entities/${item.entity.id}`),
       });
