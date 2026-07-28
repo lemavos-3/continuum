@@ -64,25 +64,25 @@ interface InsightItem {
 
 /* ── Meta de Categorias ──────────────────────────────────────────────── */
 
-const CATEGORY_META: Record<InsightCategory, { label: string; subtitle: string; icon: typeof FireIcon }> = {
+const CATEGORY_META: Record<InsightCategory, { labelKey: string; subtitleKey: string; icon: typeof FireIcon }> = {
   hotNotes: {
-    label: "Hot notes",
-    subtitle: "Recent notes with the strongest signal.",
+    labelKey: "ins_cat_hot_notes",
+    subtitleKey: "ins_cat_hot_notes_sub",
     icon: FireIcon,
   },
   hotEntities: {
-    label: "Key people & projects",
-    subtitle: "Entities appearing frequently across your graph.",
+    labelKey: "ins_cat_hot_entities",
+    subtitleKey: "ins_cat_hot_entities_sub",
     icon: UsersIcon,
   },
   worthRevisiting: {
-    label: "Worth revisiting",
-    subtitle: "Valuable notes that haven't been touched lately.",
+    labelKey: "ins_cat_worth_revisiting",
+    subtitleKey: "ins_cat_worth_revisiting_sub",
     icon: ClockIcon,
   },
   forgottenGems: {
-    label: "Forgotten gems",
-    subtitle: "Entities that once mattered and deserve another look.",
+    labelKey: "ins_cat_forgotten_gems",
+    subtitleKey: "ins_cat_forgotten_gems_sub",
     icon: ArrowTrendingUpIcon,
   },
 };
@@ -97,12 +97,24 @@ const formatHours = (h: number) => {
   return `${h.toFixed(h < 10 ? 1 : 0)}h`;
 };
 
-const formatDays = (d: number) => {
-  if (d <= 0) return "today";
-  if (d === 1) return "1d ago";
-  if (d < 30) return `${d}d ago`;
-  if (d < 365) return `${Math.floor(d / 30)}mo ago`;
-  return `${Math.floor(d / 365)}y ago`;
+const formatDays = (d: number, t: (key: string, vars?: Record<string, any>) => string) => {
+  if (d <= 0) return t("ins_today");
+  if (d === 1) return t("ins_days_ago_1");
+  if (d < 30) return t("ins_days_ago_n", { count: d });
+  if (d < 365) return t("ins_months_ago", { count: Math.floor(d / 30) });
+  return t("ins_years_ago", { count: Math.floor(d / 365) });
+};
+
+const BADGE_KEY_MAP: Record<string, string> = {
+  "hot right now": "ins_badge_hot",
+  "worth revisiting": "ins_badge_worth_revisiting",
+  "forgotten gem": "ins_badge_forgotten_gem",
+  "key entity": "ins_badge_key_entity",
+};
+
+const translateBadge = (badge: string, t: (key: string, vars?: Record<string, any>) => string) => {
+  const key = BADGE_KEY_MAP[badge?.toLowerCase()?.trim() || ""];
+  return key ? t(key) : badge;
 };
 
 const badgeStyle = (badge: string) => {
