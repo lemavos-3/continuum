@@ -38,13 +38,13 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
-  server: {
-    host: "::",
-    port: Number(process.env.PORT) || Number(process.env.VITE_DEV_PORT) || 5173,
-    hmr: {
-      overlay: false,
+    server: {
+      host: "::",
+      port: Number(process.env.PORT) || Number(process.env.VITE_DEV_PORT) || 5173,
+      hmr: {
+        overlay: false,
+      },
     },
-  },
   plugins: [
     react(),
     mode === "development" && componentTagger(),
@@ -151,4 +151,4 @@ export default defineConfig(({ mode }) => {
       "prosemirror-transform",
     ],
   },
-}));
+}});

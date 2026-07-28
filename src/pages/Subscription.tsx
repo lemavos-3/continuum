@@ -179,8 +179,7 @@ export default function Subscription() {
             {/* Benefits */}
             <ul className="mt-8 space-y-3 border-t border-white/10 pt-6">
               {VISION_BENEFITS.map((b, i) => (
-                <motion.liMétricas avançadas
-
+                <motion.li
                   key={b}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
