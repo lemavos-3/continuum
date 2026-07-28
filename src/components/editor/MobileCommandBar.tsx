@@ -1,4 +1,5 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import type { PointerEvent } from "react";
 import type { Editor } from "@tiptap/core";
 import {
   Heading1,
@@ -18,7 +19,6 @@ import {
   Link as LinkIcon,
   Image as ImageIcon,
   Table as TableIcon,
-  X,
 } from "@/lib/heroicons";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -77,26 +77,14 @@ const COMMANDS: Cmd[] = [
 export function MobileCommandBar({ editor }: Props) {
   const isMobile = useIsMobile();
   const { t } = useLanguage();
-  const [focused, setFocused] = useState(false);
-  const [dismissed, setDismissed] = useState(false);
   const [offset, setOffset] = useState(0);
   const [kbOpen, setKbOpen] = useState(false);
-
-  // Track editor focus.
-  useEffect(() => {
-    if (!editor) return;
-    const on = () => {
-      setFocused(true);
-      setDismissed(false);
-    };
-    const off = () => setFocused(false);
-    editor.on("focus", on);
-    editor.on("blur", off);
-    return () => {
-      editor.off("focus", on);
-      editor.off("blur", off);
-    };
-  }, [editor]);
+  const pointerState = useRef<{ x: number; y: number; pointerId: number | null; cancelled: boolean }>({
+    x: 0,
+    y: 0,
+    pointerId: null,
+    cancelled: false,
+  });
 
   // Track visual viewport for keyboard position.
   useEffect(() => {
@@ -134,8 +122,41 @@ export function MobileCommandBar({ editor }: Props) {
     [editor, t]
   );
 
+  const handlePointerDown = (e: PointerEvent<HTMLButtonElement>) => {
+    pointerState.current.pointerId = e.pointerId;
+    pointerState.current.x = e.clientX;
+    pointerState.current.y = e.clientY;
+    pointerState.current.cancelled = false;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: PointerEvent<HTMLButtonElement>) => {
+    if (pointerState.current.pointerId !== e.pointerId) return;
+    const dx = Math.abs(e.clientX - pointerState.current.x);
+    const dy = Math.abs(e.clientY - pointerState.current.y);
+    if (dx > 10 || dy > 10) {
+      pointerState.current.cancelled = true;
+    }
+  };
+
+  const handlePointerUp = (e: PointerEvent<HTMLButtonElement>, cmd: Cmd) => {
+    if (pointerState.current.pointerId !== e.pointerId) return;
+    const cancelled = pointerState.current.cancelled;
+    pointerState.current.pointerId = null;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    if (cancelled) return;
+    e.preventDefault();
+    insert(cmd);
+  };
+
+  const handlePointerCancel = (e: PointerEvent<HTMLButtonElement>) => {
+    if (pointerState.current.pointerId !== e.pointerId) return;
+    pointerState.current.pointerId = null;
+    pointerState.current.cancelled = true;
+  };
+
   if (!isMobile || !editor) return null;
-  if (!focused || !kbOpen || dismissed) return null;
+  if (!kbOpen) return null;
 
   return (
     <div
@@ -162,10 +183,10 @@ export function MobileCommandBar({ editor }: Props) {
               <button
                 key={c.key}
                 type="button"
-                onPointerDown={(e) => {
-                  e.preventDefault();
-                  insert(c);
-                }}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={(e) => handlePointerUp(e, c)}
+                onPointerCancel={handlePointerCancel}
                 className={cn(
                   "shrink-0 inline-flex items-center gap-1.5 rounded-lg px-2.5 h-9 text-[12px] transition-colors",
                   active
@@ -182,17 +203,6 @@ export function MobileCommandBar({ editor }: Props) {
           })}
         </div>
       </div>
-      <button
-        type="button"
-        onPointerDown={(e) => {
-          e.preventDefault();
-          setDismissed(true);
-        }}
-        className="ml-1 shrink-0 grid h-9 w-9 place-items-center rounded-lg text-white/60 hover:bg-white/10 hover:text-white"
-        aria-label={t("common_close") || "Close"}
-      >
-        <X className="h-4 w-4" />
-      </button>
     </div>
   );
 }

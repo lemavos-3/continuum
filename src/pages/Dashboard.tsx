@@ -194,8 +194,8 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-sm border border-white/20 bg-transparent p-4 text-left shadow-sm",
-        "transition duration-300 hover:border-white/60 hover:bg-white/5",
+        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-lg border border-white/[0.08] bg-card/90 backdrop-blur-xl p-4 text-left shadow-sm",
+        "transition duration-300 hover:border-white/10 hover:bg-white/5",
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -226,8 +226,8 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-sm border border-white/20 bg-transparent p-4 text-left shadow-sm",
-        "transition duration-300 hover:border-white/60 hover:bg-white/5",
+        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-lg border border-white/[0.08] bg-card/90 backdrop-blur-xl p-4 text-left shadow-sm",
+        "transition duration-300 hover:border-white/10 hover:bg-white/5",
       )}
     >
       <div className="flex items-center justify-between gap-2">
