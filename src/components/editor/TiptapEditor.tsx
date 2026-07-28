@@ -45,6 +45,7 @@ import { LinkHover } from "./extensions/LinkHover";
 import { SearchHighlight } from "./extensions/SearchHighlight";
 import { FindReplace } from "./FindReplace";
 import { StatusBar } from "./StatusBar";
+import { MobileCommandBar } from "./MobileCommandBar";
 
 const IMAGE_MIME_RE = /^image\//i;
 const IMAGE_EXT_RE = /\.(png|jpe?g|webp|gif|svg)$/i;
@@ -270,6 +271,8 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
           heading: { levels: [1, 2, 3, 4, 5, 6] },
           codeBlock: false,
           dropcursor: false,
+          link: false,
+          underline: false,
         }),
         Underline,
         Highlight.configure({ multicolor: false }),
@@ -625,6 +628,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
           <StatusBar editor={editor} />
         </div>
         <FindReplace editor={editor} open={findOpen} onClose={() => setFindOpen(false)} />
+        <MobileCommandBar editor={editor} />
       </>
     );
   }

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { authApi } from "@/lib/api";
 import type { Plan, User as AppUser } from "@/types";
 
@@ -46,21 +46,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async (opts: { silent?: boolean } = {}) => {
     try {
-      const storedAccessToken = typeof window !== "undefined"
-        ? sessionStorage.getItem("access_token") ?? localStorage.getItem("access_token")
-        : null;
-      const storedRefreshToken = typeof window !== "undefined"
-        ? localStorage.getItem("refresh_token")
-        : null;
-
-      // No credentials -> skip backend call so landing/login renders immediately.
-      if (!storedAccessToken && !storedRefreshToken) {
-        setUser(null);
-        return;
-      }
-
       const { data } = await authApi.me();
       if (data) {
+        // Derive a sensible username fallback from the email if backend didn't return one
         const emailLocal = typeof data.email === "string" ? data.email.split("@")[0] : "";
         const next: AppUser = {
           id: data.id ?? data.userId,
@@ -83,6 +71,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } catch (error: unknown) {
       const status = (error as any)?.response?.status;
+      // Only 401 means the session is truly invalid. 403 = business rule (plan limits etc).
+      // Network errors / 5xx / 403 must NOT clear the session — keep cached user.
       if (status === 401) {
         sessionStorage.removeItem("access_token");
         sessionStorage.removeItem("refresh_token");
@@ -117,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setTokens = (accessToken: string, _refreshToken: string) => {
     sessionStorage.setItem("access_token", accessToken);
+    localStorage.setItem("access_token", accessToken);
 
     // Persist refresh token across reloads so the client can renew sessions
     // mesmo quando o backend não usa cookie HttpOnly.
@@ -125,8 +116,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } else {
       localStorage.removeItem("refresh_token");
     }
-
-    localStorage.removeItem("access_token");
   };
 
   const login = async (email: string, password: string) => {
@@ -164,12 +153,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const value = useMemo(
-    () => ({ user, loading, login, loginWithGoogle, register, logout, setTokens, refreshUser: fetchUser }),
-    [user, loading]
+  return (
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, setTokens, refreshUser: fetchUser }}>
+      {children}
+    </AuthContext.Provider>
   );
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
