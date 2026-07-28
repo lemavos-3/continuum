@@ -962,7 +962,7 @@ export default function KnowledgeGraph() {
                     type="button"
                     onClick={() => setOptionsOpen(true)}
                     className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10 sm:hidden"
-                    aria-label="Open graph options"
+                    aria-label={t("gr_open_options")}
                   >
                     <Settings className="h-4 w-4" />
                   </button>
@@ -1040,13 +1040,13 @@ export default function KnowledgeGraph() {
                   <div className="rounded-3xl border border-white/10 bg-background/90 p-3">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{t("gr_time_range")}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {(["all", "7d", "30d"] as const).map(t => (
+                      {(["all", "7d", "30d"] as const).map(tf => (
                         <button
-                          key={t}
-                          onClick={() => setTimeFilter(t)}
-                          className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${timeFilter === t ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+                          key={tf}
+                          onClick={() => setTimeFilter(tf)}
+                          className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${timeFilter === tf ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
                         >
-                          {tf === "all" ? t2("gr_time_anytime") : tf === "7d" ? t2("gr_time_7d") : t2("gr_time_30d")}
+                          {tf === "all" ? t("gr_time_anytime") : tf === "7d" ? t("gr_time_7d") : t("gr_time_30d")}
                         </button>
                       ))}
                     </div>
