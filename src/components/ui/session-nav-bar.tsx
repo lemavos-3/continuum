@@ -258,8 +258,8 @@ export function SessionNavBar() {
                 <div className="flex flex-col gap-0.5 px-2 py-1.5">
                   <span className="truncate text-sm font-medium normal-case tracking-normal text-[hsl(var(--popup-foreground))]">{display}</span>
                   <span className="truncate text-xs text-[hsl(var(--popup-muted))]">{user?.email}</span>
-                  <span className="mt-1 inline-flex w-fit items-center rounded border border-[hsl(var(--popup-border))] px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[hsl(var(--popup-muted))]">
-                    {user?.plan === "VISION" ? "PRO" : (user?.plan || "FREE")}
+                    <span className="mt-1 inline-flex w-fit items-center rounded border border-[hsl(var(--popup-border))] px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[hsl(var(--popup-muted))]">
+                    {user?.plan === "VISION" || user?.plan === "PRO" ? "VISION" : (user?.plan || "FREE")}
                   </span>
                 </div>
                 <DropdownMenuSeparator />

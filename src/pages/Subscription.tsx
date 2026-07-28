@@ -56,8 +56,9 @@ export default function Subscription() {
       .catch(() => {});
   }, []);
 
-  const currentPlan = ((sub?.effectivePlan || user?.plan) as Plan) || "FREE";
-  const isPro = currentPlan === "VISION";
+  const currentPlan = ((sub?.effectivePlan || user?.plan) as Plan | string) || "FREE";
+  const normalizedPlan = currentPlan === "PRO" ? ("VISION" as Plan) : (currentPlan as Plan);
+  const isPro = normalizedPlan === "VISION";
 
   const visionLimits = useMemo(
     () => plans.find((p) => p.plan === "VISION")?.limits,
@@ -139,7 +140,7 @@ export default function Subscription() {
           </div>
         )}
 
-        {/* PRO CARD */}
+        {/* VISION CARD */}
         <motion.section
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -178,7 +179,8 @@ export default function Subscription() {
             {/* Benefits */}
             <ul className="mt-8 space-y-3 border-t border-white/10 pt-6">
               {VISION_BENEFITS.map((b, i) => (
-                <motion.li
+                <motion.liMétricas avançadas
+
                   key={b}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -198,7 +200,7 @@ export default function Subscription() {
                   { k: t("bill_notes"), v: formatLimit(visionLimits.maxNotes ?? -1) },
                   { k: t("bill_entities"), v: formatLimit(visionLimits.maxEntities ?? -1) },
                   { k: t("bill_vault"), v: formatLimit(visionLimits.maxVaultSizeMB ?? -1, " MB") },
-                  { k: t("bill_history"), v: formatLimit(visionLimits.historyDays ?? -1, "d") },
+                  { k: t("bill_history"), v: formatLimit(((visionLimits as any)?.maxHistoryDays ?? visionLimits?.historyDays) ?? -1, "d") },
                 ].map((row) => (
                   <div key={row.k}>
                     <dt className="text-[10px] uppercase tracking-[0.22em] text-white/30">

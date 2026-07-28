@@ -42,7 +42,7 @@ const plans = [
     buttonText: "Contact Sales",
     buttonVariant: "outline" as const,
     includes: [
-      "Everything in Pro, plus:",
+      "Everything in Vision, plus:",
       "Team management",
       "SSO & SAML",
       "Dedicated support",
