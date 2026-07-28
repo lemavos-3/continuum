@@ -165,7 +165,7 @@ function WeeklySummary({ notes, totalNotes, totalEntities, graphNodeCount, curre
   const notesDelta = thisWeek - lastWeek;
 
   return (
-    <section className="rounded-sm bg-white/[0.02] p-5 sm:p-8">
+    <section className="-mt-4 rounded-sm bg-white/[0.02] p-5 sm:-mt-6 sm:p-8">
       <div className="flex items-center justify-between mb-6">
         <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono hidden sm:block">Last 7 days</p>
       </div>
@@ -194,8 +194,8 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-sm border border-white/15 bg-transparent p-4 text-left shadow-sm",
-        "transition duration-300 hover:border-white/40 hover:bg-white/5",
+        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-sm border border-white/20 bg-transparent p-4 text-left shadow-sm",
+        "transition duration-300 hover:border-white/60 hover:bg-white/5",
       )}
     >
       <div className="flex items-center justify-between gap-2">
@@ -226,8 +226,8 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-sm border border-white/15 bg-transparent p-4 text-left shadow-sm",
-        "transition duration-300 hover:border-white/40 hover:bg-white/5",
+        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-sm border border-white/20 bg-transparent p-4 text-left shadow-sm",
+        "transition duration-300 hover:border-white/60 hover:bg-white/5",
       )}
     >
       <div className="flex items-center justify-between gap-2">
