@@ -4,7 +4,7 @@ import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
-import { getCurrentPlan, getPlanLimits } from "@/lib/plan";
+import { getCurrentPlan, getPlanLimits, isUnlimited } from "@/lib/plan";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +36,7 @@ import { toast as sonnerToast } from "sonner";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSelector } from "@/components/LanguageSelector";
 
-const formatLimitValue = (value: number, suffix = "") => (value === -1 ? "Unlimited" : `${value}${suffix}`);
+const formatLimitValue = (value: number, suffix = "") => (isUnlimited(value) ? "Unlimited" : `${value}${suffix}`);
 
 function OfflineSyncRow() {
   const { status, pending, syncing } = useOfflineStatus();
@@ -148,9 +148,9 @@ export default function Profile() {
 
   const planDetails = useMemo(
     () => [
-      { label: "Vault Limit", value: limits.maxVaultSizeMB === -1 ? "Unlimited" : `${limits.maxVaultSizeMB} MB` },
-      { label: "Upload Metadata", value: limits.maxMetadataSizeKb === -1 ? "Unlimited" : `${limits.maxMetadataSizeKb} KB` },
-      { label: "History", value: limits.historyDays === -1 ? "Unlimited" : `${limits.historyDays} days` },
+      { label: "Vault Limit", value: isUnlimited(limits.maxVaultSizeMB) ? "Unlimited" : `${limits.maxVaultSizeMB} MB` },
+      { label: "Upload Metadata", value: isUnlimited(limits.maxMetadataSizeKb ?? -1) ? "Unlimited" : `${limits.maxMetadataSizeKb} KB` },
+      { label: "History", value: isUnlimited(limits.historyDays) ? "Unlimited" : `${limits.historyDays} days` },
     ],
     [limits],
   );

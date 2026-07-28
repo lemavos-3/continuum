@@ -33,7 +33,7 @@ export default function Subscription() {
   const [plans, setPlans] = useState<Array<{ plan: Plan; limits: PlanLimits; priceId?: string }>>([]);
   const [prices, setPrices] = useState<{ monthly?: string }>({});
 
-  // Only PRO benefits — no AI, no yearly mentions
+  // Only VISION benefits — no AI, no yearly mentions
   const VISION_BENEFITS = [
     t("bill_benefit_unlimited_notes_entities"),
     t("bill_benefit_unlimited_history"),
@@ -122,7 +122,7 @@ export default function Subscription() {
                 {t("bill_current")}
               </span>
               <span className="text-sm text-white/90">
-                {isPro ? "PRO" : "FREE"}
+                {isPro ? "VISION" : "FREE"}
               </span>
               <span className="text-xs text-white/30">· {sub.status.toLowerCase()}</span>
             </div>
@@ -195,10 +195,10 @@ export default function Subscription() {
             {visionLimits && (
               <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-white/10 pt-6 text-xs sm:grid-cols-4">
                 {[
-                  { k: t("bill_notes"), v: formatLimit(visionLimits.maxNotes) },
-                  { k: t("bill_entities"), v: formatLimit(visionLimits.maxEntities) },
-                  { k: t("bill_vault"), v: formatLimit(visionLimits.maxVaultSizeMB, " MB") },
-                  { k: t("bill_history"), v: formatLimit(visionLimits.historyDays, "d") },
+                  { k: t("bill_notes"), v: formatLimit(visionLimits.maxNotes ?? -1) },
+                  { k: t("bill_entities"), v: formatLimit(visionLimits.maxEntities ?? -1) },
+                  { k: t("bill_vault"), v: formatLimit(visionLimits.maxVaultSizeMB ?? -1, " MB") },
+                  { k: t("bill_history"), v: formatLimit(visionLimits.historyDays ?? -1, "d") },
                 ].map((row) => (
                   <div key={row.k}>
                     <dt className="text-[10px] uppercase tracking-[0.22em] text-white/30">
