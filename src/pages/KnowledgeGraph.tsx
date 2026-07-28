@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { SideInspector } from "@/components/SideInspector";
 import { useEntityStore } from "@/contexts/EntityContext";
 import type { Entity, EntityType } from "@/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface GraphNode {
   id: string;
@@ -52,13 +53,13 @@ const TYPE_COLORS: Record<string, string> = {
 };
 const HIGHLIGHT_COLOR = "hsl(0, 0%, 100%)";
 
-const TYPE_LABELS: Record<string, string> = {
-  NOTE: "Note",
-  ACTIVITY: "Activity",
-  PERSON: "Person",
-  PROJECT: "Project",
-  TOPIC: "Topic",
-  ORGANIZATION: "Organization",
+const TYPE_LABEL_KEYS: Record<string, string> = {
+  NOTE: "gr_type_note",
+  ACTIVITY: "gr_type_activity",
+  PERSON: "gr_type_person",
+  PROJECT: "gr_type_project",
+  TOPIC: "gr_type_topic",
+  ORGANIZATION: "gr_type_organization",
 };
 
 const BASE_RADIUS: Record<string, number> = {
@@ -123,6 +124,8 @@ function quadForce(q: QuadNode, n: GraphNode, theta: number, repulsion: number) 
 }
 
 export default function KnowledgeGraph() {
+  const { t } = useLanguage();
+  const typeLabel = useCallback((type: string) => t(TYPE_LABEL_KEYS[type]) || type, [t]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -661,7 +664,7 @@ export default function KnowledgeGraph() {
         type: (node.type as EntityType) || "TOPIC",
         createdAt: node.createdAt || new Date().toISOString(),
         ownerId: "",
-        description: `Graph node • ${node.degree} connection${node.degree === 1 ? '' : 's'} • Type: ${TYPE_LABELS[node.type] || node.type}`,
+        description: t("gr_node_desc", { count: node.degree, plural: node.degree === 1 ? "" : "s", type: typeLabel(node.type) }),
         graphScore: score,
         graphDegree: node.degree,
       } as any);
@@ -892,7 +895,7 @@ export default function KnowledgeGraph() {
     const types = new Set(nodes.map(n => n.type));
     return Array.from(types).map(t => ({
       type: t,
-      label: TYPE_LABELS[t] || t,
+      label: typeLabel(t),
       color: TYPE_COLORS[t] || "hsl(0,0%,40%)",
     }));
   }, [graphStats]);
@@ -923,7 +926,7 @@ export default function KnowledgeGraph() {
                 type="button"
                 onClick={() => setOptionsOpen(true)}
                 className="absolute right-4 top-4 z-30 hidden h-10 w-10 items-center justify-center rounded-md bg-white/5 text-white shadow-lg shadow-black/20 transition hover:bg-white/10 sm:grid"
-                aria-label="Open graph options"
+                aria-label={t("gr_open_options")}
               >
                 <Settings className="h-5 w-5" />
               </button>
@@ -934,7 +937,7 @@ export default function KnowledgeGraph() {
                     type="button"
                     onClick={() => handleZoom(1)}
                     className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10"
-                    aria-label="Zoom in"
+                    aria-label={t("gr_zoom_in")}
                   >
                     <ZoomIn className="h-4 w-4" />
                   </button>
@@ -942,7 +945,7 @@ export default function KnowledgeGraph() {
                     type="button"
                     onClick={() => handleZoom(-1)}
                     className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10"
-                    aria-label="Zoom out"
+                    aria-label={t("gr_zoom_out")}
                   >
                     <ZoomOut className="h-4 w-4" />
                   </button>
@@ -950,8 +953,8 @@ export default function KnowledgeGraph() {
                     type="button"
                     onClick={() => setFocusMode(f => !f)}
                     className={`grid h-10 w-10 place-items-center rounded-full border bg-black/80 text-white transition ${focusMode ? "border-white/60 bg-white/15" : "border-white/10 hover:bg-white/10"}`}
-                    aria-label="Toggle focus mode"
-                    title="Focus mode"
+                    aria-label={t("gr_toggle_focus")}
+                    title={t("gr_focus_mode")}
                   >
                     {focusMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
@@ -959,7 +962,7 @@ export default function KnowledgeGraph() {
                     type="button"
                     onClick={() => setOptionsOpen(true)}
                     className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10 sm:hidden"
-                    aria-label="Open graph options"
+                    aria-label={t("gr_open_options")}
                   >
                     <Settings className="h-4 w-4" />
                   </button>
@@ -973,14 +976,14 @@ export default function KnowledgeGraph() {
               <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/95 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-sm font-semibold">Graph options</p>
-                    <p className="text-xs text-muted-foreground">Customize your visualization</p>
+                    <p className="text-sm font-semibold">{t("gr_options_title")}</p>
+                    <p className="text-xs text-muted-foreground">{t("gr_options_subtitle")}</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setOptionsOpen(false)}
                     className="grid h-9 w-9 place-items-center rounded-full bg-white/5 text-white transition hover:bg-white/10"
-                    aria-label="Close graph options"
+                    aria-label={t("gr_close_options")}
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -988,13 +991,13 @@ export default function KnowledgeGraph() {
 
                 <div className="mt-4 space-y-4">
                   <div>
-                    <label className="block text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground">Search nodes</label>
+                    <label className="block text-[11px] font-medium uppercase tracking-[0.24em] text-muted-foreground">{t("gr_search_nodes_label")}</label>
                     <div className="mt-2 relative">
                       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                       <Input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Search nodes…"
+                        placeholder={t("gr_search_nodes_placeholder")}
                         className="pl-10"
                       />
                     </div>
@@ -1002,21 +1005,21 @@ export default function KnowledgeGraph() {
 
                   <div className="grid gap-2 sm:grid-cols-2">
                     <Button variant="outline" size="sm" className="w-full" onClick={() => { handleShowAll(); setOptionsOpen(false); }}>
-                      Show all
+                      {t("gr_show_all")}
                     </Button>
                     <Button variant="ghost" size="sm" className="w-full" onClick={handleReset}>
-                      Reset view
+                      {t("gr_reset_view")}
                     </Button>
                   </div>
 
                   <div className="rounded-3xl border border-white/10 bg-background/90 p-3">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Type filters</p>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{t("gr_type_filters")}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <button
                         onClick={() => setTypeFilters(new Set())}
                         className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${typeFilters.size === 0 ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
                       >
-                        All
+                        {t("gr_filter_all")}
                       </button>
                       {availableTypes.map(({ type, label, color }) => {
                         const active = typeFilters.has(type);
@@ -1035,55 +1038,55 @@ export default function KnowledgeGraph() {
                   </div>
 
                   <div className="rounded-3xl border border-white/10 bg-background/90 p-3">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Time range</p>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{t("gr_time_range")}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      {(["all", "7d", "30d"] as const).map(t => (
+                      {(["all", "7d", "30d"] as const).map(tf => (
                         <button
-                          key={t}
-                          onClick={() => setTimeFilter(t)}
-                          className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${timeFilter === t ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+                          key={tf}
+                          onClick={() => setTimeFilter(tf)}
+                          className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${timeFilter === tf ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
                         >
-                          {t === "all" ? "Anytime" : t === "7d" ? "Last 7d" : "Last 30d"}
+                          {tf === "all" ? t("gr_time_anytime") : tf === "7d" ? t("gr_time_7d") : t("gr_time_30d")}
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div className="rounded-3xl border border-white/10 bg-background/90 p-3">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">Display options</p>
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{t("gr_display_options")}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <button
                         onClick={() => setShowEdges(prev => !prev)}
                         className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${showEdges ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
                       >
                         {showEdges ? <Eye className="inline h-3 w-3 mr-1" /> : <EyeOff className="inline h-3 w-3 mr-1" />}
-                        {showEdges ? "Edges on" : "Edges off"}
+                        {showEdges ? t("gr_edges_on") : t("gr_edges_off")}
                       </button>
                       <button
                         onClick={() => setShowLabels(prev => !prev)}
                         className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${showLabels ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
                       >
                         {showLabels ? <Eye className="inline h-3 w-3 mr-1" /> : <EyeOff className="inline h-3 w-3 mr-1" />}
-                        {showLabels ? "Labels on" : "Labels off"}
+                        {showLabels ? t("gr_labels_on") : t("gr_labels_off")}
                       </button>
                       <button
                         onClick={() => setLegendOpen(open => !open)}
                         className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${legendOpen ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
                       >
                         {legendOpen ? <Eye className="inline h-3 w-3 mr-1" /> : <EyeOff className="inline h-3 w-3 mr-1" />}
-                        {legendOpen ? "Legend on" : "Legend off"}
+                        {legendOpen ? t("gr_legend_on") : t("gr_legend_off")}
                       </button>
                       <button
                         onClick={() => setClusterByPeriod(prev => !prev)}
                         className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${clusterByPeriod ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
                       >
-                        {clusterByPeriod ? "Period clusters on" : "Period clusters off"}
+                        {clusterByPeriod ? t("gr_period_clusters_on") : t("gr_period_clusters_off")}
                       </button>
                       <button
                         onClick={() => setFocusMode(prev => !prev)}
                         className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${focusMode ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
                       >
-                        {focusMode ? "Focus on" : "Focus off"}
+                        {focusMode ? t("gr_focus_on") : t("gr_focus_off")}
                       </button>
                     </div>
                   </div>
@@ -1097,7 +1100,7 @@ export default function KnowledgeGraph() {
               <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
                 <div className="flex flex-col items-center gap-3">
                   <Loader2 className="w-6 h-6 animate-spin text-primary" />
-                  <p className="text-xs text-muted-foreground">Loading graph…</p>
+                  <p className="text-xs text-muted-foreground">{t("gr_loading")}</p>
                 </div>
               </div>
             )}
@@ -1107,13 +1110,13 @@ export default function KnowledgeGraph() {
                 <div className="text-center space-y-4 max-w-xs px-6">
                   <div className="space-y-2">
                     <h2 className="font-display text-lg font-semibold text-foreground">
-                      No connections detected yet
+                      {t("gr_empty_title")}
                     </h2>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Start creating notes and mention entities with <span className="text-primary font-medium">@</span> to grow your graph.
+                      {t("gr_empty_desc")}
                     </p>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => navigate("/notes")}>Create first note →</Button>
+                  <Button variant="outline" size="sm" onClick={() => navigate("/notes")}>{t("gr_empty_cta")}</Button>
                 </div>
               </div>
             )}
@@ -1138,7 +1141,7 @@ export default function KnowledgeGraph() {
 
             {legendOpen && (
               <div className="absolute left-4 top-4 z-20 rounded-3xl border border-white/10 bg-black/80 p-4 text-sm text-white shadow-lg shadow-black/30 backdrop-blur-xl">
-                <p className="mb-3 text-xs uppercase tracking-[0.24em] text-muted-foreground">Legend</p>
+                <p className="mb-3 text-xs uppercase tracking-[0.24em] text-muted-foreground">{t("gr_legend")}</p>
                 <div className="grid gap-2">
                   {availableTypes.map(({ label, color, type }) => (
                     <div key={type} className="flex items-center gap-2">
@@ -1160,7 +1163,7 @@ export default function KnowledgeGraph() {
               >
                 <p className="text-xs font-medium text-white truncate max-w-[160px]">{hoveredNode.label}</p>
                 <p className="text-[10px] text-muted-foreground">
-                  {TYPE_LABELS[hoveredNode.type] || hoveredNode.type} · {hoveredNode.degree} link{hoveredNode.degree === 1 ? "" : "s"}
+                  {typeLabel(hoveredNode.type)} · {t("gr_link_count", { count: hoveredNode.degree, plural: hoveredNode.degree === 1 ? "" : "s" })}
                 </p>
               </div>
             )}

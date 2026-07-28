@@ -32,46 +32,46 @@ interface Cmd {
   key: string;
   label: string;
   icon: typeof Type;
-  run: (e: Editor) => void;
+  run: (e: Editor, t?: (key: string) => string) => void;
   active?: (e: Editor) => boolean;
 }
 
 const COMMANDS: Cmd[] = [
-  { key: "text", label: "Text", icon: Type, run: (e) => e.chain().focus().setNode("paragraph").run() },
-  { key: "h1", label: "H1", icon: Heading1, run: (e) => e.chain().focus().toggleHeading({ level: 1 }).run(), active: (e) => e.isActive("heading", { level: 1 }) },
-  { key: "h2", label: "H2", icon: Heading2, run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(), active: (e) => e.isActive("heading", { level: 2 }) },
-  { key: "h3", label: "H3", icon: Heading3, run: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(), active: (e) => e.isActive("heading", { level: 3 }) },
-  { key: "bold", label: "Bold", icon: Bold, run: (e) => e.chain().focus().toggleBold().run(), active: (e) => e.isActive("bold") },
-  { key: "italic", label: "Italic", icon: Italic, run: (e) => e.chain().focus().toggleItalic().run(), active: (e) => e.isActive("italic") },
-  { key: "strike", label: "Strike", icon: Strikethrough, run: (e) => e.chain().focus().toggleStrike().run(), active: (e) => e.isActive("strike") },
-  { key: "ul", label: "List", icon: List, run: (e) => e.chain().focus().toggleBulletList().run(), active: (e) => e.isActive("bulletList") },
-  { key: "ol", label: "1. List", icon: ListOrdered, run: (e) => e.chain().focus().toggleOrderedList().run(), active: (e) => e.isActive("orderedList") },
-  { key: "task", label: "To-do", icon: ListTodo, run: (e) => e.chain().focus().toggleTaskList().run(), active: (e) => e.isActive("taskList") },
-  { key: "quote", label: "Quote", icon: Quote, run: (e) => e.chain().focus().toggleBlockquote().run(), active: (e) => e.isActive("blockquote") },
-  { key: "code", label: "Code", icon: Code, run: (e) => e.chain().focus().toggleCode().run(), active: (e) => e.isActive("code") },
-  { key: "codeblock", label: "Block", icon: Code2, run: (e) => e.chain().focus().toggleCodeBlock().run(), active: (e) => e.isActive("codeBlock") },
-  { key: "hr", label: "Divider", icon: Minus, run: (e) => e.chain().focus().setHorizontalRule().run() },
+  { key: "text", label: "ed_cmd_text", icon: Type, run: (e) => e.chain().focus().setNode("paragraph").run() },
+  { key: "h1", label: "ed_cmd_h1", icon: Heading1, run: (e) => e.chain().focus().toggleHeading({ level: 1 }).run(), active: (e) => e.isActive("heading", { level: 1 }) },
+  { key: "h2", label: "ed_cmd_h2", icon: Heading2, run: (e) => e.chain().focus().toggleHeading({ level: 2 }).run(), active: (e) => e.isActive("heading", { level: 2 }) },
+  { key: "h3", label: "ed_cmd_h3", icon: Heading3, run: (e) => e.chain().focus().toggleHeading({ level: 3 }).run(), active: (e) => e.isActive("heading", { level: 3 }) },
+  { key: "bold", label: "ed_cmd_bold", icon: Bold, run: (e) => e.chain().focus().toggleBold().run(), active: (e) => e.isActive("bold") },
+  { key: "italic", label: "ed_cmd_italic", icon: Italic, run: (e) => e.chain().focus().toggleItalic().run(), active: (e) => e.isActive("italic") },
+  { key: "strike", label: "ed_cmd_strike", icon: Strikethrough, run: (e) => e.chain().focus().toggleStrike().run(), active: (e) => e.isActive("strike") },
+  { key: "ul", label: "ed_cmd_ul", icon: List, run: (e) => e.chain().focus().toggleBulletList().run(), active: (e) => e.isActive("bulletList") },
+  { key: "ol", label: "ed_cmd_ol", icon: ListOrdered, run: (e) => e.chain().focus().toggleOrderedList().run(), active: (e) => e.isActive("orderedList") },
+  { key: "task", label: "ed_cmd_task", icon: ListTodo, run: (e) => e.chain().focus().toggleTaskList().run(), active: (e) => e.isActive("taskList") },
+  { key: "quote", label: "ed_cmd_quote", icon: Quote, run: (e) => e.chain().focus().toggleBlockquote().run(), active: (e) => e.isActive("blockquote") },
+  { key: "code", label: "ed_cmd_code", icon: Code, run: (e) => e.chain().focus().toggleCode().run(), active: (e) => e.isActive("code") },
+  { key: "codeblock", label: "ed_cmd_codeblock", icon: Code2, run: (e) => e.chain().focus().toggleCodeBlock().run(), active: (e) => e.isActive("codeBlock") },
+  { key: "hr", label: "ed_cmd_hr", icon: Minus, run: (e) => e.chain().focus().setHorizontalRule().run() },
   {
     key: "link",
-    label: "Link",
+    label: "ed_cmd_link",
     icon: LinkIcon,
-    run: (e) => {
-      const url = window.prompt("URL");
+    run: (e, t) => {
+      const url = window.prompt(t ? t("ed_prompt_url") : "URL");
       if (!url) return;
       e.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
     },
   },
   {
     key: "image",
-    label: "Image",
+    label: "ed_cmd_image",
     icon: ImageIcon,
-    run: (e) => {
-      const url = window.prompt("Image URL");
+    run: (e, t) => {
+      const url = window.prompt(t ? t("ed_prompt_image_url") : "Image URL");
       if (!url) return;
       e.chain().focus().setImage({ src: url }).run();
     },
   },
-  { key: "table", label: "Table", icon: TableIcon, run: (e) => e.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
+  { key: "table", label: "ed_cmd_table", icon: TableIcon, run: (e) => e.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
 ];
 
 export function MobileCommandBar({ editor }: Props) {
@@ -129,9 +129,9 @@ export function MobileCommandBar({ editor }: Props) {
     (cmd: Cmd) => {
       if (!editor) return;
       // Keep editor focused so keyboard stays open.
-      cmd.run(editor);
+      cmd.run(editor, t);
     },
-    [editor]
+    [editor, t]
   );
 
   if (!isMobile || !editor) return null;
@@ -173,10 +173,10 @@ export function MobileCommandBar({ editor }: Props) {
                     : "bg-white/[0.06] text-white/80 hover:bg-white/10"
                 )}
                 aria-pressed={active}
-                aria-label={c.label}
+                aria-label={t(c.label)}
               >
                 <Icon className="h-3.5 w-3.5" />
-                <span>{c.label}</span>
+                <span>{t(c.label)}</span>
               </button>
             );
           })}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { entitiesApi } from "@/lib/api";
@@ -30,6 +31,7 @@ export default function EntityDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [entity, setEntity] = useState<EntityData | null>(null);
   const [heatmap, setHeatmap] = useState<HeatmapData>({});
   const [stats, setStats] = useState<EntityStats | null>(null);
@@ -101,7 +103,7 @@ export default function EntityDetail() {
         );
       } catch {
         if (!cancelled) {
-          toast({ title: "Entity not found", variant: "destructive" });
+          toast({ title: t("ent_not_found"), variant: "destructive" });
           navigate("/entities");
         }
       } finally {
@@ -187,9 +189,9 @@ export default function EntityDetail() {
       setEntity(freshData);
       setStats(sRes.data);
       setHeatmap(freshHeatmap);
-      toast({ title: "Registered! 🔥" });
+      toast({ title: t("ent_registered") });
     } catch {
-      toast({ title: "Error", variant: "destructive" });
+      toast({ title: t("ent_error"), variant: "destructive" });
     }
   };
 
@@ -199,8 +201,8 @@ export default function EntityDetail() {
       const { data } = await entitiesApi.update(id, { title: newTitle.trim() });
       setEntity(data);
       setEditingTitle(false);
-      toast({ title: "Name updated!" });
-    } catch { toast({ title: "Error updating", variant: "destructive" }); }
+      toast({ title: t("ent_name_updated") });
+    } catch { toast({ title: t("ent_error_updating"), variant: "destructive" }); }
   };
 
   const handleSaveDescription = async () => {
@@ -209,8 +211,8 @@ export default function EntityDetail() {
       const { data } = await entitiesApi.update(id, { description: newDescription.trim() });
       setEntity(data);
       setEditingDescription(false);
-      toast({ title: "Description updated!" });
-    } catch { toast({ title: "Error updating description", variant: "destructive" }); }
+      toast({ title: t("ent_description_updated") });
+    } catch { toast({ title: t("ent_error_updating_description"), variant: "destructive" }); }
   };
 
   if (loading) return <AppLayout><div className="flex justify-center items-center h-full"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div></AppLayout>;
@@ -222,7 +224,8 @@ export default function EntityDetail() {
   const totalCompletions = entity.trackingDates?.length ?? stats?.totalCompletions ?? 0;
 
 
-  const typeLabel = entity.type.charAt(0) + entity.type.slice(1).toLowerCase();
+  const typeLabelKey = `ent_type_${entity.type.toLowerCase()}`;
+  const typeLabel = t(typeLabelKey) === typeLabelKey ? entity.type.charAt(0) + entity.type.slice(1).toLowerCase() : t(typeLabelKey);
 
   return (
     <AppLayout>
@@ -231,7 +234,7 @@ export default function EntityDetail() {
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/entities"))}
           className="mb-6 inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/40 hover:text-white transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5" /> Back
+          <ArrowLeft className="w-3.5 h-3.5" /> {t("ent_back")}
         </button>
 
         {/* Premium serif header — matches /entities */}
@@ -243,9 +246,9 @@ export default function EntityDetail() {
 
           {editingTitle ? (
             <div className="flex gap-2 max-w-xl">
-              <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="New name..." className="flex-1" />
-              <Button size="sm" onClick={handleSaveTitle}>Save</Button>
-              <Button size="sm" variant="outline" onClick={() => { setEditingTitle(false); setNewTitle(entity?.title || ""); }}>Cancel</Button>
+              <Input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder={t("ent_new_name_placeholder")} className="flex-1" />
+              <Button size="sm" onClick={handleSaveTitle}>{t("ent_save")}</Button>
+              <Button size="sm" variant="outline" onClick={() => { setEditingTitle(false); setNewTitle(entity?.title || ""); }}>{t("ent_cancel")}</Button>
             </div>
           ) : (
             <div className="flex items-center gap-3 group">
@@ -253,7 +256,7 @@ export default function EntityDetail() {
               <button
                 onClick={() => { setEditingTitle(true); setNewTitle(entity?.title || ""); }}
                 className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded hover:bg-white/10"
-                aria-label="Edit name"
+                aria-label={t("ent_edit_name")}
               >
                 <Edit className="w-4 h-4 text-white/50" />
               </button>
@@ -262,21 +265,21 @@ export default function EntityDetail() {
 
           {editingDescription ? (
             <div className="mt-4 flex flex-col gap-2 max-w-xl">
-              <Textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="Add description..." className="text-sm" rows={3} />
+              <Textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder={t("ent_add_description_placeholder")} className="text-sm" rows={3} />
               <div className="flex gap-2">
-                <Button size="sm" onClick={handleSaveDescription}>Save</Button>
-                <Button size="sm" variant="outline" onClick={() => { setEditingDescription(false); setNewDescription(entity?.description || ""); }}>Cancel</Button>
+                <Button size="sm" onClick={handleSaveDescription}>{t("ent_save")}</Button>
+                <Button size="sm" variant="outline" onClick={() => { setEditingDescription(false); setNewDescription(entity?.description || ""); }}>{t("ent_cancel")}</Button>
               </div>
             </div>
           ) : (
             <div className="mt-3 flex items-start gap-2 group">
               <p className="text-sm text-white/50 flex-1">
-                {entity.description || <span className="italic text-white/30">No description</span>}
+                {entity.description || <span className="italic text-white/30">{t("ent_no_description")}</span>}
               </p>
               <button
                 onClick={() => { setEditingDescription(true); setNewDescription(entity?.description || ""); }}
                 className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded hover:bg-white/10"
-                aria-label="Edit description"
+                aria-label={t("ent_edit_description")}
               >
                 <Edit className="w-3.5 h-3.5 text-white/50" />
               </button>
@@ -285,7 +288,7 @@ export default function EntityDetail() {
 
           {isHabit && (
             <div className="mt-5 flex flex-wrap gap-2 text-xs uppercase tracking-wider">
-              <span className="px-3 py-1 rounded-md border border-white/10 text-white/60">Total {totalCompletions}</span>
+              <span className="px-3 py-1 rounded-md border border-white/10 text-white/60">{t("ent_total", { count: totalCompletions })}</span>
             </div>
           )}
 
@@ -297,8 +300,8 @@ export default function EntityDetail() {
             <TimerWidget
               entityId={id!}
               entityName={entity.title}
-              onTimerStart={() => toast({ title: "Timer started" })}
-              onTimerStop={(duration) => toast({ title: `Stopped — ${formatSeconds(duration)} recorded` })}
+              onTimerStart={() => toast({ title: t("ent_timer_started") })}
+              onTimerStop={(duration) => toast({ title: t("ent_timer_stopped", { duration: formatSeconds(duration) }) })}
             />
             <TimeHeatmap entityId={id!} />
           </div>
@@ -319,25 +322,25 @@ export default function EntityDetail() {
         >
           <AccordionItem value="metadata" className="border-b border-white/10">
             <AccordionTrigger className="label-caps text-white/60 hover:text-white hover:no-underline py-4">
-              Metadata
+              {t("ent_metadata")}
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-4">
                 <div className="rounded-md border border-white/10 bg-white/[0.02] p-3">
                   <div className="label-caps text-white/40 mb-1.5 inline-flex items-center gap-1.5">
-                    <Calendar className="h-3 w-3" /> Created
+                    <Calendar className="h-3 w-3" /> {t("ent_created")}
                   </div>
                   <div className="text-sm text-white">{new Date(entity.createdAt).toLocaleDateString("en-US")}</div>
                 </div>
                 <div className="rounded-md border border-white/10 bg-white/[0.02] p-3">
                   <div className="label-caps text-white/40 mb-1.5 inline-flex items-center gap-1.5">
-                    <Network className="h-3 w-3" /> Connections
+                    <Network className="h-3 w-3" /> {t("ent_connections")}
                   </div>
                   <div className="text-sm text-white">{relatedEntities.length}</div>
                 </div>
                 <div className="rounded-md border border-white/10 bg-white/[0.02] p-3">
                   <div className="label-caps text-white/40 mb-1.5 inline-flex items-center gap-1.5">
-                    <Tag className="h-3 w-3" /> Type
+                    <Tag className="h-3 w-3" /> {t("ent_type")}
                   </div>
                   <div className="text-sm text-white">{typeLabel}</div>
                 </div>
@@ -348,16 +351,16 @@ export default function EntityDetail() {
           {entity?.type === "PROJECT" && timeSummary && (
             <AccordionItem value="time" className="border-b border-white/10">
               <AccordionTrigger className="label-caps text-white/60 hover:text-white hover:no-underline py-4">
-                <span className="inline-flex items-center gap-2"><Clock className="w-3.5 h-3.5" /> Time tracking summary</span>
+                <span className="inline-flex items-center gap-2"><Clock className="w-3.5 h-3.5" /> {t("ent_time_tracking_summary")}</span>
               </AccordionTrigger>
               <AccordionContent>
                 <div className="grid grid-cols-2 gap-3 pb-4 max-w-md">
                   <div className="rounded-md border border-white/10 bg-white/[0.02] p-3">
-                    <p className="label-caps text-white/40">Total time</p>
+                    <p className="label-caps text-white/40">{t("ent_total_time")}</p>
                     <p className="mt-1.5 font-mono text-white">{timeSummary.formattedTotal}</p>
                   </div>
                   <div className="rounded-md border border-white/10 bg-white/[0.02] p-3">
-                    <p className="label-caps text-white/40">Sessions</p>
+                    <p className="label-caps text-white/40">{t("ent_sessions")}</p>
                     <p className="mt-1.5 text-white">{timeSummary.entriesCount}</p>
                   </div>
                 </div>
@@ -367,7 +370,7 @@ export default function EntityDetail() {
 
           <AccordionItem value="notes" className="border-b border-white/10">
             <AccordionTrigger className="label-caps text-white/60 hover:text-white hover:no-underline py-4">
-              Connected notes <span className="ml-2 text-white/30 normal-case tracking-normal">({relatedNotes.length})</span>
+              {t("ent_connected_notes")} <span className="ml-2 text-white/30 normal-case tracking-normal">({relatedNotes.length})</span>
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-1 pb-4">
@@ -382,13 +385,13 @@ export default function EntityDetail() {
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm text-white">{note.title}</p>
                         <p className="text-xs text-white/40">
-                          Updated {new Date(note.updatedAt).toLocaleDateString("en-US")}
+                          {t("ent_updated", { date: new Date(note.updatedAt).toLocaleDateString("en-US") })}
                         </p>
                       </div>
                     </button>
                   ))
                 ) : (
-                  <p className="text-sm text-white/40 px-3 py-2">No connected notes yet.</p>
+                  <p className="text-sm text-white/40 px-3 py-2">{t("ent_no_connected_notes")}</p>
                 )}
               </div>
             </AccordionContent>
@@ -396,7 +399,7 @@ export default function EntityDetail() {
 
           <AccordionItem value="entities" className="border-b border-white/10">
             <AccordionTrigger className="label-caps text-white/60 hover:text-white hover:no-underline py-4">
-              Connected entities <span className="ml-2 text-white/30 normal-case tracking-normal">({relatedEntities.length})</span>
+              {t("ent_connected_entities")} <span className="ml-2 text-white/30 normal-case tracking-normal">({relatedEntities.length})</span>
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-1 pb-4">
@@ -415,7 +418,7 @@ export default function EntityDetail() {
                     </button>
                   ))
                 ) : (
-                  <p className="text-sm text-white/40 px-3 py-2">No connected entities yet.</p>
+                  <p className="text-sm text-white/40 px-3 py-2">{t("ent_no_connected_entities")}</p>
                 )}
               </div>
             </AccordionContent>

@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { mergeModules } from "@/i18n";
+
 
 export type Language = "en" | "es" | "pt" | "fr";
 
@@ -844,6 +846,15 @@ const fr: Dict = {
 
 const translations: Record<Language, Dict> = { en, es, pt, fr };
 
+// Merge modular dictionaries (src/i18n/*) on top of the base ones.
+const mergedTranslations: Record<Language, Record<string, string>> = {
+  en: { ...(en as Record<string, string>), ...mergeModules("en") },
+  es: { ...(es as Record<string, string>), ...mergeModules("es") },
+  pt: { ...(pt as Record<string, string>), ...mergeModules("pt") },
+  fr: { ...(fr as Record<string, string>), ...mergeModules("fr") },
+};
+
+
 const missingWarned = new Set<string>();
 
 function interpolate(str: string, vars?: Record<string, string | number>): string {
@@ -873,8 +884,9 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const t = (key: string, vars?: Record<string, string | number>): string => {
-    const dict = translations[language] as Record<string, string>;
-    const fallback = translations.en as Record<string, string>;
+    const dict = mergedTranslations[language];
+    const fallback = mergedTranslations.en;
+
     const value = dict[key] ?? fallback[key];
     if (value === undefined) {
       if (import.meta.env.DEV && !missingWarned.has(key)) {

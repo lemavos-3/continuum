@@ -64,25 +64,25 @@ interface InsightItem {
 
 /* ── Meta de Categorias ──────────────────────────────────────────────── */
 
-const CATEGORY_META: Record<InsightCategory, { label: string; subtitle: string; icon: typeof FireIcon }> = {
+const CATEGORY_META: Record<InsightCategory, { labelKey: string; subtitleKey: string; icon: typeof FireIcon }> = {
   hotNotes: {
-    label: "Hot notes",
-    subtitle: "Recent notes with the strongest signal.",
+    labelKey: "ins_cat_hot_notes",
+    subtitleKey: "ins_cat_hot_notes_sub",
     icon: FireIcon,
   },
   hotEntities: {
-    label: "Key people & projects",
-    subtitle: "Entities appearing frequently across your graph.",
+    labelKey: "ins_cat_hot_entities",
+    subtitleKey: "ins_cat_hot_entities_sub",
     icon: UsersIcon,
   },
   worthRevisiting: {
-    label: "Worth revisiting",
-    subtitle: "Valuable notes that haven't been touched lately.",
+    labelKey: "ins_cat_worth_revisiting",
+    subtitleKey: "ins_cat_worth_revisiting_sub",
     icon: ClockIcon,
   },
   forgottenGems: {
-    label: "Forgotten gems",
-    subtitle: "Entities that once mattered and deserve another look.",
+    labelKey: "ins_cat_forgotten_gems",
+    subtitleKey: "ins_cat_forgotten_gems_sub",
     icon: ArrowTrendingUpIcon,
   },
 };
@@ -97,12 +97,24 @@ const formatHours = (h: number) => {
   return `${h.toFixed(h < 10 ? 1 : 0)}h`;
 };
 
-const formatDays = (d: number) => {
-  if (d <= 0) return "today";
-  if (d === 1) return "1d ago";
-  if (d < 30) return `${d}d ago`;
-  if (d < 365) return `${Math.floor(d / 30)}mo ago`;
-  return `${Math.floor(d / 365)}y ago`;
+const formatDays = (d: number, t: (key: string, vars?: Record<string, any>) => string) => {
+  if (d <= 0) return t("ins_today");
+  if (d === 1) return t("ins_days_ago_1");
+  if (d < 30) return t("ins_days_ago_n", { count: d });
+  if (d < 365) return t("ins_months_ago", { count: Math.floor(d / 30) });
+  return t("ins_years_ago", { count: Math.floor(d / 365) });
+};
+
+const BADGE_KEY_MAP: Record<string, string> = {
+  "hot right now": "ins_badge_hot",
+  "worth revisiting": "ins_badge_worth_revisiting",
+  "forgotten gem": "ins_badge_forgotten_gem",
+  "key entity": "ins_badge_key_entity",
+};
+
+const translateBadge = (badge: string, t: (key: string, vars?: Record<string, any>) => string) => {
+  const key = BADGE_KEY_MAP[badge?.toLowerCase()?.trim() || ""];
+  return key ? t(key) : badge;
 };
 
 const badgeStyle = (badge: string) => {
@@ -158,6 +170,7 @@ function NavItem({ label, count, active, onClick }: NavItemProps) {
 /* ── Linha do Insight ───────────────────────────────────────────────── */
 
 function InsightRow({ item }: { item: InsightItem }) {
+  const { t } = useLanguage();
   return (
     <li>
       <button
@@ -178,7 +191,7 @@ function InsightRow({ item }: { item: InsightItem }) {
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2.5">
             <Badge variant="outline" className={cn("rounded-sm px-1.5 py-0 text-[9px] font-mono tracking-wider uppercase", badgeStyle(item.badge))}>
-              {item.badge}
+              {translateBadge(item.badge, t)}
             </Badge>
             <span className="font-mono text-[10px] uppercase tracking-widest text-white/30">
               {item.subtitle}
@@ -190,10 +203,10 @@ function InsightRow({ item }: { item: InsightItem }) {
           </h3>
 
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            {item.metaDetails.mentions ? <StatChip>{item.metaDetails.mentions} mentions</StatChip> : null}
-            {item.metaDetails.links ? <StatChip>{item.metaDetails.links} links</StatChip> : null}
-            {item.metaDetails.hours ? <StatChip>{formatHours(item.metaDetails.hours)} tracked</StatChip> : null}
-            <StatChip>{formatDays(item.metaDetails.daysAgo)}</StatChip>
+            {item.metaDetails.mentions ? <StatChip>{t("ins_mentions", { count: item.metaDetails.mentions })}</StatChip> : null}
+            {item.metaDetails.links ? <StatChip>{t("ins_links", { count: item.metaDetails.links })}</StatChip> : null}
+            {item.metaDetails.hours ? <StatChip>{t("ins_hours_tracked", { hours: formatHours(item.metaDetails.hours) })}</StatChip> : null}
+            <StatChip>{formatDays(item.metaDetails.daysAgo, t)}</StatChip>
           </div>
         </div>
       </button>
@@ -258,7 +271,7 @@ export default function Insights() {
       setHotEntities(he.data || []);
       setForgottenEntities(fe.data || []);
     } catch {
-      toast({ title: "Could not load insights", variant: "destructive" });
+      toast({ title: t("ins_could_not_load"), variant: "destructive" });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -279,8 +292,8 @@ export default function Insights() {
         category: "hotNotes",
         score: item.score,
         badge: item.badge,
-        title: item.note.title || "Untitled",
-        subtitle: "Note",
+        title: item.note.title || t("ins_untitled"),
+        subtitle: t("ins_note"),
         metaDetails: { mentions: item.mentionCount, links: item.entityConnections, hours: item.hoursTracked, daysAgo: item.daysSinceLastInteraction },
         onOpen: () => navigate(`/notes/${item.note.id}`),
       });
@@ -293,8 +306,8 @@ export default function Insights() {
         category: "hotEntities",
         score: item.score,
         badge: item.badge,
-        title: item.entity.title || "Untitled",
-        subtitle: item.entity.type || "Atom",
+        title: item.entity.title || t("ins_untitled"),
+        subtitle: item.entity.type || t("ins_atom"),
         metaDetails: { mentions: item.mentionCount, links: item.relationsCount, hours: item.hoursTracked, daysAgo: item.daysSinceLastMention },
         onOpen: () => navigate(`/entities/${item.entity.id}`),
       });
@@ -307,8 +320,8 @@ export default function Insights() {
         category: "worthRevisiting",
         score: item.score,
         badge: item.badge,
-        title: item.note.title || "Untitled",
-        subtitle: "Note",
+        title: item.note.title || t("ins_untitled"),
+        subtitle: t("ins_note"),
         metaDetails: { mentions: item.mentionCount, links: item.entityConnections, hours: item.hoursTracked, daysAgo: item.daysSinceLastInteraction },
         onOpen: () => navigate(`/notes/${item.note.id}`),
       });
@@ -321,8 +334,8 @@ export default function Insights() {
         category: "forgottenGems",
         score: item.score,
         badge: item.badge,
-        title: item.entity.title || "Untitled",
-        subtitle: item.entity.type || "Atom",
+        title: item.entity.title || t("ins_untitled"),
+        subtitle: item.entity.type || t("ins_atom"),
         metaDetails: { mentions: item.mentionCount, links: item.relationsCount, hours: item.hoursTracked, daysAgo: item.daysSinceLastMention },
         onOpen: () => navigate(`/entities/${item.entity.id}`),
       });
@@ -353,16 +366,16 @@ export default function Insights() {
   const SidebarContent = (
     <div className="space-y-7">
       <div>
-        <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-white/30">Index</p>
-        <NavItem label="All insights" count={counts.all} active={view === "all"} onClick={() => { setView("all"); setFilterDrawerOpen(false); }} />
+        <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-white/30">{t("ins_index")}</p>
+        <NavItem label={t("ins_all_insights")} count={counts.all} active={view === "all"} onClick={() => { setView("all"); setFilterDrawerOpen(false); }} />
       </div>
       <div>
-        <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-white/30">Signals</p>
+        <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-white/30">{t("ins_signals")}</p>
         <div className="space-y-0.5">
           {categoryOrder.map((cat) => (
             <NavItem
               key={cat}
-              label={CATEGORY_META[cat].label}
+              label={t(CATEGORY_META[cat].labelKey)}
               count={counts[cat]}
               active={view === cat}
               onClick={() => { setView(cat); setFilterDrawerOpen(false); }}
@@ -389,7 +402,7 @@ export default function Insights() {
         {/* Menu Lateral Mobile */}
         <Sheet open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
           <SheetContent side="left" className="w-[280px] border-white/10 bg-black/95 p-6">
-            <p className="mb-6 font-serif text-2xl text-white">Filters</p>
+            <p className="mb-6 font-serif text-2xl text-white">{t("ins_filters")}</p>
             {SidebarContent}
           </SheetContent>
         </Sheet>
@@ -405,17 +418,17 @@ export default function Insights() {
             <header className="mb-8">
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">Intelligence</p>
-                  <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">{t("insights_title")}</h1>
+                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">{t("ins_intelligence")}</p>
+                  <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">{t("ins_title")}</h1>
                   <p className="mt-2 text-sm text-white/50">
-                    Surface structures that matter most across your graph.
+                    {t("ins_subtitle")}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <button
                     onClick={() => setFilterDrawerOpen(true)}
                     className="grid h-9 w-9 place-items-center rounded-sm border border-white/15 text-white/80 transition-colors hover:border-white/40 hover:text-white lg:hidden"
-                    aria-label="Open filters"
+                    aria-label={t("ins_open_filters")}
                   >
                     <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
                   </button>
@@ -426,7 +439,7 @@ export default function Insights() {
                     className="gap-2"
                   >
                     <ArrowPathIcon className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
-                    Refresh
+                    {t("ins_refresh")}
                   </Button>
                 </div>
               </div>
@@ -435,15 +448,15 @@ export default function Insights() {
             {/* Métricas Superiores em Grid */}
             <div className="grid gap-4 grid-cols-2 md:grid-cols-3 mb-8">
               <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm">
-                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">Signals Found</p>
+                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_signals_found")}</p>
                 <p className="mt-2 text-2xl font-mono tracking-tight text-white">{counts.all}</p>
               </div>
               <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm">
-                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">Top Strength</p>
+                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_top_strength")}</p>
                 <p className="mt-2 text-2xl font-mono tracking-tight text-white">{topScore.toFixed(1)}</p>
               </div>
               <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm col-span-2 md:col-span-1">
-                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">Archived Gems</p>
+                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_archived_gems")}</p>
                 <p className="mt-2 text-2xl font-mono tracking-tight text-white">{counts.worthRevisiting + counts.forgottenGems}</p>
               </div>
             </div>
@@ -455,7 +468,7 @@ export default function Insights() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search insights by title, type or strength…"
+                  placeholder={t("ins_search_placeholder")}
                   className="w-full border-0 bg-transparent pl-6 text-sm text-white placeholder:italic placeholder:text-white/30 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
@@ -463,10 +476,12 @@ export default function Insights() {
 
             <div className="flex items-center justify-between border-b border-white/5 pb-3 pt-4 mb-4 text-[11px] text-white/40">
               <div>
-                Showing {filteredInsights.length} {filteredInsights.length === 1 ? "signal" : "signals"}
+                {filteredInsights.length === 1
+                  ? t("ins_showing_signal", { count: filteredInsights.length })
+                  : t("ins_showing_signals", { count: filteredInsights.length })}
               </div>
               <div className="font-mono text-[10px] uppercase tracking-wider text-white/30">
-                Sorted by signal score
+                {t("ins_sorted_by_score")}
               </div>
             </div>
 
@@ -478,7 +493,7 @@ export default function Insights() {
               ) : filteredInsights.length === 0 ? (
                 <div className="py-24 text-center">
                   <p className="font-serif text-2xl italic text-white/40">
-                    No matching insights found.
+                    {t("ins_no_matching")}
                   </p>
                 </div>
               ) : (
