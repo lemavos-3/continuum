@@ -844,6 +844,15 @@ const fr: Dict = {
 
 const translations: Record<Language, Dict> = { en, es, pt, fr };
 
+// Merge modular dictionaries (src/i18n/*) on top of the base ones.
+const mergedTranslations: Record<Language, Record<string, string>> = {
+  en: { ...(en as Record<string, string>), ...mergeModules("en") },
+  es: { ...(es as Record<string, string>), ...mergeModules("es") },
+  pt: { ...(pt as Record<string, string>), ...mergeModules("pt") },
+  fr: { ...(fr as Record<string, string>), ...mergeModules("fr") },
+};
+
+
 const missingWarned = new Set<string>();
 
 function interpolate(str: string, vars?: Record<string, string | number>): string {
