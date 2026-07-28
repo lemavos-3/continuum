@@ -884,8 +884,9 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const t = (key: string, vars?: Record<string, string | number>): string => {
-    const dict = translations[language] as Record<string, string>;
-    const fallback = translations.en as Record<string, string>;
+    const dict = mergedTranslations[language];
+    const fallback = mergedTranslations.en;
+
     const value = dict[key] ?? fallback[key];
     if (value === undefined) {
       if (import.meta.env.DEV && !missingWarned.has(key)) {
