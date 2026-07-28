@@ -366,16 +366,16 @@ export default function Insights() {
   const SidebarContent = (
     <div className="space-y-7">
       <div>
-        <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-white/30">Index</p>
-        <NavItem label="All insights" count={counts.all} active={view === "all"} onClick={() => { setView("all"); setFilterDrawerOpen(false); }} />
+        <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-white/30">{t("ins_index")}</p>
+        <NavItem label={t("ins_all_insights")} count={counts.all} active={view === "all"} onClick={() => { setView("all"); setFilterDrawerOpen(false); }} />
       </div>
       <div>
-        <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-white/30">Signals</p>
+        <p className="mb-3 text-[10px] uppercase tracking-[0.32em] text-white/30">{t("ins_signals")}</p>
         <div className="space-y-0.5">
           {categoryOrder.map((cat) => (
             <NavItem
               key={cat}
-              label={CATEGORY_META[cat].label}
+              label={t(CATEGORY_META[cat].labelKey)}
               count={counts[cat]}
               active={view === cat}
               onClick={() => { setView(cat); setFilterDrawerOpen(false); }}
@@ -402,7 +402,7 @@ export default function Insights() {
         {/* Menu Lateral Mobile */}
         <Sheet open={filterDrawerOpen} onOpenChange={setFilterDrawerOpen}>
           <SheetContent side="left" className="w-[280px] border-white/10 bg-black/95 p-6">
-            <p className="mb-6 font-serif text-2xl text-white">Filters</p>
+            <p className="mb-6 font-serif text-2xl text-white">{t("ins_filters")}</p>
             {SidebarContent}
           </SheetContent>
         </Sheet>
@@ -418,17 +418,17 @@ export default function Insights() {
             <header className="mb-8">
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">Intelligence</p>
-                  <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">{t("insights_title")}</h1>
+                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">{t("ins_intelligence")}</p>
+                  <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">{t("ins_title")}</h1>
                   <p className="mt-2 text-sm text-white/50">
-                    Surface structures that matter most across your graph.
+                    {t("ins_subtitle")}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <button
                     onClick={() => setFilterDrawerOpen(true)}
                     className="grid h-9 w-9 place-items-center rounded-sm border border-white/15 text-white/80 transition-colors hover:border-white/40 hover:text-white lg:hidden"
-                    aria-label="Open filters"
+                    aria-label={t("ins_open_filters")}
                   >
                     <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
                   </button>
@@ -439,7 +439,7 @@ export default function Insights() {
                     className="gap-2"
                   >
                     <ArrowPathIcon className={cn("h-3.5 w-3.5", refreshing && "animate-spin")} />
-                    Refresh
+                    {t("ins_refresh")}
                   </Button>
                 </div>
               </div>
@@ -448,15 +448,15 @@ export default function Insights() {
             {/* Métricas Superiores em Grid */}
             <div className="grid gap-4 grid-cols-2 md:grid-cols-3 mb-8">
               <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm">
-                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">Signals Found</p>
+                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_signals_found")}</p>
                 <p className="mt-2 text-2xl font-mono tracking-tight text-white">{counts.all}</p>
               </div>
               <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm">
-                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">Top Strength</p>
+                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_top_strength")}</p>
                 <p className="mt-2 text-2xl font-mono tracking-tight text-white">{topScore.toFixed(1)}</p>
               </div>
               <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm col-span-2 md:col-span-1">
-                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">Archived Gems</p>
+                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_archived_gems")}</p>
                 <p className="mt-2 text-2xl font-mono tracking-tight text-white">{counts.worthRevisiting + counts.forgottenGems}</p>
               </div>
             </div>
@@ -468,7 +468,7 @@ export default function Insights() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search insights by title, type or strength…"
+                  placeholder={t("ins_search_placeholder")}
                   className="w-full border-0 bg-transparent pl-6 text-sm text-white placeholder:italic placeholder:text-white/30 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0"
                 />
               </div>
@@ -476,10 +476,12 @@ export default function Insights() {
 
             <div className="flex items-center justify-between border-b border-white/5 pb-3 pt-4 mb-4 text-[11px] text-white/40">
               <div>
-                Showing {filteredInsights.length} {filteredInsights.length === 1 ? "signal" : "signals"}
+                {filteredInsights.length === 1
+                  ? t("ins_showing_signal", { count: filteredInsights.length })
+                  : t("ins_showing_signals", { count: filteredInsights.length })}
               </div>
               <div className="font-mono text-[10px] uppercase tracking-wider text-white/30">
-                Sorted by signal score
+                {t("ins_sorted_by_score")}
               </div>
             </div>
 
@@ -491,7 +493,7 @@ export default function Insights() {
               ) : filteredInsights.length === 0 ? (
                 <div className="py-24 text-center">
                   <p className="font-serif text-2xl italic text-white/40">
-                    No matching insights found.
+                    {t("ins_no_matching")}
                   </p>
                 </div>
               ) : (
