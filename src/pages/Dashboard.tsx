@@ -167,7 +167,6 @@ function WeeklySummary({ notes, totalNotes, totalEntities, graphNodeCount, curre
   return (
     <section className="rounded-sm bg-white/[0.02] p-5 sm:p-8">
       <div className="flex items-center justify-between mb-6">
-        <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">Weekly summary</p>
         <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono hidden sm:block">Last 7 days</p>
       </div>
       <div className="grid grid-cols-3 gap-4 sm:gap-8">
@@ -195,21 +194,21 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-2.5 overflow-hidden rounded-xl bg-neutral-900/50 p-4 text-left shadow-sm",
-        "transition-all duration-300 hover:bg-neutral-900/70",
+        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-sm border border-white/15 bg-transparent p-4 text-left shadow-sm",
+        "transition duration-300 hover:border-white/40 hover:bg-white/5",
       )}
     >
       <div className="flex items-center justify-between gap-2">
         <Badge variant="outline" className={cn("text-[9px] font-medium px-1.5 py-0 shadow-sm", badgeStyle(item.badge))}>
           {item.badge}
         </Badge>
-        <span className="font-mono text-[9px] text-white/50">{item.score.toFixed(1)}</span>
+        <span className="font-mono text-[9px] text-white/60">{item.score.toFixed(1)}</span>
       </div>
       <div className="flex items-start gap-2 flex-1 min-w-0">
-        <div className="mt-0.5 rounded-lg bg-white/[0.06] p-1 shrink-0">
+        <div className="mt-0.5 rounded-lg bg-white/[0.04] p-1 shrink-0">
           <StickyNote className="h-3.5 w-3.5 text-neutral-400" />
         </div>
-        <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{item.note.title || "Untitled"}</h3>
+        <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-white transition-colors">{item.note.title || "Untitled"}</h3>
       </div>
       <div className="mt-auto flex flex-wrap gap-1 pt-2">
         {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
@@ -227,28 +226,28 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-2.5 overflow-hidden rounded-xl border border-white/5 bg-neutral-900/40 p-3.5 text-left shadow-sm",
-        "transition-all duration-300 hover:border-white/10 hover:bg-neutral-900/60",
+        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-sm border border-white/15 bg-transparent p-4 text-left shadow-sm",
+        "transition duration-300 hover:border-white/40 hover:bg-white/5",
       )}
     >
       <div className="flex items-center justify-between gap-2">
-        <Badge variant="outline" className={cn("border text-[9px] font-medium px-1.5 py-0 shadow-sm", badgeStyle(item.badge))}>
+        <Badge variant="outline" className={cn("text-[9px] font-medium px-1.5 py-0 shadow-sm", badgeStyle(item.badge))}>
           {item.badge}
         </Badge>
-        <span className="font-mono text-[9px] text-white/50">{item.score.toFixed(1)}</span>
+        <span className="font-mono text-[9px] text-white/60">{item.score.toFixed(1)}</span>
       </div>
       <div className="flex items-start gap-2 flex-1 min-w-0">
-        <div className="mt-0.5 rounded-lg bg-white/[0.06] p-1 border border-white/5 shrink-0">
+        <div className="mt-0.5 rounded-lg bg-white/[0.04] p-1 shrink-0">
           <Network className="h-3.5 w-3.5 text-neutral-400" />
         </div>
         <div className="min-w-0">
-          <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-neutral-200 group-hover:text-white transition-colors">{item.entity.title}</h3>
+          <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-white transition-colors">{item.entity.title}</h3>
           {item.entity.type && (
             <p className="mt-0.5 text-[8px] font-semibold uppercase tracking-wider text-white/50 truncate">{item.entity.type}</p>
           )}
         </div>
       </div>
-      <div className="mt-auto flex flex-wrap gap-1 pt-2 border-t border-white/5">
+      <div className="mt-auto flex flex-wrap gap-1 pt-2">
         {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
         {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)}</StatChip>}
         <StatChip>{formatDays(item.daysSinceLastMention)}</StatChip>
