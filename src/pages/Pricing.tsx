@@ -29,10 +29,7 @@ export default function Pricing() {
     { label: t("bill_row_native_sync"), free: true, vision: true },
     { label: t("bill_row_offline_mode"), free: true, vision: true },
     { label: t("bill_row_knowledge_graph"), free: true, vision: true },
-    { label: t("bill_row_advanced_metrics"), free: false, vision: true },
     { label: t("bill_row_data_export"), free: false, vision: true },
-    { label: t("bill_row_calendar_sync"), free: false, vision: true },
-    { label: t("bill_row_priority_support"), free: false, vision: true },
   ];
 
   return (
