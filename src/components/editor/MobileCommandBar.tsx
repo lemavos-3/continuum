@@ -168,6 +168,7 @@ export function MobileCommandBar({ editor }: Props) {
       )}
       style={{
         bottom: `calc(${offset}px + env(safe-area-inset-bottom, 0px) + 8px)`,
+        touchAction: "pan-x",
       }}
       // Prevent iOS/Android from stealing focus from the editor.
       onPointerDown={(e) => e.preventDefault()}
@@ -187,6 +188,8 @@ export function MobileCommandBar({ editor }: Props) {
                 onPointerMove={handlePointerMove}
                 onPointerUp={(e) => handlePointerUp(e, c)}
                 onPointerCancel={handlePointerCancel}
+                onTouchStart={(e) => e.preventDefault()}
+                onTouchEnd={(e) => e.preventDefault()}
                 className={cn(
                   "shrink-0 inline-flex items-center gap-1.5 rounded-lg px-2.5 h-9 text-[12px] transition-colors",
                   active
