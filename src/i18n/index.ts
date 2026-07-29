@@ -13,6 +13,7 @@ import * as misc from "./misc";
 import * as dashboard from "./dashboard";
 import * as auth from "./auth";
 import * as lists from "./lists";
+import * as pwa from "./pwa";
 
 const modules: Module[] = [
   insights.dict,
@@ -25,6 +26,7 @@ const modules: Module[] = [
   dashboard.dict,
   auth.dict,
   lists.dict,
+  pwa.dict,
 ];
 
 
