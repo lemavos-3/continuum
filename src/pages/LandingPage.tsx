@@ -111,7 +111,6 @@ export default function LandingPage() {
       <div className="fixed bottom-6 right-6 z-50">
         <InstallAppButton />
       </div>
-      <InstallPrompt />
       <PwaInstallListener />
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} initialTab="login" />
     </div>
