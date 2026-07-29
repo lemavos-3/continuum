@@ -108,7 +108,7 @@ export default function LandingPage() {
         <ScrollGlobe sections={sections} className="bg-black" />
       </main>
       <Footer />
-      <div className="fixed bottom-6 right-6 z-50 hidden sm:block">
+      <div className="fixed bottom-6 right-6 z-50">
         <InstallAppButton />
       </div>
       <InstallPrompt />

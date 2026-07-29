@@ -17,18 +17,21 @@ export default function InstallAppButton() {
     );
   }
 
-  if (!available) return null;
-
   const handle = async () => {
     if (isIos && !canInstall) {
       toast({ title: t("pwa_ios_title"), description: t("pwa_ios_desc") });
       return;
     }
+
     setBusy(true);
     const outcome = await promptInstall();
     setBusy(false);
     if (outcome === "unavailable") {
-      toast({ title: t("pwa_unavailable"), variant: "destructive" });
+      toast({
+        title: t("pwa_unavailable"),
+        description: t("pwa_unavailable"),
+        variant: "destructive",
+      });
     }
   };
 
