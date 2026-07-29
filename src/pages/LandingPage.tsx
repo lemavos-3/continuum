@@ -10,6 +10,7 @@ import Footer from "@/components/landing/Footer";
 import AuthDialog from "@/components/auth/AuthDialog";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
 import InstallAppButton from "@/components/pwa/InstallAppButton";
+import PwaInstallListener from "@/components/pwa/PwaInstallListener";
 import { ScrollGlobe } from "@/components/ui/landing-page";
 import landingNotes from "@/assets/landing-notes.jpg";
 import landingEditor from "@/assets/landing-editor.jpg";
@@ -111,6 +112,7 @@ export default function LandingPage() {
         <InstallAppButton />
       </div>
       <InstallPrompt />
+      <PwaInstallListener />
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} initialTab="login" />
     </div>
   );
