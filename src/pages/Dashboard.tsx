@@ -828,11 +828,11 @@ export default function Dashboard() {
             <div>
               <div className="flex items-center justify-between gap-3 mb-5">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">Account</p>
-                  <h2 className="mt-1 font-serif text-2xl text-white">{t("planLimits")}</h2>
+                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_account")}</p>
+                  <h2 className="mt-1 font-serif text-2xl text-white">{t("db_planLimits")}</h2>
                 </div>
                 <span className="text-[9px] font-mono uppercase tracking-widest text-white/70 border border-white/10 px-2 py-1 rounded-sm">
-                  {user?.plan || "FREE"}
+                  {user?.plan || t("db_free")}
                 </span>
               </div>
 
@@ -840,7 +840,7 @@ export default function Dashboard() {
                 <div className="space-y-3.5">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-white/60">{t("notes")}</span>
+                      <span className="text-white/60">{t("db_notes")}</span>
                       <span className="text-white/80 font-mono text-[11px] tabular-nums">
                         {usage.notesCount} / {isUnlimited(limits.maxNotes) ? "∞" : limits.maxNotes}
                       </span>
@@ -849,7 +849,7 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-white/60">{t("entities")}</span>
+                      <span className="text-white/60">{t("db_entities")}</span>
                       <span className="text-white/80 font-mono text-[11px] tabular-nums">
                         {usage.entitiesCount} / {isUnlimited(limits.maxEntities) ? "∞" : limits.maxEntities}
                       </span>
@@ -858,28 +858,28 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-white/60">{t("vault")}</span>
+                      <span className="text-white/60">{t("db_stream")}</span>
                       <span className="text-white/80 font-mono text-[11px] tabular-nums">{storageUsed} / {storageLimit}</span>
                     </div>
                     <Progress value={isUnlimited(limits.maxVaultSizeMB) ? 0 : Math.min((usage.vaultSizeMB / limits.maxVaultSizeMB) * 100, 100)} className="h-1 bg-white/5" />
                   </div>
                 </div>
               ) : (
-                <div className="text-xs text-white/40">Loading usage…</div>
+                <div className="text-xs text-white/40">{t("db_loadingUsage")}</div>
               )}
 
               <div className="mt-5 rounded-xl border border-white/5 bg-white/[0.01] p-3.5 text-[11px]">
                 <div className="grid gap-3 grid-cols-2">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">History retention</span>
-                    <span className="text-neutral-300 font-medium">{isUnlimited(limits.historyDays) ? "Unlimited" : `${limits.historyDays} days`}</span>
+                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">{t("db_historyRetention")}</span>
+                    <span className="text-neutral-300 font-medium">{isUnlimited(limits.historyDays) ? t("db_unlimited") : t("db_daysUnit", { n: limits.historyDays })}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">Metadata limit</span>
-                    <span className="text-neutral-300 font-medium">{isUnlimited(limits.maxMetadataSizeKb) ? "Unlimited" : `${limits.maxMetadataSizeKb} KB`}</span>
+                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">{t("db_metadataLimit")}</span>
+                    <span className="text-neutral-300 font-medium">{isUnlimited(limits.maxMetadataSizeKb) ? t("db_unlimited") : t("db_kbUnit", { n: limits.maxMetadataSizeKb })}</span>
                   </div>
                   <div className="flex items-center justify-between col-span-2 pt-2.5 border-t border-white/5 mt-0.5 text-neutral-400">
-                    <span>Data export</span>
+                    <span>{t("db_dataExport")}</span>
                     {user?.dataExport ? (
                       <button
                         type="button"
@@ -887,10 +887,10 @@ export default function Dashboard() {
                         disabled={exporting}
                         className="text-neutral-200 underline underline-offset-4 hover:text-white disabled:opacity-50 transition-colors"
                       >
-                        {exporting ? "Exporting…" : "Download backup"}
+                        {exporting ? t("db_exporting") : t("db_downloadBackup")}
                       </button>
                     ) : (
-                      <span className="text-neutral-600 text-[10px]">Upgrade required</span>
+                      <span className="text-neutral-600 text-[10px]">{t("db_upgradeRequired")}</span>
                     )}
                   </div>
                 </div>
@@ -901,7 +901,7 @@ export default function Dashboard() {
               onClick={() => navigate("/subscription")}
               className="mt-4 text-xs text-neutral-400 hover:text-white self-start transition-colors"
             >
-              Manage subscription →
+              {t("db_manageSubscription")}
             </button>
           </div>
 

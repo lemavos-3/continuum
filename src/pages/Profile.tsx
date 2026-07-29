@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import InstallAppButton from "@/components/pwa/InstallAppButton";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -258,6 +259,10 @@ export default function Profile() {
                   await handleSave();
                 }}
               />
+            </div>
+
+            <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm">
+              <InstallAppButton />
             </div>
 
             <div className="flex items-center gap-3 border border-white/5 bg-white/[0.01] p-4 rounded-sm">
