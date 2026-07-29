@@ -910,11 +910,11 @@ export default function Dashboard() {
           <div className="border border-white/5 bg-white/[0.01] rounded-sm p-4 sm:p-6 lg:col-span-4 flex flex-col">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">Stream</p>
-                <h2 className="mt-1 font-serif text-xl text-white">{t("dashboard_recentNotes")}</h2>
+                <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_stream")}</p>
+                <h2 className="mt-1 font-serif text-xl text-white">{t("db_recentNotes")}</h2>
               </div>
               <button type="button" onClick={() => navigate("/notes")} className="text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors">
-                View all
+                {t("db_viewAll")}
               </button>
             </div>
             <div className="space-y-1 flex-1 overflow-y-auto max-h-[280px] sm:max-h-[310px] pr-1 scrollbar-thin">
@@ -927,7 +927,7 @@ export default function Dashboard() {
                     className="group w-full rounded-xl border border-transparent px-2.5 py-2 text-left transition-all hover:bg-neutral-900/50 hover:border-white/5"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-xs sm:text-sm font-medium text-white/80 group-hover:text-white truncate">{note.title || "Untitled"}</p>
+                      <p className="text-xs sm:text-sm font-medium text-white/80 group-hover:text-white truncate">{note.title || t("db_untitled")}</p>
                       <ArrowRight className="h-3.5 w-3.5 text-white/30 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-white/50" />
                     </div>
                     <p className="mt-0.5 text-[9px] font-mono text-white/40">{formatNoteDate(note.createdAtTimestamp)}</p>
@@ -935,7 +935,7 @@ export default function Dashboard() {
                 ))
               ) : (
                 <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.01] p-6 text-center text-xs text-white/30 h-full flex items-center justify-center">
-                  No recent notes yet.
+                  {t("db_noRecentNotes")}
                 </div>
               )}
             </div>
@@ -943,8 +943,8 @@ export default function Dashboard() {
 
           {/* INSIGHTS: HOT RIGHT NOW */}
           <DashboardInsightSection
-            title="Hot right now"
-            subtitle="Strongest recent gravity across notes"
+            title={t("db_hotRightNow")}
+            subtitle={t("db_hotRightNowSubtitle")}
             icon={Flame}
             loading={insightsLoading}
             empty={hotNotes.length === 0}
@@ -953,7 +953,7 @@ export default function Dashboard() {
             onRefresh={() => loadInsights(true)}
             refreshing={refreshingInsights}
             viewMoreHref="/notes"
-            viewMoreLabel="View all notes"
+            viewMoreLabel={t("db_viewAllNotes")}
           >
             {hotNotes.map((n) => (
               <NoteCard key={n.note.id} item={n} onOpen={() => navigate(`/notes/${n.note.id}`)} />
@@ -963,15 +963,15 @@ export default function Dashboard() {
           {/* BLOCO 3: GRAPH DISCOVERY */}
           {/* INSIGHTS: KEY PEOPLE & PROJECTS */}
           <DashboardInsightSection
-            title="Key people & projects"
-            subtitle="Trending graph entities"
+            title={t("db_keyPeopleProjects")}
+            subtitle={t("db_keyPeopleProjectsSubtitle")}
             icon={Users}
             loading={insightsLoading}
             empty={hotEntities.length === 0}
             className="lg:col-span-4"
             gridColsClass="grid-cols-1"
             viewMoreHref="/entities"
-            viewMoreLabel="View all entities"
+            viewMoreLabel={t("db_viewAllEntities")}
           >
             {hotEntities.map((e) => (
               <EntityCard key={e.entity.id} item={e} onOpen={() => navigate(`/entities/${e.entity.id}`)} />
@@ -980,15 +980,15 @@ export default function Dashboard() {
 
           {/* INSIGHTS: WORTH REVISITING */}
           <DashboardInsightSection
-            title="Worth revisiting"
-            subtitle="High-value aging notes"
+            title={t("db_worthRevisiting")}
+            subtitle={t("db_worthRevisitingSubtitle")}
             icon={Clock}
             loading={insightsLoading}
             empty={forgottenNotes.length === 0}
             className="lg:col-span-4"
             gridColsClass="grid-cols-1"
             viewMoreHref="/notes"
-            viewMoreLabel="View all notes"
+            viewMoreLabel={t("db_viewAllNotes")}
           >
             {forgottenNotes.map((n) => (
               <NoteCard key={n.note.id} item={n} onOpen={() => navigate(`/notes/${n.note.id}`)} />
@@ -997,15 +997,15 @@ export default function Dashboard() {
 
           {/* INSIGHTS: FORGOTTEN GEMS */}
           <DashboardInsightSection
-            title="Forgotten gems"
-            subtitle="Entities that once mattered"
+            title={t("db_forgottenGems")}
+            subtitle={t("db_forgottenGemsSubtitle")}
             icon={TrendingUp}
             loading={insightsLoading}
             empty={forgottenEntities.length === 0}
             className="lg:col-span-4"
             gridColsClass="grid-cols-1"
             viewMoreHref="/entities"
-            viewMoreLabel="View all entities"
+            viewMoreLabel={t("db_viewAllEntities")}
           >
             {forgottenEntities.map((e) => (
               <EntityCard key={e.entity.id} item={e} onOpen={() => navigate(`/entities/${e.entity.id}`)} />
@@ -1014,27 +1014,27 @@ export default function Dashboard() {
 
         </section>
       </div>
-      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason="You've reached the notes limit for your plan." />
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason={t("db_notesLimitReason")} />
       
       {/* Onboarding popup after account creation */}
       <Dialog open={showOnboardingPopup} onOpenChange={setShowOnboardingPopup}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">Welcome to Continuum! 🎉</DialogTitle>
+            <DialogTitle className="font-serif text-2xl">{t("db_welcomeTitle")}</DialogTitle>
             <DialogDescription className="mt-2">
-              Your knowledge graph is ready to grow.
+              {t("db_welcomeDesc")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-foreground/80">
-              Did you know? You can import your existing notes as <span className="font-semibold">Markdown</span> files. Bring your knowledge from other tools and start building your graph right away.
+              {t("db_welcomeParagraphPart1")} <span className="font-semibold">{t("db_welcomeParagraphMarkdown")}</span> {t("db_welcomeParagraphPart2")}
             </p>
             <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-xs text-white/50 mb-2">📥 Import supports:</p>
+              <p className="text-xs text-white/50 mb-2">{t("db_importSupportsLabel")}</p>
               <ul className="text-xs text-white/70 space-y-1">
-                <li>• Your notes in Markdown (.md) format</li>
-                <li>• Automatic entity detection from mentions</li>
-                <li>• Folder structure from your files</li>
+                <li>• {t("db_importSupport1")}</li>
+                <li>• {t("db_importSupport2")}</li>
+                <li>• {t("db_importSupport3")}</li>
               </ul>
             </div>
           </div>
@@ -1045,7 +1045,7 @@ export default function Dashboard() {
               onClick={() => setShowOnboardingPopup(false)}
               className="flex-1"
             >
-              Got it
+              {t("db_gotIt")}
             </Button>
             <Button
               size="sm"
@@ -1055,7 +1055,7 @@ export default function Dashboard() {
               }}
               className="flex-1"
             >
-              Import notes →
+              {t("db_importNotesArrow")}
             </Button>
           </div>
         </DialogContent>
