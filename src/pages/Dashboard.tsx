@@ -83,12 +83,11 @@ const formatHours = (h: number) => {
   return `${h.toFixed(h < 10 ? 1 : 0)}h`;
 };
 
-const formatDays = (d: number) => {
-  if (d <= 0) return "today";
-  if (d === 1) return "1d ago";
-  if (d < 30) return `${d}d ago`;
-  if (d < 365) return `${Math.round(d / 30)}mo ago`;
-  return `${Math.round(d / 365)}y ago`;
+const formatDays = (d: number, t: (key: string, vars?: Record<string, string | number>) => string) => {
+  if (d <= 0) return t("db_today");
+  if (d < 30) return t("db_dAgo", { n: d });
+  if (d < 365) return t("db_moAgo", { n: Math.round(d / 30) });
+  return t("db_yAgo", { n: Math.round(d / 365) });
 };
 
 const badgeStyle = (badge: string) => {
@@ -153,6 +152,7 @@ function SummaryMetric({ label, value, delta, comparison }: { label: string; val
 function WeeklySummary({ notes, totalNotes, totalEntities, graphNodeCount, currentScore }: {
   notes: any[]; totalNotes: number; totalEntities: number; graphNodeCount: number; currentScore: number;
 }) {
+  const { t } = useLanguage();
   const now = Date.now();
   const WEEK = 7 * 24 * 60 * 60 * 1000;
   const list = Array.isArray(notes) ? notes : [];
@@ -167,12 +167,12 @@ function WeeklySummary({ notes, totalNotes, totalEntities, graphNodeCount, curre
   return (
     <section className="-mt-4 rounded-sm bg-white/[0.02] p-5 sm:-mt-6 sm:p-8">
       <div className="flex items-center justify-between mb-6">
-        <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono hidden sm:block">Last 7 days</p>
+        <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono hidden sm:block">{t("db_last7days")}</p>
       </div>
       <div className="grid grid-cols-3 gap-4 sm:gap-8">
-        <SummaryMetric label="Notes" value={String(totalNotes)} delta={notesDelta} comparison="vs last week" />
-        <SummaryMetric label="Entities" value={String(totalEntities)} delta={0} comparison={`${graphNodeCount} nodes`} />
-        <SummaryMetric label="Score" value={currentScore.toFixed(2)} delta={0} comparison="gravity index" />
+        <SummaryMetric label={t("db_notes")} value={String(totalNotes)} delta={notesDelta} comparison={t("db_vsLastWeek")} />
+        <SummaryMetric label={t("db_entities")} value={String(totalEntities)} delta={0} comparison={t("db_nodes", { n: graphNodeCount })} />
+        <SummaryMetric label={t("db_score")} value={currentScore.toFixed(2)} delta={0} comparison={t("db_gravityIndex")} />
       </div>
     </section>
   );
@@ -188,6 +188,7 @@ function StatChip({ children }: { children: ReactNode }) {
 }
 
 function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
+  const { t } = useLanguage();
   return (
     <motion.button
       whileHover={{ y: -1 }}
@@ -208,18 +209,19 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
         <div className="mt-0.5 rounded-lg bg-white/[0.04] p-1 shrink-0">
           <StickyNote className="h-3.5 w-3.5 text-neutral-400" />
         </div>
-        <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-white transition-colors">{item.note.title || "Untitled"}</h3>
+        <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-white transition-colors">{item.note.title || t("db_untitled")}</h3>
       </div>
       <div className="mt-auto flex flex-wrap gap-1 pt-2">
         {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
         {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)}</StatChip>}
-        <StatChip>{formatDays(item.daysSinceLastInteraction)}</StatChip>
+        <StatChip>{formatDays(item.daysSinceLastInteraction, t)}</StatChip>
       </div>
     </motion.button>
   );
 }
 
 function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void }) {
+  const { t } = useLanguage();
   return (
     <motion.button
       whileHover={{ y: -1 }}
@@ -250,7 +252,7 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
       <div className="mt-auto flex flex-wrap gap-1 pt-2">
         {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
         {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)}</StatChip>}
-        <StatChip>{formatDays(item.daysSinceLastMention)}</StatChip>
+        <StatChip>{formatDays(item.daysSinceLastMention, t)}</StatChip>
       </div>
     </motion.button>
   );
@@ -262,6 +264,7 @@ function DashboardInsightSection({
   title: string; subtitle?: string; icon: ComponentType<{ className?: string }>; children: ReactNode; empty: boolean; loading: boolean; className?: string; onRefresh?: () => void; refreshing?: boolean; viewMoreHref?: string; viewMoreLabel?: string; gridColsClass?: string;
 }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const items = Children.toArray(children);
   const previewItems = items.slice(0, 4);
   const expandedItems = items.slice(4, 10);
@@ -273,7 +276,7 @@ function DashboardInsightSection({
     <div className={cn("rounded-sm bg-neutral-950/70 p-4 sm:p-6 flex flex-col shadow-sm", className)}>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
         <div>
-          <p className="text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono">Signal</p>
+          <p className="text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono">{t("db_signal")}</p>
           <h2 className="mt-1 font-serif text-xl text-white">{title}</h2>
           {subtitle && <p className="mt-1 text-xs text-white/50">{subtitle}</p>}
         </div>
@@ -286,7 +289,7 @@ function DashboardInsightSection({
               className="text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors flex items-center gap-1.5"
             >
               <RefreshCw className={cn("h-3 w-3", refreshing && "animate-spin")} />
-              <span>Refresh</span>
+              <span>{t("db_refresh")}</span>
             </button>
           )}
           {viewMoreHref && (
@@ -295,7 +298,7 @@ function DashboardInsightSection({
               onClick={() => navigate(viewMoreHref)}
               className="text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors"
             >
-              {viewMoreLabel || "View all"}
+              {viewMoreLabel || t("db_viewAll")}
             </button>
           )}
         </div>
@@ -309,7 +312,7 @@ function DashboardInsightSection({
           </div>
         ) : empty ? (
           <div className="rounded-xl bg-neutral-900/50 p-6 text-center text-xs text-white/40 h-full flex flex-col items-center justify-center min-h-[120px]">
-            Nothing to show yet.
+            {t("db_nothingToShow")}
           </div>
         ) : (
           <>
@@ -319,8 +322,8 @@ function DashboardInsightSection({
                 <AccordionItem value={title} className="border-none">
                   <AccordionTrigger className="px-0 py-0 hover:no-underline">
                     <div className="flex w-full items-center justify-between gap-3 rounded-xl bg-neutral-900/50 px-3 py-2 text-xs font-medium text-white/50 hover:bg-neutral-900/60 transition-colors">
-                      <span>Show {visibleCount - previewItems.length} more</span>
-                      <span>{visibleCount} of {totalCount}</span>
+                      <span>{t("db_showMore", { n: visibleCount - previewItems.length })}</span>
+                      <span>{t("db_countOfTotal", { count: visibleCount, total: totalCount })}</span>
                     </div>
                   </AccordionTrigger>
                   <AccordionContent className="px-0 pt-3 pb-0">
@@ -328,14 +331,14 @@ function DashboardInsightSection({
                       {expandedItems}
                     </div>
                     <div className="flex items-center justify-between gap-3 text-[10px] text-white/40 pt-2 border-t border-white/10">
-                      <span>{totalCount > visibleCount ? `Showing ${visibleCount} of ${totalCount}` : `Showing all ${visibleCount}`}</span>
+                      <span>{totalCount > visibleCount ? t("db_showingOfTotal", { count: visibleCount, total: totalCount }) : t("db_showingAll", { count: visibleCount })}</span>
                       {viewMoreHref && (
                         <button
                           type="button"
                           onClick={() => navigate(viewMoreHref)}
                           className="text-white/50 hover:text-white transition-colors"
                         >
-                          {viewMoreLabel || "View all"}
+                          {viewMoreLabel || t("db_viewAll")}
                         </button>
                       )}
                     </div>
@@ -406,7 +409,7 @@ export default function Dashboard() {
       setHotEntities(extractData(he));
       setForgottenEntities(extractData(fe));
     } catch (err) {
-      toast({ title: "Couldn't load insights", description: "Please try again.", variant: "destructive" });
+      toast({ title: t("db_toastInsightsFailTitle"), description: t("db_toastTryAgain"), variant: "destructive" });
     } finally {
       setInsightsLoading(false);
       setRefreshingInsights(false);
@@ -432,10 +435,10 @@ export default function Dashboard() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast({ title: "Export ready", description: "Your full vault was downloaded as a .zip." });
+      toast({ title: t("db_toastExportReadyTitle"), description: t("db_toastExportReadyDesc") });
     } catch (e) {
       console.error("Export failed", e);
-      toast({ title: "Export failed", description: "Please try again.", variant: "destructive" });
+      toast({ title: t("db_toastExportFailedTitle"), description: t("db_toastTryAgain"), variant: "destructive" });
     } finally {
       setExporting(false);
     }
@@ -613,11 +616,11 @@ export default function Dashboard() {
 
   const greeting = (() => {
     const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 18) return "Good afternoon";
-    return "Good evening";
+    if (hour < 12) return t("db_goodMorning");
+    if (hour < 18) return t("db_goodAfternoon");
+    return t("db_goodEvening");
   })();
-  const displayName = user?.username || user?.email?.split("@")[0] || "there";
+  const displayName = user?.username || user?.email?.split("@")[0] || t("db_there");
 
   return (
     <AppLayout>
@@ -626,26 +629,26 @@ export default function Dashboard() {
         {/* HEADER */}
         <header className="border-b border-white/10 pb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("dashboard_overview")}</p>
+            <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_overview")}</p>
             <h1 className="mt-2 font-serif text-4xl sm:text-5xl tracking-tight text-white">
               {greeting}, {displayName}
             </h1>
             <p className="mt-2 text-sm text-white/50">
-              Here's what's happening across your knowledge graph.
+              {t("db_subtitle")}
             </p>
           </div>
           <div className="flex items-center gap-1.5 self-start sm:self-auto">
             <Button size="sm" variant="outline" onClick={() => navigate("/activities")} className="gap-1 h-7 px-2.5 text-[11px]">
               <Flame className="h-3 w-3" />
-              Activities
+              {t("db_activities")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => navigate("/projects")} className="gap-1 h-7 px-2.5 text-[11px]">
               <Clock className="h-3 w-3" />
-              Project
+              {t("db_project")}
             </Button>
             <Button size="sm" onClick={() => void createNote()} disabled={creating} className="gap-1 h-7 px-2.5 text-[11px]">
               {creating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-              {creating ? "Creating…" : "New note"}
+              {creating ? t("db_creating") : t("db_newNote")}
             </Button>
           </div>
 
@@ -672,14 +675,14 @@ export default function Dashboard() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("dashboard_signal")}</p>
-                    <h2 className="mt-1 font-serif text-2xl text-white">{t("dashboard_scoreEvolution")}</h2>
-                    <p className="mt-1 text-xs text-white/50">Knowledge graph gravity index</p>
+                    <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_signal")}</p>
+                    <h2 className="mt-1 font-serif text-2xl text-white">{t("db_scoreEvolution")}</h2>
+                    <p className="mt-1 text-xs text-white/50">{t("db_scoreEvolutionSubtitle")}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   <div className="text-right">
-                    <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">Current</p>
+                    <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("db_current")}</p>
                     <p className="font-mono text-2xl text-white tabular-nums leading-none mt-1">
                       {scoreStats.current.toFixed(2)}
                     </p>
@@ -691,14 +694,14 @@ export default function Dashboard() {
                     className="text-xs text-white/50 hover:text-white hidden sm:flex items-center gap-1 transition-colors disabled:opacity-50"
                   >
                     <RefreshCw className={cn("h-3 w-3", scoreTimelineFetching && "animate-spin")} />
-                    Score
+                    {t("db_score")}
                   </button>
                   <button
                     type="button"
                     onClick={() => navigate("/insights")}
                     className="text-xs text-white/50 hover:text-white hidden sm:block transition-colors"
                   >
-                    Insights →
+                    {t("db_insightsArrow")}
                   </button>
                 </div>
               </div>
@@ -707,12 +710,12 @@ export default function Dashboard() {
               <div className="flex items-center -mx-4 px-4 sm:mx-0 sm:px-0 overflow-x-auto scrollbar-none gap-1 border-y sm:border border-white/5 sm:rounded-sm bg-white/[0.01] p-1">
                 {(Object.keys(rangeDaysMap) as TimeRange[]).map((range) => {
                   const labels: Record<TimeRange, string> = {
-                    "14d": "14 Days",
-                    "1mo": "1 Month",
-                    "3mo": "3 Months",
-                    "6mo": "6 Months",
-                    "1y": "1 Year",
-                    "total": "All Time"
+                    "14d": t("db_range14d"),
+                    "1mo": t("db_range1mo"),
+                    "3mo": t("db_range3mo"),
+                    "6mo": t("db_range6mo"),
+                    "1y": t("db_range1y"),
+                    "total": t("db_rangeTotal")
                   };
                   return (
                     <button
@@ -736,19 +739,19 @@ export default function Dashboard() {
             <div className="h-[200px] sm:h-[250px] w-full -mx-2 relative">
               {scoreTimelineLoading && scoreTimelineData.length === 0 ? (
                 <div className="absolute inset-0 flex items-center justify-center text-xs text-white/40">
-                  Loading score history…
+                  {t("db_loadingScoreHistory")}
                 </div>
               ) : !scoreStats.hasData ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 text-center px-4">
-                  <p className="text-xs text-white/40">No score history yet</p>
-                  <p className="text-[11px] text-white/30">Create notes and entities to build your knowledge gravity.</p>
+                  <p className="text-xs text-white/40">{t("db_noScoreHistory")}</p>
+                  <p className="text-[11px] text-white/30">{t("db_noScoreHistoryHint")}</p>
                 </div>
               ) : (
                 <>
                   {/* Alerta visual de falha na sincronização */}
                   {scoreTimelineError && (
                     <div className="absolute right-2 top-1 z-10 rounded-md border border-red-500/20 bg-red-500/10 px-2 py-1 text-[10px] text-red-400">
-                      Failed to sync score
+                      {t("db_failedSyncScore")}
                     </div>
                   )}
                   <ChartContainer config={{}} className="h-full w-full">
@@ -800,7 +803,7 @@ export default function Dashboard() {
                             year: "numeric",
                           });
                         }}
-                        formatter={(value) => [Number(value as number).toFixed(2), "Score"]}
+                        formatter={(value) => [Number(value as number).toFixed(2), t("db_score")]}
                       />
                       <Area
                         type="monotone"
@@ -825,11 +828,11 @@ export default function Dashboard() {
             <div>
               <div className="flex items-center justify-between gap-3 mb-5">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">Account</p>
-                  <h2 className="mt-1 font-serif text-2xl text-white">{t("planLimits")}</h2>
+                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_account")}</p>
+                  <h2 className="mt-1 font-serif text-2xl text-white">{t("db_planLimits")}</h2>
                 </div>
                 <span className="text-[9px] font-mono uppercase tracking-widest text-white/70 border border-white/10 px-2 py-1 rounded-sm">
-                  {user?.plan || "FREE"}
+                  {user?.plan || t("db_free")}
                 </span>
               </div>
 
@@ -837,7 +840,7 @@ export default function Dashboard() {
                 <div className="space-y-3.5">
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-white/60">{t("notes")}</span>
+                      <span className="text-white/60">{t("db_notes")}</span>
                       <span className="text-white/80 font-mono text-[11px] tabular-nums">
                         {usage.notesCount} / {isUnlimited(limits.maxNotes) ? "∞" : limits.maxNotes}
                       </span>
@@ -846,7 +849,7 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-white/60">{t("entities")}</span>
+                      <span className="text-white/60">{t("db_entities")}</span>
                       <span className="text-white/80 font-mono text-[11px] tabular-nums">
                         {usage.entitiesCount} / {isUnlimited(limits.maxEntities) ? "∞" : limits.maxEntities}
                       </span>
@@ -855,28 +858,28 @@ export default function Dashboard() {
                   </div>
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-xs">
-                      <span className="text-white/60">{t("vault")}</span>
+                      <span className="text-white/60">{t("db_stream")}</span>
                       <span className="text-white/80 font-mono text-[11px] tabular-nums">{storageUsed} / {storageLimit}</span>
                     </div>
                     <Progress value={isUnlimited(limits.maxVaultSizeMB) ? 0 : Math.min((usage.vaultSizeMB / limits.maxVaultSizeMB) * 100, 100)} className="h-1 bg-white/5" />
                   </div>
                 </div>
               ) : (
-                <div className="text-xs text-white/40">Loading usage…</div>
+                <div className="text-xs text-white/40">{t("db_loadingUsage")}</div>
               )}
 
               <div className="mt-5 rounded-xl border border-white/5 bg-white/[0.01] p-3.5 text-[11px]">
                 <div className="grid gap-3 grid-cols-2">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">History retention</span>
-                    <span className="text-neutral-300 font-medium">{isUnlimited(limits.historyDays) ? "Unlimited" : `${limits.historyDays} days`}</span>
+                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">{t("db_historyRetention")}</span>
+                    <span className="text-neutral-300 font-medium">{isUnlimited(limits.historyDays) ? t("db_unlimited") : t("db_daysUnit", { n: limits.historyDays })}</span>
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">Metadata limit</span>
-                    <span className="text-neutral-300 font-medium">{isUnlimited(limits.maxMetadataSizeKb) ? "Unlimited" : `${limits.maxMetadataSizeKb} KB`}</span>
+                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">{t("db_metadataLimit")}</span>
+                    <span className="text-neutral-300 font-medium">{isUnlimited(limits.maxMetadataSizeKb) ? t("db_unlimited") : t("db_kbUnit", { n: limits.maxMetadataSizeKb })}</span>
                   </div>
                   <div className="flex items-center justify-between col-span-2 pt-2.5 border-t border-white/5 mt-0.5 text-neutral-400">
-                    <span>Data export</span>
+                    <span>{t("db_dataExport")}</span>
                     {user?.dataExport ? (
                       <button
                         type="button"
@@ -884,10 +887,10 @@ export default function Dashboard() {
                         disabled={exporting}
                         className="text-neutral-200 underline underline-offset-4 hover:text-white disabled:opacity-50 transition-colors"
                       >
-                        {exporting ? "Exporting…" : "Download backup"}
+                        {exporting ? t("db_exporting") : t("db_downloadBackup")}
                       </button>
                     ) : (
-                      <span className="text-neutral-600 text-[10px]">Upgrade required</span>
+                      <span className="text-neutral-600 text-[10px]">{t("db_upgradeRequired")}</span>
                     )}
                   </div>
                 </div>
@@ -898,7 +901,7 @@ export default function Dashboard() {
               onClick={() => navigate("/subscription")}
               className="mt-4 text-xs text-neutral-400 hover:text-white self-start transition-colors"
             >
-              Manage subscription →
+              {t("db_manageSubscription")}
             </button>
           </div>
 
@@ -907,11 +910,11 @@ export default function Dashboard() {
           <div className="border border-white/5 bg-white/[0.01] rounded-sm p-4 sm:p-6 lg:col-span-4 flex flex-col">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
-                <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">Stream</p>
-                <h2 className="mt-1 font-serif text-xl text-white">{t("dashboard_recentNotes")}</h2>
+                <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_stream")}</p>
+                <h2 className="mt-1 font-serif text-xl text-white">{t("db_recentNotes")}</h2>
               </div>
               <button type="button" onClick={() => navigate("/notes")} className="text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors">
-                View all
+                {t("db_viewAll")}
               </button>
             </div>
             <div className="space-y-1 flex-1 overflow-y-auto max-h-[280px] sm:max-h-[310px] pr-1 scrollbar-thin">
@@ -924,7 +927,7 @@ export default function Dashboard() {
                     className="group w-full rounded-xl border border-transparent px-2.5 py-2 text-left transition-all hover:bg-neutral-900/50 hover:border-white/5"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <p className="text-xs sm:text-sm font-medium text-white/80 group-hover:text-white truncate">{note.title || "Untitled"}</p>
+                      <p className="text-xs sm:text-sm font-medium text-white/80 group-hover:text-white truncate">{note.title || t("db_untitled")}</p>
                       <ArrowRight className="h-3.5 w-3.5 text-white/30 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-white/50" />
                     </div>
                     <p className="mt-0.5 text-[9px] font-mono text-white/40">{formatNoteDate(note.createdAtTimestamp)}</p>
@@ -932,7 +935,7 @@ export default function Dashboard() {
                 ))
               ) : (
                 <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.01] p-6 text-center text-xs text-white/30 h-full flex items-center justify-center">
-                  No recent notes yet.
+                  {t("db_noRecentNotes")}
                 </div>
               )}
             </div>
@@ -940,8 +943,8 @@ export default function Dashboard() {
 
           {/* INSIGHTS: HOT RIGHT NOW */}
           <DashboardInsightSection
-            title="Hot right now"
-            subtitle="Strongest recent gravity across notes"
+            title={t("db_hotRightNow")}
+            subtitle={t("db_hotRightNowSubtitle")}
             icon={Flame}
             loading={insightsLoading}
             empty={hotNotes.length === 0}
@@ -950,7 +953,7 @@ export default function Dashboard() {
             onRefresh={() => loadInsights(true)}
             refreshing={refreshingInsights}
             viewMoreHref="/notes"
-            viewMoreLabel="View all notes"
+            viewMoreLabel={t("db_viewAllNotes")}
           >
             {hotNotes.map((n) => (
               <NoteCard key={n.note.id} item={n} onOpen={() => navigate(`/notes/${n.note.id}`)} />
@@ -960,15 +963,15 @@ export default function Dashboard() {
           {/* BLOCO 3: GRAPH DISCOVERY */}
           {/* INSIGHTS: KEY PEOPLE & PROJECTS */}
           <DashboardInsightSection
-            title="Key people & projects"
-            subtitle="Trending graph entities"
+            title={t("db_keyPeopleProjects")}
+            subtitle={t("db_keyPeopleProjectsSubtitle")}
             icon={Users}
             loading={insightsLoading}
             empty={hotEntities.length === 0}
             className="lg:col-span-4"
             gridColsClass="grid-cols-1"
             viewMoreHref="/entities"
-            viewMoreLabel="View all entities"
+            viewMoreLabel={t("db_viewAllEntities")}
           >
             {hotEntities.map((e) => (
               <EntityCard key={e.entity.id} item={e} onOpen={() => navigate(`/entities/${e.entity.id}`)} />
@@ -977,15 +980,15 @@ export default function Dashboard() {
 
           {/* INSIGHTS: WORTH REVISITING */}
           <DashboardInsightSection
-            title="Worth revisiting"
-            subtitle="High-value aging notes"
+            title={t("db_worthRevisiting")}
+            subtitle={t("db_worthRevisitingSubtitle")}
             icon={Clock}
             loading={insightsLoading}
             empty={forgottenNotes.length === 0}
             className="lg:col-span-4"
             gridColsClass="grid-cols-1"
             viewMoreHref="/notes"
-            viewMoreLabel="View all notes"
+            viewMoreLabel={t("db_viewAllNotes")}
           >
             {forgottenNotes.map((n) => (
               <NoteCard key={n.note.id} item={n} onOpen={() => navigate(`/notes/${n.note.id}`)} />
@@ -994,15 +997,15 @@ export default function Dashboard() {
 
           {/* INSIGHTS: FORGOTTEN GEMS */}
           <DashboardInsightSection
-            title="Forgotten gems"
-            subtitle="Entities that once mattered"
+            title={t("db_forgottenGems")}
+            subtitle={t("db_forgottenGemsSubtitle")}
             icon={TrendingUp}
             loading={insightsLoading}
             empty={forgottenEntities.length === 0}
             className="lg:col-span-4"
             gridColsClass="grid-cols-1"
             viewMoreHref="/entities"
-            viewMoreLabel="View all entities"
+            viewMoreLabel={t("db_viewAllEntities")}
           >
             {forgottenEntities.map((e) => (
               <EntityCard key={e.entity.id} item={e} onOpen={() => navigate(`/entities/${e.entity.id}`)} />
@@ -1011,27 +1014,27 @@ export default function Dashboard() {
 
         </section>
       </div>
-      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason="You've reached the notes limit for your plan." />
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason={t("db_notesLimitReason")} />
       
       {/* Onboarding popup after account creation */}
       <Dialog open={showOnboardingPopup} onOpenChange={setShowOnboardingPopup}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-2xl">Welcome to Continuum! 🎉</DialogTitle>
+            <DialogTitle className="font-serif text-2xl">{t("db_welcomeTitle")}</DialogTitle>
             <DialogDescription className="mt-2">
-              Your knowledge graph is ready to grow.
+              {t("db_welcomeDesc")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-foreground/80">
-              Did you know? You can import your existing notes as <span className="font-semibold">Markdown</span> files. Bring your knowledge from other tools and start building your graph right away.
+              {t("db_welcomeParagraphPart1")} <span className="font-semibold">{t("db_welcomeParagraphMarkdown")}</span> {t("db_welcomeParagraphPart2")}
             </p>
             <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
-              <p className="text-xs text-white/50 mb-2">📥 Import supports:</p>
+              <p className="text-xs text-white/50 mb-2">{t("db_importSupportsLabel")}</p>
               <ul className="text-xs text-white/70 space-y-1">
-                <li>• Your notes in Markdown (.md) format</li>
-                <li>• Automatic entity detection from mentions</li>
-                <li>• Folder structure from your files</li>
+                <li>• {t("db_importSupport1")}</li>
+                <li>• {t("db_importSupport2")}</li>
+                <li>• {t("db_importSupport3")}</li>
               </ul>
             </div>
           </div>
@@ -1042,7 +1045,7 @@ export default function Dashboard() {
               onClick={() => setShowOnboardingPopup(false)}
               className="flex-1"
             >
-              Got it
+              {t("db_gotIt")}
             </Button>
             <Button
               size="sm"
@@ -1052,7 +1055,7 @@ export default function Dashboard() {
               }}
               className="flex-1"
             >
-              Import notes →
+              {t("db_importNotesArrow")}
             </Button>
           </div>
         </DialogContent>

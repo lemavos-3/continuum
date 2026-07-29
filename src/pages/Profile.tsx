@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import InstallAppButton from "@/components/pwa/InstallAppButton";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { useAuth } from "@/contexts/AuthContext";
@@ -40,6 +41,7 @@ import { LanguageSelector } from "@/components/LanguageSelector";
 const formatLimitValue = (value: number, suffix = "") => (isUnlimited(value) ? "Unlimited" : `${value}${suffix}`);
 
 function OfflineSyncRow() {
+  const { t } = useLanguage();
   const { status, pending, syncing } = useOfflineStatus();
   const [busy, setBusy] = useState(false);
   const [lastSync, setLastSync] = useState<number | undefined>(undefined);
@@ -51,33 +53,33 @@ function OfflineSyncRow() {
 
   const onSync = async () => {
     if (!navigator.onLine) {
-      sonnerToast.error("You're offline. Changes will sync when you're back online.");
+      sonnerToast.error(t("profile_offlineToast"));
       return;
     }
     setBusy(true);
     try {
       const r = await flushQueue();
-      if (r.sent === 0 && r.failed === 0) sonnerToast.success("Everything is up to date.");
-      else if (r.failed === 0) sonnerToast.success(`${r.sent} change${r.sent === 1 ? "" : "s"} synced.`);
-      else sonnerToast.warning(`${r.sent} synced, ${r.failed} failed — will retry.`);
+      if (r.sent === 0 && r.failed === 0) sonnerToast.success(t("ls_profile_sync_up_to_date"));
+      else if (r.failed === 0) sonnerToast.success(t(r.sent === 1 ? "ls_profile_sync_success_one" : "ls_profile_sync_success", { n: r.sent }));
+      else sonnerToast.warning(t("ls_profile_sync_partial", { sent: r.sent, failed: r.failed }));
     } finally {
       setBusy(false);
     }
   };
 
   const subtitle = status === "offline"
-    ? `Working offline${pending > 0 ? ` · ${pending} pending` : ""}`
+    ? `${t("profile_workingOffline")}${pending > 0 ? ` · ${t(pending === 1 ? "ls_profile_pending_changes_one" : "ls_profile_pending_changes", { n: pending })}` : ""}`
     : pending > 0
-      ? `${pending} pending change${pending === 1 ? "" : "s"}`
+      ? t(pending === 1 ? "ls_profile_pending_changes_one" : "ls_profile_pending_changes", { n: pending })
       : lastSync
-        ? `Last sync: ${new Date(lastSync).toLocaleString()}`
-        : "Up to date";
+        ? t("profile_lastSync", { time: new Date(lastSync).toLocaleString() })
+        : t("profile_upToDate");
 
   return (
     <div className="flex items-center gap-4 py-4">
       <ArrowPathIcon className={`h-4 w-4 text-foreground/30 shrink-0 ${syncing || busy ? "animate-spin" : ""}`} />
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-foreground/70">Offline & Sync</p>
+        <p className="text-xs font-medium text-foreground/70">{t("profile_offlineSync")}</p>
         <p className="text-xs text-foreground/30 truncate">{subtitle}</p>
       </div>
       <button
@@ -86,7 +88,7 @@ function OfflineSyncRow() {
         disabled={busy || syncing}
         className="text-xs text-white/70 hover:text-white underline underline-offset-4 disabled:opacity-40"
       >
-        {busy || syncing ? "Syncing…" : "Sync now"}
+        {busy || syncing ? t("profile_syncing") : t("profile_syncNow")}
       </button>
     </div>
   );
@@ -122,9 +124,9 @@ export default function Profile() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast({ title: "Backup downloaded successfully" });
+      toast({ title: t("profile_backupOk") });
     } catch (e: any) {
-      toast({ title: "Export failed", description: e?.message ?? "Please try again", variant: "destructive" });
+      toast({ title: t("profile_backupFailed"), description: e?.message ?? t("common_tryAgain"), variant: "destructive" });
     } finally {
       setExporting(false);
     }
@@ -140,20 +142,20 @@ export default function Profile() {
 
   const usageResources = useMemo(
     () => [
-      { label: "Notes", current: usage?.notesCount ?? 0, max: limits.maxNotes, suffix: "" },
-      { label: "Entities", current: usage?.entitiesCount ?? 0, max: limits.maxEntities, suffix: "" },
-      { label: "Vault Storage", current: usage?.vaultSizeMB ?? 0, max: limits.maxVaultSizeMB, suffix: " MB" },
+      { label: t("notes"), current: usage?.notesCount ?? 0, max: limits.maxNotes, suffix: "" },
+      { label: t("entities"), current: usage?.entitiesCount ?? 0, max: limits.maxEntities, suffix: "" },
+      { label: t("ls_profile_vault_storage"), current: usage?.vaultSizeMB ?? 0, max: limits.maxVaultSizeMB, suffix: " MB" },
     ],
-    [usage, limits],
+    [usage, limits, t],
   );
 
   const planDetails = useMemo(
     () => [
-      { label: "Vault Limit", value: isUnlimited(limits.maxVaultSizeMB) ? "Unlimited" : `${limits.maxVaultSizeMB} MB` },
-      { label: "Upload Metadata", value: isUnlimited(limits.maxMetadataSizeKb ?? -1) ? "Unlimited" : `${limits.maxMetadataSizeKb} KB` },
-      { label: "History", value: isUnlimited(limits.historyDays) ? "Unlimited" : `${limits.historyDays} days` },
+      { label: t("profile_vaultLimit"), value: isUnlimited(limits.maxVaultSizeMB) ? t("common_unlimited") : `${limits.maxVaultSizeMB} MB` },
+      { label: t("profile_uploadMetadata"), value: isUnlimited(limits.maxMetadataSizeKb ?? -1) ? t("common_unlimited") : `${limits.maxMetadataSizeKb} KB` },
+      { label: t("history"), value: isUnlimited(limits.historyDays) ? t("common_unlimited") : t("profile_historyDays", { n: limits.historyDays }) },
     ],
-    [limits],
+    [limits, t],
   );
 
   const handleSave = async () => {
@@ -161,11 +163,11 @@ export default function Profile() {
     try {
       await authApi.updateMe({ username, name: username });
       await refreshUser();
-      toast({ title: "Profile updated" });
+      toast({ title: t("profile_updated") });
     } catch (err: any) {
       toast({
-        title: "Error saving profile",
-        description: err.response?.data?.message || "Please try again",
+        title: t("profile_updateFailed"),
+        description: err.response?.data?.message || t("common_tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -219,7 +221,7 @@ export default function Profile() {
                     className="w-full border-0 border-b border-white/5 bg-transparent pl-6 pr-16 rounded-none text-sm text-white/45 cursor-not-allowed focus:outline-none focus:ring-0"
                   />
                   <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] text-white/40 bg-white/[0.04] border border-white/5 px-1.5 py-0.5 rounded-sm">
-                    Google
+                    {t("ls_profile_google_provider")}
                   </span>
                 </div>
               </div>
@@ -227,7 +229,7 @@ export default function Profile() {
               <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/[0.04]">
                 <div>
                   <p className="text-xs text-white/30">{t("profile_currentPlan")}</p>
-                  <p className="mt-1 text-sm font-medium text-white/70">{currentPlan === "VISION" || currentPlan === "PRO" ? "VISION" : currentPlan}</p>
+                  <p className="mt-1 text-sm font-medium text-white/70">{currentPlan === "VISION" ? "VISION" : currentPlan}</p>
                 </div>
                 <div>
                   <p className="text-xs text-white/30">{t("profile_memberSince")}</p>
@@ -257,6 +259,10 @@ export default function Profile() {
                   await handleSave();
                 }}
               />
+            </div>
+
+            <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm">
+              <InstallAppButton />
             </div>
 
             <div className="flex items-center gap-3 border border-white/5 bg-white/[0.01] p-4 rounded-sm">
