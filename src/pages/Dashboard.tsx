@@ -629,7 +629,7 @@ export default function Dashboard() {
         {/* HEADER */}
         <header className="border-b border-white/10 pb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("dashboard_overview")}</p>
+            <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_overview")}</p>
             <h1 className="mt-2 font-serif text-4xl sm:text-5xl tracking-tight text-white">
               {greeting}, {displayName}
             </h1>
