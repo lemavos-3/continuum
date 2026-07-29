@@ -227,7 +227,7 @@ export default function Profile() {
               <div className="grid grid-cols-2 gap-4 pt-2 border-t border-white/[0.04]">
                 <div>
                   <p className="text-xs text-white/30">{t("profile_currentPlan")}</p>
-                  <p className="mt-1 text-sm font-medium text-white/70">{currentPlan === "VISION" || currentPlan === "PRO" ? "VISION" : currentPlan}</p>
+                  <p className="mt-1 text-sm font-medium text-white/70">{currentPlan === "VISION" ? "VISION" : currentPlan}</p>
                 </div>
                 <div>
                   <p className="text-xs text-white/30">{t("profile_memberSince")}</p>
