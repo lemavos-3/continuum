@@ -183,7 +183,7 @@ export default function Entities() {
         const res = await entitiesApi.list();
         if (!cancelled) setEntities(Array.isArray(res.data) ? (res.data as Entity[]) : []);
       } catch {
-        if (!cancelled) toast({ title: "Could not load entities", variant: "destructive" });
+        if (!cancelled) toast({ title: t("ls_entities_error_loading"), variant: "destructive" });
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -207,7 +207,7 @@ export default function Entities() {
       applyUsageDelta({ entitiesCount: -1, activitiesCount: pendingDeleteEntity.type === "ACTIVITY" ? -1 : 0 });
       void refreshUsage();
     } catch {
-      toast({ title: "Error deleting entity", variant: "destructive" });
+      toast({ title: t("ls_entities_error_deleting"), variant: "destructive" });
     } finally {
       setPendingDeleteEntity(null);
     }
@@ -241,7 +241,7 @@ export default function Entities() {
       toast({ title: t(targets.length === 1 ? "entities_countRemoved_one" : "entities_countRemoved", { n: targets.length }) });
       exitSelectMode();
     } catch {
-      toast({ title: "Error deleting entities", variant: "destructive" });
+      toast({ title: t("ls_entities_error_deleting_many"), variant: "destructive" });
     } finally {
       setBulkDeleting(false);
       setBulkDeleteOpen(false);

@@ -227,7 +227,7 @@ export default function Notes() {
       setNotes(Array.isArray(notesRes.data) ? notesRes.data : []);
       setTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
     } catch {
-      toast({ title: "Error loading archive", variant: "destructive" });
+      toast({ title: t("ls_notes_error_loading_archive"), variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -248,7 +248,7 @@ export default function Notes() {
       );
     } catch {
       setNotes((prev) => prev.map((n) => (n.id === noteId ? { ...n, favorite: !n.favorite } : n)));
-      toast({ title: "Could not update favorite", variant: "destructive" });
+      toast({ title: t("ls_notes_error_favorite"), variant: "destructive" });
     }
   };
 
@@ -265,7 +265,7 @@ export default function Notes() {
       applyUsageDelta({ notesCount: -1 });
       void refresh();
     } catch {
-      toast({ title: "Error deleting", variant: "destructive" });
+      toast({ title: t("ls_notes_error_deleting"), variant: "destructive" });
     } finally {
       setPendingDelete(null);
     }
@@ -298,7 +298,7 @@ export default function Notes() {
       toast({ title: t(ids.length === 1 ? "notes_bulk_removed_one" : "notes_bulk_removed", { n: ids.length }) || `${ids.length} removed` });
       exitSelectMode();
     } catch {
-      toast({ title: "Error deleting entries", variant: "destructive" });
+      toast({ title: t("ls_notes_error_deleting_entries"), variant: "destructive" });
     } finally {
       setBulkDeleting(false);
       setBulkDeleteOpen(false);
@@ -323,7 +323,7 @@ export default function Notes() {
       console.error("[Notes] bulk type error", e);
       setNotes(previousNotes);
       const details = (e as any)?.response?.data?.message || (e as any)?.response?.data?.error || (e as Error)?.message;
-      toast({ title: "Error updating type", description: details || "Please try again.", variant: "destructive" });
+      toast({ title: t("ls_notes_error_updating_type"), description: details || t("ls_notes_error_updating_type_desc"), variant: "destructive" });
       void fetchData();
     } finally {
       setBulkTypeApplying(false);
@@ -402,9 +402,9 @@ export default function Notes() {
       const form = new FormData();
       form.append("file", file);
       await vaultApi.upload(form);
-      toast({ title: "Sent to Vault", description: file.name });
+      toast({ title: t("ls_notes_sent_to_vault"), description: file.name });
     } catch {
-      toast({ title: "Upload failed", variant: "destructive" });
+      toast({ title: t("ls_notes_upload_failed"), variant: "destructive" });
     } finally {
       setUploading(false);
     }
@@ -729,7 +729,7 @@ export default function Notes() {
                                   <div className="min-w-0 flex-1">
                                     <div className="flex items-center gap-2 flex-wrap">
                                       <h3 className="font-serif text-xl leading-snug text-white/90 transition-colors group-hover:text-white">
-                                        {note.title || "Untitled"}
+                                        {note.title || t("notes_untitled")}
                                       </h3>
                                       <InsightSignalBadge kind="note" id={note.id} />
                                     </div>
@@ -801,26 +801,26 @@ export default function Notes() {
         </div>
       </div>
 
-      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason="You've reached the notes limit for your plan." />
+      <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason={t("notes_limit")} />
       <ConfirmDialog
         open={!!pendingDelete}
         onOpenChange={(open) => !open && setPendingDelete(null)}
-        title="Remove this entry?"
+        title={t("notes_remove_one_title")}
         description={
           pendingDelete
-            ? `"${pendingDelete.title || "Untitled"}" will be permanently removed from your archive.`
-            : "This action cannot be undone."
+            ? t("notes_remove_one_desc", { title: pendingDelete.title || t("notes_untitled") })
+            : t("ls_notes_action_cannot_be_undone")
         }
-        confirmText="Remove"
+        confirmText={t("notes_remove")}
         destructive
         onConfirm={confirmDelete}
       />
       <ConfirmDialog
         open={bulkDeleteOpen}
         onOpenChange={(open) => !open && !bulkDeleting && setBulkDeleteOpen(false)}
-        title={`Remove ${selectedIds.size} ${selectedIds.size === 1 ? "entry" : "entries"}?`}
-        description="The selected entries will be permanently removed from your archive."
-        confirmText={bulkDeleting ? "Removing…" : "Remove"}
+        title={t(selectedIds.size === 1 ? "notes_remove_many_title_one" : "notes_remove_many_title", { n: selectedIds.size })}
+        description={t("notes_remove_many_desc")}
+        confirmText={bulkDeleting ? t("notes_removing") : t("notes_remove")}
         destructive
         onConfirm={confirmBulkDelete}
       />
