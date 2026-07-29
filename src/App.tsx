@@ -101,7 +101,11 @@ const AppRoutes = () => (
     <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
     <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
     <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-    <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+    <Route
+      path="/forgot-password"
+      element={EMAIL_AUTH_ENABLED ? <PublicRoute><ForgotPassword /></PublicRoute> : <Navigate to="/login" replace />}
+    />
+
     <Route path="/google-callback" element={<GoogleCallback />} />
     <Route path="/login-successful" element={<LoginSuccess />} />
     <Route path="/login-token" element={<LoginSuccess />} />
