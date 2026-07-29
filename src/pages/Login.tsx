@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { EMAIL_AUTH_ENABLED as DEV_MODE } from "@/lib/dev-mode";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "@/lib/heroicons";
@@ -9,7 +10,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 // DEV_MODE toggle — when VITE_DEV_MODE=true, show the email/password
 // login form alongside the Google sign-in button. In production this
 // stays false and we redirect straight to Google.
-const DEV_MODE = String(import.meta.env.VITE_DEV_MODE ?? "false").toLowerCase() === "true";
 
 export default function Login() {
   const { t } = useLanguage();

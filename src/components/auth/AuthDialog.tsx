@@ -1,4 +1,5 @@
 import { FormEvent, useEffect, useState } from "react";
+import { EMAIL_AUTH_ENABLED as DEV_MODE } from "@/lib/dev-mode";
 import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,7 +10,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 type AuthTab = "login" | "register" | "forgot";
 
-const DEV_MODE = String(import.meta.env.VITE_DEV_MODE ?? "false").toLowerCase() === "true";
 
 interface AuthDialogProps {
   open: boolean;
