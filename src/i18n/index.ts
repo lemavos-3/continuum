@@ -10,6 +10,9 @@ import * as editor from "./editor";
 import * as time from "./time";
 import * as graph from "./graph";
 import * as misc from "./misc";
+import * as dashboard from "./dashboard";
+import * as auth from "./auth";
+import * as lists from "./lists";
 
 const modules: Module[] = [
   insights.dict,
@@ -19,7 +22,11 @@ const modules: Module[] = [
   time.dict,
   graph.dict,
   misc.dict,
+  dashboard.dict,
+  auth.dict,
+  lists.dict,
 ];
+
 
 export function mergeModules(lang: Language): LangDict {
   const out: LangDict = {};
