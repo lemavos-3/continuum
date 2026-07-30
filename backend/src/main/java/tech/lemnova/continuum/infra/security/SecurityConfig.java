@@ -104,7 +104,7 @@ public class SecurityConfig {
             // Safe defaults — production domains + Lovable preview wildcards.
             // Override via CORS_ALLOWED_ORIGINS env var (comma separated).
             allowedOrigins = Arrays.asList(
-                "https://continuumnodes.lovable.app"
+                "https://continuum.onl"
             );
         }
 

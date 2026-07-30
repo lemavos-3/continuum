@@ -9,7 +9,6 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import AuthDialog from "@/components/auth/AuthDialog";
 import InstallPrompt from "@/components/pwa/InstallPrompt";
-import InstallAppButton from "@/components/pwa/InstallAppButton";
 import PwaInstallListener from "@/components/pwa/PwaInstallListener";
 import { ScrollGlobe } from "@/components/ui/landing-page";
 import landingNotes from "@/assets/landing-notes.jpg";
@@ -108,9 +107,6 @@ export default function LandingPage() {
         <ScrollGlobe sections={sections} className="bg-black" />
       </main>
       <Footer />
-      <div className="fixed bottom-6 right-6 z-50">
-        <InstallAppButton />
-      </div>
       <PwaInstallListener />
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} initialTab="login" />
     </div>
