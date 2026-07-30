@@ -1,7 +1,6 @@
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  SparklesIcon,
   FireIcon,
   ClockIcon,
   UsersIcon,
@@ -13,6 +12,7 @@ import {
 import AppLayout from "@/components/AppLayout";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -126,9 +126,9 @@ const badgeStyle = (badge: string) => {
 
 function StatChip({ children }: { children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-sm border border-white/5 bg-white/[0.02] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
+    <Badge variant="outline" className="rounded-sm border-white/5 bg-white/[0.02] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
       {children}
-    </span>
+    </Badge>
   );
 }
 
@@ -143,12 +143,14 @@ interface NavItemProps {
 
 function NavItem({ label, count, active, onClick }: NavItemProps) {
   return (
-    <button
-      onClick={onClick}
+    <Button
+      type="button"
+      variant="ghost"
       className={cn(
-        "group flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-[13px] transition-colors",
+        "group flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-[13px] normal-case transition-colors",
         active ? "text-white" : "text-white/45 hover:text-white/80"
       )}
+      onClick={onClick}
     >
       <span className="flex items-center gap-2">
         <span
@@ -163,7 +165,7 @@ function NavItem({ label, count, active, onClick }: NavItemProps) {
       <span className={cn("font-mono text-[10px] tabular-nums", active ? "text-white/60" : "text-white/30")}>
         {count}
       </span>
-    </button>
+    </Button>
   );
 }
 
@@ -425,13 +427,16 @@ export default function Insights() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <button
+                    <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="grid h-9 w-9 place-items-center text-white/80 lg:hidden"
                     onClick={() => setFilterDrawerOpen(true)}
-                    className="grid h-9 w-9 place-items-center rounded-sm border border-white/15 text-white/80 transition-colors hover:border-white/40 hover:text-white lg:hidden"
                     aria-label={t("ins_open_filters")}
                   >
                     <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
-                  </button>
+                  </Button>
                   <Button
                     onClick={() => load(true)}
                     disabled={refreshing}
@@ -447,18 +452,18 @@ export default function Insights() {
 
             {/* Métricas Superiores em Grid */}
             <div className="grid gap-4 grid-cols-2 md:grid-cols-3 mb-8">
-              <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm">
+              <Card variant="subtle" className="p-4">
                 <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_signals_found")}</p>
                 <p className="mt-2 text-2xl font-mono tracking-tight text-white">{counts.all}</p>
-              </div>
-              <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm">
+              </Card>
+              <Card variant="subtle" className="p-4">
                 <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_top_strength")}</p>
                 <p className="mt-2 text-2xl font-mono tracking-tight text-white">{topScore.toFixed(1)}</p>
-              </div>
-              <div className="border border-white/5 bg-white/[0.01] p-4 rounded-sm col-span-2 md:col-span-1">
+              </Card>
+              <Card variant="subtle" className="p-4 col-span-2 md:col-span-1">
                 <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_archived_gems")}</p>
                 <p className="mt-2 text-2xl font-mono tracking-tight text-white">{counts.worthRevisiting + counts.forgottenGems}</p>
-              </div>
+              </Card>
             </div>
 
             {/* Input de Busca Sticky */}

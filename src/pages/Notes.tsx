@@ -1,8 +1,10 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AppLayout from "@/components/AppLayout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { notesApi, vaultApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { useCreateNote } from "@/hooks/useCreateNote";
@@ -104,14 +106,14 @@ interface NavItemProps {
 }
 function NavItem({ label, count, active, onClick }: NavItemProps) {
   return (
-    <button
-      onClick={onClick}
+    <Button
+      type="button"
+      variant="ghost"
       className={cn(
-        "group flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-[13px] transition-colors",
-        active
-          ? "text-white"
-          : "text-white/45 hover:text-white/80"
+        "group flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-[13px] normal-case transition-colors",
+        active ? "text-white" : "text-white/45 hover:text-white/80"
       )}
+      onClick={onClick}
     >
       <span className="flex items-center gap-2">
         <span
@@ -126,7 +128,7 @@ function NavItem({ label, count, active, onClick }: NavItemProps) {
       <span className={cn("font-mono text-[10px] tabular-nums", active ? "text-white/60" : "text-white/30")}>
         {count}
       </span>
-    </button>
+    </Button>
   );
 }
 
@@ -559,7 +561,8 @@ export default function Notes() {
             <div className="sticky top-14 z-10 -mx-4 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
-                <input
+                <Input
+                  variant="ghost"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t("notes_searchPlaceholder")}
@@ -576,22 +579,28 @@ export default function Notes() {
               <div className="flex items-center gap-4 font-mono">
                 <div className="flex items-center gap-1.5">
                   <span>{t("list_sortBy")}</span>
-                  <button
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="normal-case text-white/70 hover:text-white transition-colors"
                     onClick={() => setSortBy(sortBy === "createdAt" ? "updatedAt" : "createdAt")}
-                    className="text-white/70 hover:text-white transition-colors"
                   >
                     [{sortBy === "createdAt" ? t("list_sort_creation") : t("list_sort_modification")}]
-                  </button>
+                  </Button>
                 </div>
-                <button
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="normal-case flex items-center gap-1.5 text-white/70 hover:text-white transition-colors"
                   onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-                  className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors"
                 >
                   <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="m3 16 4 4 4-4" /><path d="M7 20V4" /><path d="m21 8-4-4-4 4" /><path d="M17 4v16" />
                   </svg>
                   {sortOrder === "desc" ? t("list_sort_recent") : t("list_sort_oldest")}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -602,24 +611,30 @@ export default function Notes() {
                   {t("select_selected", { n: selectedIds.size })}
                 </span>
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="normal-case px-3 py-1.5 text-xs text-white/70 hover:border-white/40 hover:text-white"
                     onClick={() => {
                       const allIds = filtered.map((n) => n.id);
                       const allSelected = allIds.every((id) => selectedIds.has(id));
                       setSelectedIds(allSelected ? new Set() : new Set(allIds));
                     }}
-                    className="rounded-sm border border-white/15 px-3 py-1.5 text-xs text-white/70 transition-colors hover:border-white/40 hover:text-white"
                   >
                     {filtered.length > 0 && filtered.every((n) => selectedIds.has(n.id)) ? t("select_clearAll") : t("select_all")}
-                  </button>
+                  </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
                         disabled={selectedIds.size === 0 || bulkTypeApplying}
-                        className="inline-flex items-center gap-1.5 rounded-sm border border-white/15 bg-white/[0.04] px-3 py-1.5 text-xs text-white/80 transition-colors hover:border-white/40 hover:text-white disabled:opacity-40"
+                        className="normal-case inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-white/80"
                       >
                         {bulkTypeApplying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Tag className="h-3.5 w-3.5" />} {t("notes_set_type") || "Set type"}
-                      </button>
+                      </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="min-w-[180px]">
                       {types.map((tp) => (
@@ -638,13 +653,16 @@ export default function Notes() {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <button
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="normal-case inline-flex items-center gap-1.5 px-3 py-1.5 text-xs"
                     onClick={() => setBulkDeleteOpen(true)}
                     disabled={selectedIds.size === 0}
-                    className="inline-flex items-center gap-1.5 rounded-sm border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-40"
                   >
                     <Trash2 className="h-3.5 w-3.5" /> {t("common_delete")}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -675,9 +693,12 @@ export default function Notes() {
                   const collapsed = collapsedMonths.has(key);
                   return (
                     <section key={key}>
-                      <button
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="group mb-5 flex w-full items-center justify-between border-b border-white/10 pb-2 text-left normal-case"
                         onClick={() => toggleMonth(key)}
-                        className="group mb-5 flex w-full items-center justify-between border-b border-white/10 pb-2 text-left"
                       >
                         <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.32em] text-white/40 group-hover:text-white/70">
                           {collapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
@@ -686,7 +707,7 @@ export default function Notes() {
                         <span className="font-mono text-[10px] text-white/30 tabular-nums">
                           {t(items.length === 1 ? "list_showing_entries_one" : "list_showing_entries", { n: items.length })}
                         </span>
-                      </button>
+                      </Button>
 
                       {!collapsed && (
                         <ul className="divide-y divide-white/[0.06]">
@@ -736,9 +757,11 @@ export default function Notes() {
                                     {preview && (
                                       <p className="mt-1 line-clamp-1 text-sm text-white/45">{preview}</p>
                                     )}
-                                    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/35">
+                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-white/35">
                                       {note.type && (
-                                        <span className="uppercase tracking-[0.18em]">{note.type}</span>
+                                        <Badge variant="outline" className="border-white/10 bg-white/5 text-white/65 uppercase tracking-[0.18em]">
+                                          {note.type}
+                                        </Badge>
                                       )}
                                       <span className="sm:hidden">{relativeDate(targetDate)}</span>
                                     </div>
@@ -747,23 +770,18 @@ export default function Notes() {
 
                                   {!selectMode && (
                                   <div className="flex shrink-0 items-center gap-1 pt-1">
-
-                                    <span
-                                      role="button"
-                                      tabIndex={0}
-                                      onClick={(e) => toggleFavorite(note.id, e)}
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter" || e.key === " ") {
-                                          e.preventDefault();
-                                          toggleFavorite(note.id, e as unknown as React.MouseEvent);
-                                        }
-                                      }}
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
                                       className={cn(
-                                        "cursor-pointer rounded-sm p-1.5 transition-colors",
-                                        note.favorite
-                                          ? "text-white"
-                                          : "text-white/20 opacity-0 hover:text-white/70 group-hover:opacity-100"
+                                        "transition-colors p-1.5",
+                                        note.favorite ? "text-white" : "text-white/20 opacity-0 hover:text-white/70 group-hover:opacity-100"
                                       )}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleFavorite(note.id, e);
+                                      }}
                                       aria-label={note.favorite ? t("notes_unfavorite") : t("notes_favorite")}
                                     >
                                       {note.favorite ? (
@@ -771,20 +789,21 @@ export default function Notes() {
                                       ) : (
                                         <Bookmark className="h-3.5 w-3.5" />
                                       )}
-                                    </span>
-                                    <span
-                                      role="button"
-                                      tabIndex={0}
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-white/20 opacity-0 transition hover:text-white/70 group-hover:opacity-100 p-1.5"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         e.preventDefault();
                                         setPendingDelete(note);
                                       }}
-                                      className="cursor-pointer rounded-sm p-1.5 text-white/20 opacity-0 transition hover:text-white/70 group-hover:opacity-100"
                                       aria-label={t("common_delete")}
                                     >
                                       <Trash2 className="h-3.5 w-3.5" />
-                                    </span>
+                                    </Button>
                                   </div>
                                   )}
                               </NoteRow>

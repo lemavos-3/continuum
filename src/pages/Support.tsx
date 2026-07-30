@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Mail,
   MessageSquare,
@@ -18,21 +20,22 @@ function mailto(email: string, subject: string, body: string) {
 function FaqItem({ q, a }: { q: string; a: string }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="border border-white/10 bg-white/[0.02] rounded-sm">
-      <button
+    <Card className="overflow-hidden">
+      <Button
         type="button"
+        variant="ghost"
+        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left normal-case tracking-normal text-sm font-medium text-white/85 hover:bg-white/[0.02]"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left"
       >
-        <span className="text-sm font-medium text-white/85">{q}</span>
+        <span>{q}</span>
         <ChevronDown
           className={`h-4 w-4 shrink-0 text-white/40 transition-transform ${open ? "rotate-180" : ""}`}
         />
-      </button>
+      </Button>
       {open && (
         <p className="px-5 pb-5 text-sm leading-7 text-white/50">{a}</p>
       )}
-    </div>
+    </Card>
   );
 }
 
@@ -87,12 +90,9 @@ export default function Support() {
   return (
     <div className="min-h-screen bg-black text-white px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-4xl">
-        <a
-          href="#/"
-          className="mb-8 inline-flex text-sm font-semibold uppercase tracking-[0.28em] text-zinc-400 transition hover:text-white"
-        >
-          {t("bill_back_to_home")}
-        </a>
+        <Button asChild variant="link" className="mb-8 inline-flex text-sm font-semibold uppercase tracking-[0.28em] text-zinc-400 transition hover:text-white">
+          <a href="#/">{t("bill_back_to_home")}</a>
+        </Button>
 
         <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">{t("bill_support_help_contact")}</p>
         <h1 className="mt-3 font-serif text-4xl tracking-tight text-white sm:text-5xl">{t("bill_support_center")}</h1>
@@ -105,18 +105,19 @@ export default function Support() {
           {cards.map((c) => {
             const Icon = c.icon;
             return (
-              <a
+              <Card
                 key={c.title}
-                href={c.href}
-                className="group flex flex-col border border-white/10 bg-white/[0.02] p-5 rounded-sm transition hover:border-white/30 hover:bg-white/[0.04]"
+                className="group overflow-hidden border-white/10 bg-white/[0.02] p-5 rounded-sm transition hover:border-white/30 hover:bg-white/[0.04]"
               >
-                <Icon className="h-6 w-6 text-white/70" />
-                <h2 className="mt-4 text-base font-medium text-white/90">{c.title}</h2>
-                <p className="mt-2 flex-1 text-sm leading-6 text-white/50">{c.description}</p>
-                <span className="mt-4 text-xs uppercase tracking-[0.22em] text-white/60 group-hover:text-white transition-colors">
-                  {c.action} →
-                </span>
-              </a>
+                <a href={c.href} className="flex h-full flex-col">
+                  <Icon className="h-6 w-6 text-white/70" />
+                  <h2 className="mt-4 text-base font-medium text-white/90">{c.title}</h2>
+                  <p className="mt-2 flex-1 text-sm leading-6 text-white/50">{c.description}</p>
+                  <span className="mt-4 text-xs uppercase tracking-[0.22em] text-white/60 group-hover:text-white transition-colors">
+                    {c.action} →
+                  </span>
+                </a>
+              </Card>
             );
           })}
         </div>
@@ -133,9 +134,9 @@ export default function Support() {
 
         <p className="mt-16 text-sm text-white/40">
           {t("bill_still_stuck")}{" "}
-          <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-white hover:underline">
-            {CONTACT_EMAIL}
-          </a>
+          <Button asChild variant="link" className="font-medium text-white hover:underline">
+            <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          </Button>
           .
         </p>
       </div>

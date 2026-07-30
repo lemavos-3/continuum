@@ -6,7 +6,9 @@ import { usePlanGate } from "@/hooks/usePlanGate";
 import UpgradeModal from "@/components/UpgradeModal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { CreateEntityDialog } from "@/components/CreateEntityDialog";
+import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Plus,
@@ -67,12 +69,14 @@ interface NavItemProps {
 
 function NavItem({ label, count, active, onClick }: NavItemProps) {
   return (
-    <button
-      onClick={onClick}
+    <Button
+      type="button"
+      variant="ghost"
       className={cn(
-        "group flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-[13px] transition-colors",
+        "group flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-left text-[13px] normal-case transition-colors",
         active ? "text-white" : "text-white/45 hover:text-white/80"
       )}
+      onClick={onClick}
     >
       <span className="flex items-center gap-2">
         <span
@@ -87,7 +91,7 @@ function NavItem({ label, count, active, onClick }: NavItemProps) {
       <span className={cn("font-mono text-[10px] tabular-nums", active ? "text-white/60" : "text-white/30")}>
         {count}
       </span>
-    </button>
+    </Button>
   );
 }
 
@@ -377,7 +381,8 @@ export default function Entities() {
             <div className="sticky top-14 z-10 -mx-4 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
-                <input
+                <Input
+                  variant="ghost"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t("common_search") + "…"}
@@ -395,23 +400,29 @@ export default function Entities() {
                 {/* Tipo de Ordenação */}
                 <div className="flex items-center gap-1.5">
                   <span>{t("list_sortBy")}</span>
-                  <button
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="normal-case text-white/70 hover:text-white transition-colors"
                     onClick={() => setSortBy(sortBy === "createdAt" ? "updatedAt" : "createdAt")}
-                    className="text-white/70 hover:text-white transition-colors"
                   >
                     [{sortBy === "createdAt" ? t("list_sort_creation") : t("list_sort_modification")}]
-                  </button>
+                  </Button>
                 </div>
                 {/* Direção da Ordenação */}
-                <button
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="normal-case flex items-center gap-1.5 text-white/70 hover:text-white transition-colors"
                   onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-                  className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors"
                 >
                   <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="m3 16 4 4 4-4" /><path d="M7 20V4" /><path d="m21 8-4-4-4 4" /><path d="M17 4v16" />
                   </svg>
                   {sortOrder === "desc" ? t("list_sort_recent") : t("list_sort_oldest")}
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -420,23 +431,29 @@ export default function Entities() {
               <div className="sticky top-[7.5rem] z-20 mb-6 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-white/15 bg-black/80 px-3 py-2.5 backdrop-blur-xl">
                 <span className="text-sm text-white/70">{t("select_selected", { n: selectedIds.size })}</span>
                 <div className="flex items-center gap-2">
-                  <button
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="normal-case px-3 py-1.5 text-xs text-white/70 hover:border-white/40 hover:text-white"
                     onClick={() => {
                       const allIds = filteredAndSorted.map((e) => e.id);
                       const allSelected = allIds.every((id) => selectedIds.has(id));
                       setSelectedIds(allSelected ? new Set() : new Set(allIds));
                     }}
-                    className="rounded-sm border border-white/15 px-3 py-1.5 text-xs text-white/70 transition-colors hover:border-white/40 hover:text-white"
                   >
                     {filteredAndSorted.length > 0 && filteredAndSorted.every((e) => selectedIds.has(e.id)) ? t("select_clearAll") : t("select_all")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="sm"
+                    className="normal-case inline-flex items-center gap-1.5 px-3 py-1.5 text-xs"
                     onClick={() => setBulkDeleteOpen(true)}
                     disabled={selectedIds.size === 0}
-                    className="inline-flex items-center gap-1.5 rounded-sm border border-red-500/30 bg-red-500/10 px-3 py-1.5 text-xs text-red-300 transition-colors hover:bg-red-500/20 disabled:opacity-40"
                   >
                     <Trash2 className="h-3.5 w-3.5" /> {t("common_delete")}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
@@ -495,31 +512,29 @@ export default function Entities() {
                         {entity.description && (
                           <p className="mt-1 line-clamp-1 text-sm text-white/45">{entity.description}</p>
                         )}
-                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-white/35">
-                          <span className="uppercase tracking-[0.18em]">
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-white/35">
+                          <Badge variant="outline" className="border-white/10 bg-white/5 text-white/65 uppercase tracking-[0.18em]">
                             {t(`entities_type_${entity.type}`) ?? typeLabels[entity.type] ?? entity.type}
-                          </span>
+                          </Badge>
                           <span className="sm:hidden">{relativeDate(targetDate)}</span>
                         </div>
                       </div>
 
                       {!selectMode && (
                         <div className="flex shrink-0 items-center gap-1 pt-1">
-                          <span
-                            role="button"
-                            tabIndex={0}
-                            onClick={(e) => handleDelete(e, entity)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                handleDelete(e as unknown as React.MouseEvent, entity);
-                              }
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-white/20 opacity-0 transition hover:text-white/70 group-hover:opacity-100 p-1.5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(e, entity);
                             }}
-                            className="cursor-pointer rounded-sm p-1.5 text-white/20 opacity-0 transition hover:text-white/70 group-hover:opacity-100"
                             aria-label={t("common_delete")}
                           >
                             <Trash2 className="h-3.5 w-3.5" />
-                          </span>
+                          </Button>
                         </div>
                       )}
                     </EntityRow>

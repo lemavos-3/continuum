@@ -7,12 +7,15 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { isUnlimited } from "@/lib/plan";
 import { type Plan, type PlanLimits } from "@/types";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import {
   ArrowPathIcon,
   ArrowRightIcon,
   CheckIcon,
 } from "@heroicons/react/24/outline";
+
+const MotionCard = motion(Card);
 
 interface SubInfo {
   plan?: string;
@@ -129,23 +132,26 @@ export default function Subscription() {
             </div>
             
             {isPro && (
-              <button
+              <Button
+                variant="link"
+                size="sm"
                 onClick={handlePortal}
                 disabled={portalLoading}
-                className="text-[11px] uppercase tracking-[0.22em] text-white/40 underline underline-offset-4 transition-colors hover:text-white/70 disabled:cursor-not-allowed disabled:opacity-50"
+                className="text-white/40 hover:text-white/70"
               >
                 {portalLoading ? t("bill_opening") : t("bill_manage_billing")}
-              </button>
+              </Button>
             )}
           </div>
         )}
 
         {/* VISION CARD */}
-        <motion.section
+        <MotionCard
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
-          className="relative flex-1 overflow-hidden rounded-sm border border-white/15 bg-white/[0.02]"
+          variant="subtle"
+          className="relative flex-1 overflow-hidden"
         >
           {/* subtle top gradient */}
           <div
@@ -153,8 +159,7 @@ export default function Subscription() {
             className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
           />
 
-          <div className="px-6 pt-8 pb-6 sm:px-10 sm:pt-12 sm:pb-10">
-            {/* Plan header */}
+          <CardHeader className="pt-8 sm:pt-12">
             <div className="flex items-start justify-between">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.32em] text-white/40">
@@ -175,9 +180,10 @@ export default function Subscription() {
             <p className="mt-6 max-w-md text-sm leading-relaxed text-white/55">
               {t("bill_vision_tagline")}
             </p>
+          </CardHeader>
 
-            {/* Benefits */}
-            <ul className="mt-8 space-y-3 border-t border-white/10 pt-6">
+          <CardContent className="space-y-8">
+            <ul className="space-y-3 border-t border-white/10 pt-6">
               {VISION_BENEFITS.map((b, i) => (
                 <motion.li
                   key={b}
@@ -192,9 +198,8 @@ export default function Subscription() {
               ))}
             </ul>
 
-            {/* Limits matrix */}
             {visionLimits && (
-              <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-white/10 pt-6 text-xs sm:grid-cols-4">
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-3 border-t border-white/10 pt-6 text-xs sm:grid-cols-4">
                 {[
                   { k: t("bill_notes"), v: formatLimit(visionLimits.maxNotes ?? -1) },
                   { k: t("bill_entities"), v: formatLimit(visionLimits.maxEntities ?? -1) },
@@ -212,38 +217,38 @@ export default function Subscription() {
                 ))}
               </dl>
             )}
+          </CardContent>
 
-            {/* CTA */}
-            <div className="mt-10">
-              {isPro ? (
-                <div className="flex h-11 items-center justify-center rounded-sm border border-dashed border-white/10 text-[11px] uppercase tracking-[0.28em] text-white/40">
-                  {t("bill_active")}
-                </div>
-              ) : (
-                <button
-                  onClick={handleCheckout}
-                  disabled={checkoutLoading}
-                  className={cn(
-                    "group flex h-11 w-full items-center justify-center gap-2 rounded-sm border border-white bg-white text-[11px] uppercase tracking-[0.28em] text-black transition-all",
-                    "hover:bg-transparent hover:text-white disabled:cursor-not-allowed disabled:opacity-50",
-                  )}
-                >
-                  {checkoutLoading ? (
-                    <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <>
-                      {t("bill_upgrade_to_vision")}
-                      <ArrowRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                    </>
-                  )}
-                </button>
-              )}
-              <p className="mt-4 text-center text-[10px] uppercase tracking-[0.22em] text-white/30">
-                {t("bill_cancel_secure")}
-              </p>
-            </div>
-          </div>
-        </motion.section>
+          <CardFooter className="flex-col items-stretch gap-3 pt-0">
+            {isPro ? (
+              <div className="flex h-11 items-center justify-center rounded-sm border border-dashed border-white/10 text-[11px] uppercase tracking-[0.28em] text-white/40">
+                {t("bill_active")}
+              </div>
+            ) : (
+              <Button
+                type="button"
+                variant="white"
+                size="lg"
+                onClick={handleCheckout}
+                disabled={checkoutLoading}
+                className="group w-full justify-center gap-2"
+              >
+                {checkoutLoading ? (
+                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    {t("bill_upgrade_to_vision")}
+                    <ArrowRightIcon className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                  </>
+                )}
+              </Button>
+            )}
+
+            <p className="text-center text-[10px] uppercase tracking-[0.22em] text-white/30">
+              {t("bill_cancel_secure")}
+            </p>
+          </CardFooter>
+        </MotionCard>
       </div>
     </AppLayout>
   );

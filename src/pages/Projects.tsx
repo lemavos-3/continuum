@@ -2,6 +2,7 @@ import { useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import { TimeTrackingList } from "@/components/TimeTrackingList";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Plus } from "@/lib/heroicons";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -29,11 +30,12 @@ export default function Projects() {
             <div className="flex flex-wrap items-center gap-4">
               <div className="relative flex-1 min-w-0">
                 <MagnifyingGlassIcon className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
-                <input
+                <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder={t("common_search") + "…"}
-                  className="w-full border-0 bg-transparent pl-6 text-sm text-white placeholder:italic placeholder:text-white/30 focus:outline-none focus:ring-0"
+                  variant="ghost"
+                  className="pl-6 text-sm text-white placeholder:italic placeholder:text-white/30"
                 />
               </div>
               <Button className="gap-2" onClick={() => setCreateOpen(true)}>
@@ -47,22 +49,26 @@ export default function Projects() {
             <div className="flex items-center gap-4 font-mono">
               <div className="flex items-center gap-1.5">
                 <span>Sort by:</span>
-                <button
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="text-white/70 hover:text-white"
                   onClick={() => setSortBy(sortBy === "createdAt" ? "updatedAt" : "createdAt")}
-                  className="text-white/70 hover:text-white transition-colors"
                 >
                   [{sortBy === "createdAt" ? "Creation" : "Modification"}]
-                </button>
+                </Button>
               </div>
-              <button
+              <Button
+                variant="link"
+                size="sm"
+                className="flex items-center gap-1.5 text-white/70 hover:text-white"
                 onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-                className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors"
               >
                 <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m3 16 4 4 4-4" /><path d="M7 20V4" /><path d="m21 8-4-4-4 4" /><path d="M17 4v16" />
                 </svg>
                 {sortOrder === "desc" ? "Recent" : "Oldest"}
-              </button>
+              </Button>
             </div>
           </div>
 

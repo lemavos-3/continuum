@@ -12,6 +12,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getPlanLimits, isUnlimited } from "@/lib/plan";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChartContainer } from "@/components/ui/chart";
 import { Badge } from "@/components/ui/badge";
@@ -122,14 +123,14 @@ const DashboardSkeleton = () => (
 
 function StatCard({ icon: Icon, label, value, hint }: { icon: ComponentType<{ className?: string }>; label: string; value: string | number; hint?: string; }) {
   return (
-    <div className="border border-white/5 bg-white/[0.01] rounded-sm p-4 flex flex-col gap-1 min-w-0 transition-colors hover:border-white/10">
+    <Card variant="subtle" className="p-4 flex flex-col gap-1 min-w-0 transition-colors hover:border-white/10">
       <div className="flex items-center gap-1.5 text-white/30">
         <Icon className="h-3 w-3 shrink-0" />
         <span className="text-[9px] uppercase tracking-widest font-mono truncate">{label}</span>
       </div>
       <p className="text-2xl font-mono tracking-tight text-white tabular-nums leading-none mt-2 truncate">{value}</p>
       {hint && <p className="text-[10px] font-mono uppercase tracking-wider text-white/30 truncate mt-1">{hint}</p>}
-    </div>
+    </Card>
   );
 }
 
@@ -165,7 +166,7 @@ function WeeklySummary({ notes, totalNotes, totalEntities, graphNodeCount, curre
   const notesDelta = thisWeek - lastWeek;
 
   return (
-    <section className="-mt-4 rounded-sm bg-white/[0.02] p-5 sm:-mt-6 sm:p-8">
+    <Card variant="subtle" className="-mt-4 p-5 sm:-mt-6 sm:p-8">
       <div className="flex items-center justify-between mb-6">
         <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono hidden sm:block">{t("db_last7days")}</p>
       </div>
@@ -687,22 +688,26 @@ export default function Dashboard() {
                       {scoreStats.current.toFixed(2)}
                     </p>
                   </div>
-                  <button
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     type="button"
                     onClick={() => refetchScoreTimeline()}
                     disabled={scoreTimelineFetching}
-                    className="text-xs text-white/50 hover:text-white hidden sm:flex items-center gap-1 transition-colors disabled:opacity-50"
+                    className="hidden sm:inline-flex gap-1 text-xs text-white/50 hover:text-white transition-colors disabled:opacity-50"
                   >
                     <RefreshCw className={cn("h-3 w-3", scoreTimelineFetching && "animate-spin")} />
                     {t("db_score")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
                     type="button"
                     onClick={() => navigate("/insights")}
-                    className="text-xs text-white/50 hover:text-white hidden sm:block transition-colors"
+                    className="hidden sm:inline-flex text-xs text-white/50 hover:text-white transition-colors"
                   >
                     {t("db_insightsArrow")}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -881,14 +886,16 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between col-span-2 pt-2.5 border-t border-white/5 mt-0.5 text-neutral-400">
                     <span>{t("db_dataExport")}</span>
                     {user?.dataExport ? (
-                      <button
+                      <Button
                         type="button"
+                        variant="link"
+                        size="sm"
                         onClick={handleExportData}
                         disabled={exporting}
-                        className="text-neutral-200 underline underline-offset-4 hover:text-white disabled:opacity-50 transition-colors"
+                        className="text-neutral-200 underline-offset-4 hover:text-white disabled:opacity-50 transition-colors"
                       >
                         {exporting ? t("db_exporting") : t("db_downloadBackup")}
-                      </button>
+                      </Button>
                     ) : (
                       <span className="text-neutral-600 text-[10px]">{t("db_upgradeRequired")}</span>
                     )}
@@ -896,13 +903,15 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={() => navigate("/subscription")}
-              className="mt-4 text-xs text-neutral-400 hover:text-white self-start transition-colors"
+              className="mt-4 self-start"
             >
               {t("db_manageSubscription")}
-            </button>
+            </Button>
           </div>
 
           {/* BLOCO 2: WORKSPACE ACTIVITY */}
