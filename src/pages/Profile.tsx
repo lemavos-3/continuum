@@ -8,6 +8,8 @@ import { version } from "@/lib/version";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { getCurrentPlan, getPlanLimits, isUnlimited } from "@/lib/plan";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -81,14 +83,15 @@ function OfflineSyncRow() {
         <p className="text-xs font-medium text-foreground/70">Offline & Sync</p>
         <p className="text-xs text-foreground/30 truncate">{subtitle}</p>
       </div>
-      <button
+      <Button
         type="button"
+        variant="link"
         onClick={onSync}
         disabled={busy || syncing}
-        className="text-xs text-white/70 hover:text-white underline underline-offset-4 disabled:opacity-40"
+        className="normal-case text-xs text-white/70 disabled:opacity-40"
       >
         {busy || syncing ? "Syncing…" : "Sync now"}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -193,7 +196,7 @@ export default function Profile() {
               <h2 className="text-sm font-semibold text-white/80">{t("profile_accountDetails")}</h2>
             </div>
 
-            <div className="space-y-5 border border-white/5 bg-white/[0.01] p-6 rounded-sm">
+            <Card className="space-y-5 border-white/5 bg-white/[0.01] p-6 rounded-sm shadow-none backdrop-blur-none">
               <div className="space-y-2">
                 <Label htmlFor="profile-username" className="text-xs text-white/40">{t("profile_username")}</Label>
                 <div className="relative">
@@ -219,9 +222,9 @@ export default function Profile() {
                     readOnly
                     className="w-full border-0 border-b border-white/5 bg-transparent pl-6 pr-16 rounded-none text-sm text-white/45 cursor-not-allowed focus:outline-none focus:ring-0"
                   />
-                  <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] text-white/40 bg-white/[0.04] border border-white/5 px-1.5 py-0.5 rounded-sm">
+                  <Badge variant="outline" className="absolute right-0 top-1/2 -translate-y-1/2 text-[10px] text-white/40 bg-white/[0.04] border-white/5 px-1.5 py-0.5 rounded-sm">
                     Google
-                  </span>
+                  </Badge>
                 </div>
               </div>
 
@@ -238,14 +241,14 @@ export default function Profile() {
                 </div>
               </div>
 
-              <button
+              <Button
                 onClick={() => setSaveConfirmOpen(true)}
                 disabled={saving || !username.trim()}
-                className="flex items-center justify-center gap-2 w-full h-9 border border-white/15 bg-transparent hover:border-white/40 text-white/80 hover:text-white rounded-sm text-sm font-medium transition-colors disabled:opacity-40 mt-4"
+                className="normal-case text-sm font-medium mt-4 w-full"
               >
                 {saving && <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />}
                 {t("profile_saveChanges")}
-              </button>
+              </Button>
 
               <ConfirmDialog
                 open={saveConfirmOpen}
@@ -258,17 +261,17 @@ export default function Profile() {
                   await handleSave();
                 }}
               />
-            </div>
+            </Card>
 
-            <div className="flex items-center gap-3 border border-white/5 bg-white/[0.01] p-4 rounded-sm">
+            <Card className="flex items-center gap-3 border-white/5 bg-white/[0.01] p-4 rounded-sm shadow-none backdrop-blur-none">
               <ShieldCheckIcon className="h-4 w-4 text-white/40 shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-medium text-white/70">{t("profile_secureAuth")}</p>
                 <p className="text-xs text-white/30 truncate">{t("profile_secureAuthDesc")}</p>
               </div>
-            </div>
+            </Card>
 
-            <div className="border border-white/5 bg-white/[0.01] p-5 rounded-sm space-y-3">
+            <Card className="border-white/5 bg-white/[0.01] p-5 rounded-sm shadow-none backdrop-blur-none space-y-3">
               <div className="flex items-start gap-3">
                 <ArrowUpTrayIcon className="h-4 w-4 text-white/40 shrink-0 mt-0.5" />
                 <div className="min-w-0 flex-1">
@@ -278,17 +281,18 @@ export default function Profile() {
                   </p>
                 </div>
               </div>
-              <button
+              <Button
+                variant="outline"
                 onClick={() => setImportOpen(true)}
-                className="w-full h-9 border border-white/15 bg-transparent hover:border-white/40 text-white/80 hover:text-white rounded-sm text-sm font-medium transition-colors"
+                className="normal-case text-sm w-full"
               >
                 {t("profile_importMdBtn")}
-              </button>
-            </div>
+              </Button>
+            </Card>
 
-            <div className="border border-white/5 bg-white/[0.01] p-5 rounded-sm">
+            <Card className="border-white/5 bg-white/[0.01] p-5 rounded-sm shadow-none backdrop-blur-none">
               <InstallAppButton />
-            </div>
+            </Card>
           </div>
 
           {/* PREFERENCES SECTION */}
@@ -375,7 +379,7 @@ export default function Profile() {
                   const percent = unlimited ? 100 : Math.min((resource.current / resource.max) * 100, 100);
 
                   return (
-                    <div key={resource.label} className="border border-white/5 bg-white/[0.01] p-5 rounded-sm space-y-3">
+                    <Card key={resource.label} className="border-white/5 bg-white/[0.01] p-5 rounded-sm shadow-none backdrop-blur-none space-y-3">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-medium text-white/80">{resource.label}</span>
                         <span className="text-xs text-white/40 tabular-nums">
@@ -383,7 +387,7 @@ export default function Profile() {
                         </span>
                       </div>
                       <Progress value={unlimited ? 0 : percent} className="h-[2px] bg-white/5 rounded-none" />
-                    </div>
+                    </Card>
                   );
                 })}
               </div>
@@ -392,28 +396,29 @@ export default function Profile() {
             {/* PLAN DETAILS */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {planDetails.map((detail) => (
-                <div key={detail.label} className="border border-white/5 bg-white/[0.01] p-4 flex items-center justify-between gap-3 text-xs rounded-sm">
+                <Card key={detail.label} className="border-white/5 bg-white/[0.01] p-4 flex items-center justify-between gap-3 text-xs rounded-sm shadow-none backdrop-blur-none">
                   <span className="text-white/40 text-xs">{detail.label}</span>
                   <span className="text-xs text-white/70 tabular-nums">{detail.value}</span>
-                </div>
+                </Card>
               ))}
 
-              <div className="border border-white/5 bg-white/[0.01] p-4 flex items-center justify-between gap-3 text-xs rounded-sm">
+              <Card className="border-white/5 bg-white/[0.01] p-4 flex items-center justify-between gap-3 text-xs rounded-sm shadow-none backdrop-blur-none">
                 <span className="text-white/40 text-xs">{t("profile_exportData")}</span>
                 {user?.dataExport ? (
-                  <button
+                  <Button
                     type="button"
+                    variant="link"
                     onClick={handleExportData}
                     disabled={exporting}
-                    className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white underline underline-offset-4 disabled:opacity-40 transition-colors"
+                    className="normal-case text-xs text-white/70 disabled:opacity-40"
                   >
                     <ArrowDownTrayIcon className="w-3 h-3" />
                     {exporting ? t("profile_exporting") : t("profile_downloadBackup")}
-                  </button>
+                  </Button>
                 ) : (
                   <span className="text-white/20 text-xs">{t("profile_locked")}</span>
                 )}
-              </div>
+              </Card>
             </div>
           </section>
         </div>
