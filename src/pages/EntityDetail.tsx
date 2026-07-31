@@ -4,6 +4,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { entitiesApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft, Loader2, Edit, StickyNote, Network, Calendar, Tag, Clock } from "@/lib/heroicons";
@@ -230,15 +232,17 @@ export default function EntityDetail() {
   return (
     <AppLayout>
       <div className="px-6 lg:px-12 py-10 max-w-4xl mx-auto">
-        <button
+        <Button
+          variant="quiet"
+          size="sm"
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/entities"))}
-          className="mb-6 inline-flex items-center gap-1 text-xs uppercase tracking-[0.2em] text-white/40 hover:text-white transition-colors"
+          className="mb-6 px-0 h-auto"
         >
           <ArrowLeft className="w-3.5 h-3.5" /> {t("ent_back")}
-        </button>
+        </Button>
 
         {/* Premium serif header — matches /entities */}
-        <header className="border-b border-white/10 pb-8 mb-8">
+        <header className="border-b border-border pb-8 mb-8">
           <div className="flex items-center gap-2 mb-2">
             <p className="label-caps">{typeLabel}</p>
             <InsightSignalBadge kind="entity" id={entity.id} />
@@ -253,13 +257,15 @@ export default function EntityDetail() {
           ) : (
             <div className="flex items-center gap-3 group">
               <h1 className="font-serif text-5xl tracking-tight">{entity.title}</h1>
-              <button
+              <Button
+                variant="ghost"
+                size="iconSm"
                 onClick={() => { setEditingTitle(true); setNewTitle(entity?.title || ""); }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded hover:bg-white/10"
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
                 aria-label={t("ent_edit_name")}
               >
-                <Edit className="w-4 h-4 text-white/50" />
-              </button>
+                <Edit className="w-4 h-4 text-muted-foreground" />
+              </Button>
             </div>
           )}
 
@@ -273,22 +279,24 @@ export default function EntityDetail() {
             </div>
           ) : (
             <div className="mt-3 flex items-start gap-2 group">
-              <p className="text-sm text-white/50 flex-1">
-                {entity.description || <span className="italic text-white/30">{t("ent_no_description")}</span>}
+              <p className="text-sm text-muted-foreground flex-1">
+                {entity.description || <span className="italic text-muted-foreground/60">{t("ent_no_description")}</span>}
               </p>
-              <button
+              <Button
+                variant="ghost"
+                size="iconSm"
                 onClick={() => { setEditingDescription(true); setNewDescription(entity?.description || ""); }}
-                className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded hover:bg-white/10"
+                className="opacity-0 group-hover:opacity-100 transition-opacity"
                 aria-label={t("ent_edit_description")}
               >
-                <Edit className="w-3.5 h-3.5 text-white/50" />
-              </button>
+                <Edit className="w-3.5 h-3.5 text-muted-foreground" />
+              </Button>
             </div>
           )}
 
           {isHabit && (
-            <div className="mt-5 flex flex-wrap gap-2 text-xs uppercase tracking-wider">
-              <span className="px-3 py-1 rounded-md border border-white/10 text-white/60">{t("ent_total", { count: totalCompletions })}</span>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Badge variant="meta">{t("ent_total", { count: totalCompletions })}</Badge>
             </div>
           )}
 
@@ -318,107 +326,109 @@ export default function EntityDetail() {
         <Accordion
           type="multiple"
           defaultValue={["metadata", "notes", "entities"]}
-          className="border-t border-white/10"
+          className="border-t border-border"
         >
-          <AccordionItem value="metadata" className="border-b border-white/10">
-            <AccordionTrigger className="label-caps text-white/60 hover:text-white hover:no-underline py-4">
+          <AccordionItem value="metadata" className="border-b border-border">
+            <AccordionTrigger className="label-caps text-muted-foreground hover:text-foreground hover:no-underline py-4">
               {t("ent_metadata")}
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-4">
-                <div className="rounded-md border border-white/10 bg-white/[0.02] p-3">
-                  <div className="label-caps text-white/40 mb-1.5 inline-flex items-center gap-1.5">
+                <Card variant="subtle" className="p-3">
+                  <div className="label-caps text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
                     <Calendar className="h-3 w-3" /> {t("ent_created")}
                   </div>
-                  <div className="text-sm text-white">{new Date(entity.createdAt).toLocaleDateString("en-US")}</div>
-                </div>
-                <div className="rounded-md border border-white/10 bg-white/[0.02] p-3">
-                  <div className="label-caps text-white/40 mb-1.5 inline-flex items-center gap-1.5">
+                  <div className="text-sm text-foreground">{new Date(entity.createdAt).toLocaleDateString("en-US")}</div>
+                </Card>
+                <Card variant="subtle" className="p-3">
+                  <div className="label-caps text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
                     <Network className="h-3 w-3" /> {t("ent_connections")}
                   </div>
-                  <div className="text-sm text-white">{relatedEntities.length}</div>
-                </div>
-                <div className="rounded-md border border-white/10 bg-white/[0.02] p-3">
-                  <div className="label-caps text-white/40 mb-1.5 inline-flex items-center gap-1.5">
+                  <div className="text-sm text-foreground">{relatedEntities.length}</div>
+                </Card>
+                <Card variant="subtle" className="p-3">
+                  <div className="label-caps text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
                     <Tag className="h-3 w-3" /> {t("ent_type")}
                   </div>
-                  <div className="text-sm text-white">{typeLabel}</div>
-                </div>
+                  <div className="text-sm text-foreground">{typeLabel}</div>
+                </Card>
               </div>
             </AccordionContent>
           </AccordionItem>
 
           {entity?.type === "PROJECT" && timeSummary && (
-            <AccordionItem value="time" className="border-b border-white/10">
-              <AccordionTrigger className="label-caps text-white/60 hover:text-white hover:no-underline py-4">
+            <AccordionItem value="time" className="border-b border-border">
+              <AccordionTrigger className="label-caps text-muted-foreground hover:text-foreground hover:no-underline py-4">
                 <span className="inline-flex items-center gap-2"><Clock className="w-3.5 h-3.5" /> {t("ent_time_tracking_summary")}</span>
               </AccordionTrigger>
               <AccordionContent>
                 <div className="grid grid-cols-2 gap-3 pb-4 max-w-md">
-                  <div className="rounded-md border border-white/10 bg-white/[0.02] p-3">
-                    <p className="label-caps text-white/40">{t("ent_total_time")}</p>
-                    <p className="mt-1.5 font-mono text-white">{timeSummary.formattedTotal}</p>
-                  </div>
-                  <div className="rounded-md border border-white/10 bg-white/[0.02] p-3">
-                    <p className="label-caps text-white/40">{t("ent_sessions")}</p>
-                    <p className="mt-1.5 text-white">{timeSummary.entriesCount}</p>
-                  </div>
+                  <Card variant="subtle" className="p-3">
+                    <p className="label-caps text-muted-foreground">{t("ent_total_time")}</p>
+                    <p className="mt-1.5 font-mono text-foreground">{timeSummary.formattedTotal}</p>
+                  </Card>
+                  <Card variant="subtle" className="p-3">
+                    <p className="label-caps text-muted-foreground">{t("ent_sessions")}</p>
+                    <p className="mt-1.5 text-foreground">{timeSummary.entriesCount}</p>
+                  </Card>
                 </div>
               </AccordionContent>
             </AccordionItem>
           )}
 
-          <AccordionItem value="notes" className="border-b border-white/10">
-            <AccordionTrigger className="label-caps text-white/60 hover:text-white hover:no-underline py-4">
-              {t("ent_connected_notes")} <span className="ml-2 text-white/30 normal-case tracking-normal">({relatedNotes.length})</span>
+          <AccordionItem value="notes" className="border-b border-border">
+            <AccordionTrigger className="label-caps text-muted-foreground hover:text-foreground hover:no-underline py-4">
+              {t("ent_connected_notes")} <span className="ml-2 text-muted-foreground/60 normal-case tracking-normal">({relatedNotes.length})</span>
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-1 pb-4">
                 {relatedNotes.length > 0 ? (
                   relatedNotes.map((note) => (
-                    <button
+                    <Button
                       key={note.id}
+                      variant="ghost"
                       onClick={() => navigate(`/notes/${note.id}`)}
-                      className="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-white/5"
+                      className="flex h-auto w-full items-start justify-start gap-2 rounded-md px-3 py-2.5 text-left normal-case tracking-normal font-normal"
                     >
-                      <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white/40" />
+                      <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-white">{note.title}</p>
-                        <p className="text-xs text-white/40">
+                        <p className="truncate text-sm text-foreground">{note.title}</p>
+                        <p className="text-xs text-muted-foreground">
                           {t("ent_updated", { date: new Date(note.updatedAt).toLocaleDateString("en-US") })}
                         </p>
                       </div>
-                    </button>
+                    </Button>
                   ))
                 ) : (
-                  <p className="text-sm text-white/40 px-3 py-2">{t("ent_no_connected_notes")}</p>
+                  <p className="text-sm text-muted-foreground px-3 py-2">{t("ent_no_connected_notes")}</p>
                 )}
               </div>
             </AccordionContent>
           </AccordionItem>
 
-          <AccordionItem value="entities" className="border-b border-white/10">
-            <AccordionTrigger className="label-caps text-white/60 hover:text-white hover:no-underline py-4">
-              {t("ent_connected_entities")} <span className="ml-2 text-white/30 normal-case tracking-normal">({relatedEntities.length})</span>
+          <AccordionItem value="entities" className="border-b border-border">
+            <AccordionTrigger className="label-caps text-muted-foreground hover:text-foreground hover:no-underline py-4">
+              {t("ent_connected_entities")} <span className="ml-2 text-muted-foreground/60 normal-case tracking-normal">({relatedEntities.length})</span>
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-1 pb-4">
                 {relatedEntities.length > 0 ? (
                   relatedEntities.map((ent) => (
-                    <button
+                    <Button
                       key={ent.id}
+                      variant="ghost"
                       onClick={() => navigate(`/entities/${ent.id}`)}
-                      className="flex w-full items-start gap-2 rounded-md px-3 py-2.5 text-left transition-colors hover:bg-white/5"
+                      className="flex h-auto w-full items-start justify-start gap-2 rounded-md px-3 py-2.5 text-left normal-case tracking-normal font-normal"
                     >
-                      <Network className="mt-0.5 h-3.5 w-3.5 shrink-0 text-white/40" />
+                      <Network className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm text-white">{ent.title}</p>
-                        <p className="text-xs text-white/40 uppercase tracking-wider">{ent.type}</p>
+                        <p className="truncate text-sm text-foreground">{ent.title}</p>
+                        <p className="text-xs text-muted-foreground uppercase tracking-wider">{ent.type}</p>
                       </div>
-                    </button>
+                    </Button>
                   ))
                 ) : (
-                  <p className="text-sm text-white/40 px-3 py-2">{t("ent_no_connected_entities")}</p>
+                  <p className="text-sm text-muted-foreground px-3 py-2">{t("ent_no_connected_entities")}</p>
                 )}
               </div>
             </AccordionContent>
