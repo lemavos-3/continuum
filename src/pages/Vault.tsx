@@ -3,6 +3,8 @@ import AppLayout from "@/components/AppLayout";
 import { vaultApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
@@ -59,7 +61,7 @@ function ImageThumb({ file, onDelete }: { file: VaultFile; onDelete: (f: VaultFi
   const { url, error } = useBlobUrl(file.id);
   const { t } = useLanguage();
   return (
-    <div className="group relative rounded-sm overflow-hidden border border-white/5 bg-black/10 aspect-square transition-colors hover:border-white/20">
+    <Card variant="subtle" className="group relative overflow-hidden border-white/5 bg-black/10 aspect-square p-0 transition-colors hover:border-white/20">
       {error ? (
         <div className="flex items-center justify-center h-full text-[11px] text-red-400/70 font-mono">{t("gr_vault_error_generic")}</div>
       ) : url ? (
@@ -82,7 +84,7 @@ function ImageThumb({ file, onDelete }: { file: VaultFile; onDelete: (f: VaultFi
       >
         <Trash2 className="h-3.5 w-3.5" />
       </Button>
-    </div>
+    </Card>
   );
 }
 
@@ -90,7 +92,7 @@ function AudioPlayer({ file, onDelete }: { file: VaultFile; onDelete: (f: VaultF
   const { url, error } = useBlobUrl(file.id);
   const { t } = useLanguage();
   return (
-    <div className="group relative flex flex-col justify-between rounded-sm border border-white/5 bg-black/10 p-4 transition-colors hover:border-white/10">
+    <Card variant="subtle" className="group relative flex flex-col justify-between border-white/5 bg-black/10 p-4 transition-colors hover:border-white/10">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-serif text-white/80 truncate group-hover:text-white transition-colors">{file.fileName}</p>
@@ -117,7 +119,7 @@ function AudioPlayer({ file, onDelete }: { file: VaultFile; onDelete: (f: VaultF
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -125,7 +127,7 @@ function PdfCard({ file, onDelete, onOpen }: { file: VaultFile; onDelete: (f: Va
   const { url, error } = useBlobUrl(file.id);
   const { t } = useLanguage();
   return (
-    <div className="rounded-sm border border-white/5 bg-black/10 overflow-hidden flex flex-col transition-colors hover:border-white/10 group">
+    <Card variant="subtle" className="border-white/5 bg-black/10 overflow-hidden flex flex-col p-0 transition-colors hover:border-white/10 group">
       <button type="button" onClick={() => onOpen(file)} className="aspect-[4/3] bg-black/40 relative overflow-hidden border-b border-white/5 flex items-center justify-center">
         {error ? (
           <div className="text-[11px] font-mono text-red-400/60">{t("gr_vault_error_generic")}</div>
@@ -152,7 +154,7 @@ function PdfCard({ file, onDelete, onOpen }: { file: VaultFile; onDelete: (f: Va
           </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
