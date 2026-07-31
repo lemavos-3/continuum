@@ -17,6 +17,7 @@ const buttonVariants = cva(
         link: "text-foreground underline-offset-4 hover:underline",
         white: "border border-white bg-white text-black hover:bg-white/90",
         quiet: "bg-transparent text-muted-foreground hover:text-foreground hover:bg-foreground/10",
+        canvasIcon: "rounded-full border border-white/10 bg-black/80 text-white hover:bg-white/10 shadow-lg shadow-black/20",
       },
       size: {
         default: "h-9 px-4 py-2",

@@ -381,23 +381,27 @@ export default function Vault() {
       </AlertDialog>
 
       {/* MODAL EXPANDIDO DE PREVIEW PDF */}
-      {pdfPreview && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col transition-all" onClick={() => setPdfPreview(null)}>
+      <Dialog open={!!pdfPreview} onOpenChange={(open) => !open && setPdfPreview(null)}>
+        <DialogContent
+          hideClose
+          overlayClassName="bg-black/80 backdrop-blur-md"
+          className="fixed inset-0 left-0 top-0 z-50 grid h-dvh max-h-dvh w-screen max-w-none translate-x-0 translate-y-0 grid-rows-[auto_1fr] gap-0 rounded-none border-0 bg-transparent p-0 shadow-none flex flex-col"
+        >
           <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-black/40 backdrop-blur-xl text-white">
-            <p className="font-serif text-sm truncate max-w-xl">{pdfPreview.fileName}</p>
+            <p className="font-serif text-sm truncate max-w-xl">{pdfPreview?.fileName}</p>
             <Button size="sm" variant="ghost" onClick={() => setPdfPreview(null)} className="text-white/40 hover:text-white rounded-sm hover:bg-white/5 text-xs">{t("gr_vault_close")}</Button>
           </div>
-          <div className="flex-1 p-6" onClick={(e) => e.stopPropagation()}>
+          <div className="flex-1 p-6">
             {pdfPreviewBlob.url ? (
-              <iframe src={pdfPreviewBlob.url} title={pdfPreview.fileName} className="w-full h-full bg-transparent border border-white/10 rounded-sm shadow-2xl" />
+              <iframe src={pdfPreviewBlob.url} title={pdfPreview?.fileName} className="w-full h-full bg-transparent border border-white/10 rounded-sm shadow-2xl" />
             ) : (
               <div className="flex items-center justify-center h-full">
                 <Loader2 className="h-5 w-5 animate-spin text-white/30" />
               </div>
             )}
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }

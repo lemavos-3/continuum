@@ -922,50 +922,58 @@ export default function KnowledgeGraph() {
         <div className="relative flex flex-col flex-1">
           {!empty && (
             <>
-              <button
+              <Button
                 type="button"
+                variant="canvasIcon"
+                size="icon"
                 onClick={() => setOptionsOpen(true)}
-                className="absolute right-4 top-4 z-30 hidden h-10 w-10 items-center justify-center rounded-md bg-white/5 text-white shadow-lg shadow-black/20 transition hover:bg-white/10 sm:grid"
+                className="absolute right-4 top-4 z-30 hidden rounded-md border-0 bg-white/5 hover:bg-white/10 sm:grid"
                 aria-label={t("gr_open_options")}
               >
                 <Settings className="h-5 w-5" />
-              </button>
+              </Button>
 
               <div className="absolute right-4 top-16 z-30 flex flex-col items-end gap-2">
                 <div className="flex flex-col items-center gap-0.5">
-                  <button
+                  <Button
                     type="button"
+                    variant="canvasIcon"
+                    size="icon"
                     onClick={() => handleZoom(1)}
-                    className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10"
                     aria-label={t("gr_zoom_in")}
                   >
                     <ZoomIn className="h-4 w-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="canvasIcon"
+                    size="icon"
                     onClick={() => handleZoom(-1)}
-                    className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10"
                     aria-label={t("gr_zoom_out")}
                   >
                     <ZoomOut className="h-4 w-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="canvasIcon"
+                    size="icon"
                     onClick={() => setFocusMode(f => !f)}
-                    className={`grid h-10 w-10 place-items-center rounded-full border bg-black/80 text-white transition ${focusMode ? "border-white/60 bg-white/15" : "border-white/10 hover:bg-white/10"}`}
+                    className={focusMode ? "border-white/60 bg-white/15" : ""}
                     aria-label={t("gr_toggle_focus")}
                     title={t("gr_focus_mode")}
                   >
                     {focusMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="canvasIcon"
+                    size="icon"
                     onClick={() => setOptionsOpen(true)}
-                    className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10 sm:hidden"
+                    className="sm:hidden"
                     aria-label={t("gr_open_options")}
                   >
                     <Settings className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </>

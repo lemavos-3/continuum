@@ -12,6 +12,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getPlanLimits, isUnlimited } from "@/lib/plan";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, cardVariants } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChartContainer } from "@/components/ui/chart";
 import { Badge } from "@/components/ui/badge";
@@ -195,7 +196,8 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-lg border border-white/[0.08] bg-card/90 backdrop-blur-xl p-4 text-left shadow-sm",
+        cardVariants(),
+        "group relative flex w-full flex-col gap-3 overflow-hidden p-4 text-left",
         "transition duration-300 hover:border-white/10 hover:bg-white/5",
       )}
     >
@@ -228,7 +230,8 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-lg border border-white/[0.08] bg-card/90 backdrop-blur-xl p-4 text-left shadow-sm",
+        cardVariants(),
+        "group relative flex w-full flex-col gap-3 overflow-hidden p-4 text-left",
         "transition duration-300 hover:border-white/10 hover:bg-white/5",
       )}
     >
