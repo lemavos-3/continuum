@@ -12,6 +12,7 @@ import UpgradeModal from "@/components/UpgradeModal";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { getPlanLimits, isUnlimited } from "@/lib/plan";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, cardVariants } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChartContainer } from "@/components/ui/chart";
 import { Badge } from "@/components/ui/badge";
@@ -195,7 +196,8 @@ function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-lg border border-white/[0.08] bg-card/90 backdrop-blur-xl p-4 text-left shadow-sm",
+        cardVariants(),
+        "group relative flex w-full flex-col gap-3 overflow-hidden p-4 text-left",
         "transition duration-300 hover:border-white/10 hover:bg-white/5",
       )}
     >
@@ -228,7 +230,8 @@ function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void 
       whileTap={{ scale: 0.99 }}
       onClick={onOpen}
       className={cn(
-        "group relative flex w-full flex-col gap-3 overflow-hidden rounded-lg border border-white/[0.08] bg-card/90 backdrop-blur-xl p-4 text-left shadow-sm",
+        cardVariants(),
+        "group relative flex w-full flex-col gap-3 overflow-hidden p-4 text-left",
         "transition duration-300 hover:border-white/10 hover:bg-white/5",
       )}
     >
@@ -282,24 +285,26 @@ function DashboardInsightSection({
         </div>
         <div className="flex items-center justify-end gap-4 mt-1 sm:mt-0">
           {onRefresh && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={onRefresh}
               disabled={refreshing}
-              className="text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors flex items-center gap-1.5"
+              className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors flex items-center gap-1.5"
             >
               <RefreshCw className={cn("h-3 w-3", refreshing && "animate-spin")} />
               <span>{t("db_refresh")}</span>
-            </button>
+            </Button>
           )}
           {viewMoreHref && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => navigate(viewMoreHref)}
-              className="text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors"
+              className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors"
             >
               {viewMoreLabel || t("db_viewAll")}
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -333,13 +338,14 @@ function DashboardInsightSection({
                     <div className="flex items-center justify-between gap-3 text-[10px] text-white/40 pt-2 border-t border-white/10">
                       <span>{totalCount > visibleCount ? t("db_showingOfTotal", { count: visibleCount, total: totalCount }) : t("db_showingAll", { count: visibleCount })}</span>
                       {viewMoreHref && (
-                        <button
+                        <Button
                           type="button"
+                          variant="ghost"
                           onClick={() => navigate(viewMoreHref)}
-                          className="text-white/50 hover:text-white transition-colors"
+                          className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-[10px] text-white/50 hover:text-white transition-colors"
                         >
                           {viewMoreLabel || t("db_viewAll")}
-                        </button>
+                        </Button>
                       )}
                     </div>
                   </AccordionContent>
@@ -670,7 +676,8 @@ export default function Dashboard() {
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* BLOCO 1: PERFORMANCE & METRICS */}
-          <div className="border border-white/5 bg-white/[0.01] rounded-sm p-4 sm:p-6 lg:col-span-8 flex flex-col justify-between">
+          <Card variant="faint" className="lg:col-span-8 flex flex-col justify-between">
+          <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
             <div className="flex flex-col gap-4 mb-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -687,22 +694,24 @@ export default function Dashboard() {
                       {scoreStats.current.toFixed(2)}
                     </p>
                   </div>
-                  <button
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => refetchScoreTimeline()}
                     disabled={scoreTimelineFetching}
-                    className="text-xs text-white/50 hover:text-white hidden sm:flex items-center gap-1 transition-colors disabled:opacity-50"
+                    className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-xs text-white/50 hover:text-white hidden sm:flex items-center gap-1 transition-colors disabled:opacity-50"
                   >
                     <RefreshCw className={cn("h-3 w-3", scoreTimelineFetching && "animate-spin")} />
                     {t("db_score")}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="ghost"
                     onClick={() => navigate("/insights")}
-                    className="text-xs text-white/50 hover:text-white hidden sm:block transition-colors"
+                    className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-xs text-white/50 hover:text-white hidden sm:block transition-colors"
                   >
                     {t("db_insightsArrow")}
-                  </button>
+                  </Button>
                 </div>
               </div>
 
@@ -718,19 +727,20 @@ export default function Dashboard() {
                     "total": t("db_rangeTotal")
                   };
                   return (
-                    <button
+                    <Button
                       key={range}
                       type="button"
+                      variant="ghost"
                       onClick={() => setTimeRange(range)}
                       className={cn(
-                        "text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-sm transition-colors shrink-0",
+                        "h-auto normal-case text-[10px] font-mono uppercase tracking-widest px-3 py-1.5 rounded-sm transition-colors shrink-0",
                         timeRange === range
-                          ? "bg-white/[0.06] text-white"
-                          : "text-white/40 hover:text-white/70"
+                          ? "bg-white/[0.06] text-white hover:bg-white/[0.06] hover:text-white"
+                          : "bg-transparent text-white/40 hover:bg-transparent hover:text-white/70"
                       )}
                     >
                       {labels[range]}
-                    </button>
+                    </Button>
                   );
                 })}
               </div>
@@ -821,10 +831,12 @@ export default function Dashboard() {
                 </>
               )}
             </div>
-          </div>
+          </CardContent>
+          </Card>
 
           {/* PLAN USAGE CARD */}
-          <div className="hidden border border-white/5 bg-white/[0.01] rounded-sm p-4 sm:p-6 lg:col-span-4 flex flex-col justify-between">
+          <Card variant="faint" className="hidden lg:col-span-4 flex flex-col justify-between">
+            <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
             <div>
               <div className="flex items-center justify-between gap-3 mb-5">
                 <div>
@@ -881,14 +893,15 @@ export default function Dashboard() {
                   <div className="flex items-center justify-between col-span-2 pt-2.5 border-t border-white/5 mt-0.5 text-neutral-400">
                     <span>{t("db_dataExport")}</span>
                     {user?.dataExport ? (
-                      <button
+                      <Button
                         type="button"
+                        variant="ghost"
                         onClick={handleExportData}
                         disabled={exporting}
-                        className="text-neutral-200 underline underline-offset-4 hover:text-white disabled:opacity-50 transition-colors"
+                        className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-neutral-200 underline underline-offset-4 hover:text-white disabled:opacity-50 transition-colors"
                       >
                         {exporting ? t("db_exporting") : t("db_downloadBackup")}
-                      </button>
+                      </Button>
                     ) : (
                       <span className="text-neutral-600 text-[10px]">{t("db_upgradeRequired")}</span>
                     )}
@@ -896,42 +909,46 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
-            <button
+            <Button
               type="button"
+              variant="ghost"
               onClick={() => navigate("/subscription")}
-              className="mt-4 text-xs text-neutral-400 hover:text-white self-start transition-colors"
+              className="h-auto p-0 mt-4 bg-transparent hover:bg-transparent normal-case text-xs text-neutral-400 hover:text-white self-start transition-colors"
             >
               {t("db_manageSubscription")}
-            </button>
-          </div>
+            </Button>
+            </CardContent>
+          </Card>
 
           {/* BLOCO 2: WORKSPACE ACTIVITY */}
           {/* RECENT NOTES CARD */}
-          <div className="border border-white/5 bg-white/[0.01] rounded-sm p-4 sm:p-6 lg:col-span-4 flex flex-col">
+          <Card variant="faint" className="lg:col-span-4 flex flex-col">
+            <CardContent className="p-4 sm:p-6 flex flex-col flex-1">
             <div className="flex items-center justify-between gap-3 mb-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_stream")}</p>
                 <h2 className="mt-1 font-serif text-xl text-white">{t("db_recentNotes")}</h2>
               </div>
-              <button type="button" onClick={() => navigate("/notes")} className="text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors">
+              <Button type="button" variant="ghost" onClick={() => navigate("/notes")} className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors">
                 {t("db_viewAll")}
-              </button>
+              </Button>
             </div>
             <div className="space-y-1 flex-1 overflow-y-auto max-h-[280px] sm:max-h-[310px] pr-1 scrollbar-thin">
               {recentNotes.length > 0 ? (
                 recentNotes.map((note) => (
-                  <button
+                  <Button
                     key={note.id}
                     type="button"
+                    variant="ghost"
                     onClick={() => navigate(`/notes/${note.id}`)}
-                    className="group w-full rounded-xl border border-transparent px-2.5 py-2 text-left transition-all hover:bg-neutral-900/50 hover:border-white/5"
+                    className="group w-full h-auto flex-col items-stretch normal-case rounded-xl border border-transparent px-2.5 py-2 text-left bg-transparent transition-all hover:bg-neutral-900/50 hover:border-white/5"
                   >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center justify-between gap-3 w-full">
                       <p className="text-xs sm:text-sm font-medium text-white/80 group-hover:text-white truncate">{note.title || t("db_untitled")}</p>
                       <ArrowRight className="h-3.5 w-3.5 text-white/30 shrink-0 transition-transform group-hover:translate-x-0.5 group-hover:text-white/50" />
                     </div>
-                    <p className="mt-0.5 text-[9px] font-mono text-white/40">{formatNoteDate(note.createdAtTimestamp)}</p>
-                  </button>
+                    <p className="mt-0.5 text-[9px] font-mono text-white/40 w-full text-left">{formatNoteDate(note.createdAtTimestamp)}</p>
+                  </Button>
                 ))
               ) : (
                 <div className="rounded-xl border border-dashed border-white/5 bg-white/[0.01] p-6 text-center text-xs text-white/30 h-full flex items-center justify-center">
@@ -939,7 +956,8 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-          </div>
+            </CardContent>
+          </Card>
 
           {/* INSIGHTS: HOT RIGHT NOW */}
           <DashboardInsightSection

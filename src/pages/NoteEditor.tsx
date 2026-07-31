@@ -17,6 +17,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { 
@@ -527,13 +529,15 @@ export default function NoteEditor() {
                         <div className="flex items-center justify-between">
                           <Label className="text-xs uppercase tracking-wider text-muted-foreground">{t("ed_wallpaper")}</Label>
                           {wallpaper.fileId && (
-                            <button
+                            <Button
                               type="button"
+                              variant="quiet"
+                              size="xs"
                               onClick={handleWallpaperRemove}
-                              className="text-[10px] uppercase tracking-wider text-muted-foreground hover:text-destructive transition-colors"
+                              className="h-auto p-0 text-[10px] uppercase tracking-wider hover:text-destructive"
                             >
                               {t("ed_remove")}
-                            </button>
+                            </Button>
                           )}
                         </div>
 
@@ -664,22 +668,22 @@ export default function NoteEditor() {
                 <span>{t("ed_note_metadata")}</span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-sm border border-white/5 bg-white/[0.02] p-3">
+                <Card variant="subtle" className="p-3">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_score")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{noteScore.toFixed(1)}</p>
-                </div>
-                <div className="rounded-sm border border-white/5 bg-white/[0.02] p-3">
+                </Card>
+                <Card variant="subtle" className="p-3">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_mentions")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{mentionCounts.total}</p>
-                </div>
-                <div className="rounded-sm border border-white/5 bg-white/[0.02] p-3">
+                </Card>
+                <Card variant="subtle" className="p-3">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_entities")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{note?.entityIds?.length ?? 0}</p>
-                </div>
-                <div className="rounded-sm border border-white/5 bg-white/[0.02] p-3">
+                </Card>
+                <Card variant="subtle" className="p-3">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_characters")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{characterCount}</p>
-                </div>
+                </Card>
               </div>
             </div>
 
@@ -697,19 +701,20 @@ export default function NoteEditor() {
                 <ul className="space-y-2">
                   {mentionedEntities.map((entity) => (
                     <li key={entity.id}>
-                      <button
+                      <Button
+                        variant="ghost"
                         onClick={() => navigate(`/entities/${entity.id}`)}
-                        className="w-full flex flex-col gap-0.5 rounded-sm border border-white/5 bg-white/[0.02] p-2 text-left transition-colors hover:bg-white/[0.06] hover:border-white/10"
+                        className="w-full h-auto flex flex-col items-start gap-1 rounded-sm border border-white/5 bg-white/[0.02] p-2 text-left normal-case tracking-normal hover:bg-white/[0.06] hover:border-white/10"
                       >
                         <span className="text-xs font-medium text-white/90 line-clamp-1">
                           {entity.title || t("ed_untitled_entity")}
                         </span>
                         {entity.type && (
-                          <span className="text-[9px] uppercase tracking-wider text-white/35">
+                          <Badge variant="meta" className="px-1.5 py-0 text-[9px]">
                             {typeLabels[entity.type] || entity.type}
-                          </span>
+                          </Badge>
                         )}
-                      </button>
+                      </Button>
                     </li>
                   ))}
                 </ul>

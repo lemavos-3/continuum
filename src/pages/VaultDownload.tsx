@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { vaultApi } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Loader2, ArrowLeft, Download } from "@/lib/heroicons";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -63,7 +64,7 @@ export default function VaultDownload() {
   return (
     <AppLayout>
       <div className="flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] px-4 text-center">
-        <div className="max-w-xl w-full rounded-2xl border border-border/70 bg-card/80 p-8 shadow-lg">
+        <Card className="max-w-xl w-full border-border/70 bg-card/80 p-8 shadow-lg">
           <div className="flex flex-col items-center gap-4">
             {status === "loading" && (
               <>
@@ -96,7 +97,7 @@ export default function VaultDownload() {
               )}
             </div>
           </div>
-        </div>
+        </Card>
       </div>
     </AppLayout>
   );

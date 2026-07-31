@@ -10,6 +10,7 @@ const cardVariants = cva(
       variant: {
         default: "",
         subtle: "rounded-sm border-white/15 bg-white/[0.02] shadow-none",
+        faint: "rounded-sm border-white/5 bg-white/[0.01] shadow-none transition-colors hover:border-white/10",
       },
     },
     defaultVariants: {
@@ -58,4 +59,4 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 );
 CardFooter.displayName = "CardFooter";
 
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent };
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent, cardVariants };

@@ -15,6 +15,8 @@ import {
 } from "@/lib/heroicons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
 import { SideInspector } from "@/components/SideInspector";
 import { useEntityStore } from "@/contexts/EntityContext";
 import type { Entity, EntityType } from "@/types";
@@ -916,56 +918,67 @@ export default function KnowledgeGraph() {
     });
   };
 
+  const chipActiveClass = (active: boolean) =>
+    active ? "bg-primary/15 text-primary hover:bg-primary/15 hover:text-primary" : "";
+
   return (
     <AppLayout>
       <div className="flex flex-col" style={{ height: "calc(100vh - 3.5rem)" }}>
         <div className="relative flex flex-col flex-1">
           {!empty && (
             <>
-              <button
+              <Button
                 type="button"
+                variant="canvasIcon"
+                size="icon"
                 onClick={() => setOptionsOpen(true)}
-                className="absolute right-4 top-4 z-30 hidden h-10 w-10 items-center justify-center rounded-md bg-white/5 text-white shadow-lg shadow-black/20 transition hover:bg-white/10 sm:grid"
+                className="absolute right-4 top-4 z-30 hidden rounded-md border-0 bg-white/5 hover:bg-white/10 sm:grid"
                 aria-label={t("gr_open_options")}
               >
                 <Settings className="h-5 w-5" />
-              </button>
+              </Button>
 
               <div className="absolute right-4 top-16 z-30 flex flex-col items-end gap-2">
                 <div className="flex flex-col items-center gap-0.5">
-                  <button
+                  <Button
                     type="button"
+                    variant="canvasIcon"
+                    size="icon"
                     onClick={() => handleZoom(1)}
-                    className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10"
                     aria-label={t("gr_zoom_in")}
                   >
                     <ZoomIn className="h-4 w-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="canvasIcon"
+                    size="icon"
                     onClick={() => handleZoom(-1)}
-                    className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10"
                     aria-label={t("gr_zoom_out")}
                   >
                     <ZoomOut className="h-4 w-4" />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="canvasIcon"
+                    size="icon"
                     onClick={() => setFocusMode(f => !f)}
-                    className={`grid h-10 w-10 place-items-center rounded-full border bg-black/80 text-white transition ${focusMode ? "border-white/60 bg-white/15" : "border-white/10 hover:bg-white/10"}`}
+                    className={focusMode ? "border-white/60 bg-white/15" : ""}
                     aria-label={t("gr_toggle_focus")}
                     title={t("gr_focus_mode")}
                   >
                     {focusMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                  <button
+                  </Button>
+                  <Button
                     type="button"
+                    variant="canvasIcon"
+                    size="icon"
                     onClick={() => setOptionsOpen(true)}
-                    className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-black/80 text-white transition hover:bg-white/10 sm:hidden"
+                    className="sm:hidden"
                     aria-label={t("gr_open_options")}
                   >
                     <Settings className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
               </div>
             </>
@@ -973,20 +986,22 @@ export default function KnowledgeGraph() {
 
           {optionsOpen && (
             <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/50 px-4 py-6 sm:p-6">
-              <div className="w-full max-w-md rounded-3xl border border-white/10 bg-black/95 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl">
+              <Card className="w-full max-w-md rounded-3xl border-white/10 bg-black/95 p-5 shadow-2xl shadow-black/40">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-sm font-semibold">{t("gr_options_title")}</p>
                     <p className="text-xs text-muted-foreground">{t("gr_options_subtitle")}</p>
                   </div>
-                  <button
+                  <Button
                     type="button"
+                    variant="canvasIcon"
+                    size="icon"
                     onClick={() => setOptionsOpen(false)}
-                    className="grid h-9 w-9 place-items-center rounded-full bg-white/5 text-white transition hover:bg-white/10"
+                    className="h-9 w-9 border-0 bg-white/5 hover:bg-white/10"
                     aria-label={t("gr_close_options")}
                   >
                     <X className="h-4 w-4" />
-                  </button>
+                  </Button>
                 </div>
 
                 <div className="mt-4 space-y-4">
@@ -1012,86 +1027,94 @@ export default function KnowledgeGraph() {
                     </Button>
                   </div>
 
-                  <div className="rounded-3xl border border-white/10 bg-background/90 p-3">
+                  <Card variant="subtle" className="rounded-3xl border-white/10 bg-background/90 p-3">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{t("gr_type_filters")}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <button
+                      <Badge
+                        variant="chip"
                         onClick={() => setTypeFilters(new Set())}
-                        className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${typeFilters.size === 0 ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+                        className={chipActiveClass(typeFilters.size === 0)}
                       >
                         {t("gr_filter_all")}
-                      </button>
+                      </Badge>
                       {availableTypes.map(({ type, label, color }) => {
                         const active = typeFilters.has(type);
                         return (
-                          <button
+                          <Badge
                             key={type}
+                            variant="chip"
                             onClick={() => toggleTypeFilter(type)}
-                            className={`inline-flex items-center gap-2 rounded-md px-3 py-2 text-[11px] font-medium transition ${active ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+                            className={`gap-2 ${chipActiveClass(active)}`}
                           >
                             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
                             {label}
-                          </button>
+                          </Badge>
                         );
                       })}
                     </div>
-                  </div>
+                  </Card>
 
-                  <div className="rounded-3xl border border-white/10 bg-background/90 p-3">
+                  <Card variant="subtle" className="rounded-3xl border-white/10 bg-background/90 p-3">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{t("gr_time_range")}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {(["all", "7d", "30d"] as const).map(tf => (
-                        <button
+                        <Badge
                           key={tf}
+                          variant="chip"
                           onClick={() => setTimeFilter(tf)}
-                          className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${timeFilter === tf ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+                          className={chipActiveClass(timeFilter === tf)}
                         >
                           {tf === "all" ? t("gr_time_anytime") : tf === "7d" ? t("gr_time_7d") : t("gr_time_30d")}
-                        </button>
+                        </Badge>
                       ))}
                     </div>
-                  </div>
+                  </Card>
 
-                  <div className="rounded-3xl border border-white/10 bg-background/90 p-3">
+                  <Card variant="subtle" className="rounded-3xl border-white/10 bg-background/90 p-3">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{t("gr_display_options")}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
-                      <button
+                      <Badge
+                        variant="chip"
                         onClick={() => setShowEdges(prev => !prev)}
-                        className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${showEdges ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+                        className={chipActiveClass(showEdges)}
                       >
                         {showEdges ? <Eye className="inline h-3 w-3 mr-1" /> : <EyeOff className="inline h-3 w-3 mr-1" />}
                         {showEdges ? t("gr_edges_on") : t("gr_edges_off")}
-                      </button>
-                      <button
+                      </Badge>
+                      <Badge
+                        variant="chip"
                         onClick={() => setShowLabels(prev => !prev)}
-                        className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${showLabels ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+                        className={chipActiveClass(showLabels)}
                       >
                         {showLabels ? <Eye className="inline h-3 w-3 mr-1" /> : <EyeOff className="inline h-3 w-3 mr-1" />}
                         {showLabels ? t("gr_labels_on") : t("gr_labels_off")}
-                      </button>
-                      <button
+                      </Badge>
+                      <Badge
+                        variant="chip"
                         onClick={() => setLegendOpen(open => !open)}
-                        className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${legendOpen ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+                        className={chipActiveClass(legendOpen)}
                       >
                         {legendOpen ? <Eye className="inline h-3 w-3 mr-1" /> : <EyeOff className="inline h-3 w-3 mr-1" />}
                         {legendOpen ? t("gr_legend_on") : t("gr_legend_off")}
-                      </button>
-                      <button
+                      </Badge>
+                      <Badge
+                        variant="chip"
                         onClick={() => setClusterByPeriod(prev => !prev)}
-                        className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${clusterByPeriod ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+                        className={chipActiveClass(clusterByPeriod)}
                       >
                         {clusterByPeriod ? t("gr_period_clusters_on") : t("gr_period_clusters_off")}
-                      </button>
-                      <button
+                      </Badge>
+                      <Badge
+                        variant="chip"
                         onClick={() => setFocusMode(prev => !prev)}
-                        className={`rounded-md px-3 py-2 text-[11px] font-medium transition ${focusMode ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground hover:bg-accent"}`}
+                        className={chipActiveClass(focusMode)}
                       >
                         {focusMode ? t("gr_focus_on") : t("gr_focus_off")}
-                      </button>
+                      </Badge>
                     </div>
-                  </div>
+                  </Card>
                 </div>
-              </div>
+              </Card>
             </div>
           )}
 
@@ -1140,7 +1163,7 @@ export default function KnowledgeGraph() {
             )}
 
             {legendOpen && (
-              <div className="absolute left-4 top-4 z-20 rounded-3xl border border-white/10 bg-black/80 p-4 text-sm text-white shadow-lg shadow-black/30 backdrop-blur-xl">
+              <Card className="absolute left-4 top-4 z-20 rounded-3xl border-white/10 bg-black/80 p-4 text-sm text-white shadow-lg shadow-black/30">
                 <p className="mb-3 text-xs uppercase tracking-[0.24em] text-muted-foreground">{t("gr_legend")}</p>
                 <div className="grid gap-2">
                   {availableTypes.map(({ label, color, type }) => (
@@ -1150,12 +1173,12 @@ export default function KnowledgeGraph() {
                     </div>
                   ))}
                 </div>
-              </div>
+              </Card>
             )}
 
             {hoveredNode && tooltipPos && !selectedNode && (
-              <div
-                className="absolute z-20 pointer-events-none px-2.5 py-1.5 rounded-md bg-black/90 backdrop-blur-sm border border-white/10 shadow-lg"
+              <Card
+                className="absolute z-20 pointer-events-none rounded-md border-white/10 bg-black/90 px-2.5 py-1.5 shadow-lg"
                 style={{
                   left: Math.min(tooltipPos.x + 12, (containerRef.current?.clientWidth || 300) - 180),
                   top: Math.max(8, tooltipPos.y - 40),
@@ -1165,7 +1188,7 @@ export default function KnowledgeGraph() {
                 <p className="text-[10px] text-muted-foreground">
                   {typeLabel(hoveredNode.type)} · {t("gr_link_count", { count: hoveredNode.degree, plural: hoveredNode.degree === 1 ? "" : "s" })}
                 </p>
-              </div>
+              </Card>
             )}
           </div>
         </div>
