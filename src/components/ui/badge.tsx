@@ -4,16 +4,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-[5px] border-0 h-[22px] px-[9px] text-[11px] font-medium whitespace-nowrap transition-colors focus:outline-none focus:ring-2 focus:ring-ring",
   {
     variants: {
       variant: {
-        default: "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
-        meta: "rounded-md border-border bg-muted/20 px-3 py-1 text-[10px] font-normal uppercase tracking-[0.18em] text-muted-foreground",
-        chip: "rounded-md border-transparent bg-transparent px-3 py-2 text-[11px] font-medium normal-case tracking-normal text-muted-foreground transition-colors hover:text-foreground hover:bg-accent cursor-pointer",
+        default: "bg-primary/15 text-primary",
+        secondary: "bg-accent text-muted-foreground",
+        destructive: "bg-destructive/15 text-destructive",
+        outline: "bg-accent text-foreground",
+        meta: "bg-accent text-muted-foreground",
+        chip: "h-7 bg-transparent px-3 text-muted-foreground transition-colors hover:text-foreground hover:bg-accent cursor-pointer",
       },
     },
     defaultVariants: {
