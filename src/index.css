@@ -113,11 +113,31 @@
   }
 
 
-  /* Light theme — soft paper aesthetic, hairline borders @ 8% black. */
+  /* Light theme — warm paper aesthetic. */
   .light {
     color-scheme: light;
-    --background: 0 0% 100%;
-    --foreground: 0 0% 7%;
+
+    --bg-base: #FBFAF7;
+    --bg-surface: #FFFFFF;
+    --bg-surface-2: #F4F2ED;
+    --bg-hover: #EDEBE5;
+    --bg-active: #E3E0D8;
+    --bg-selected: rgba(20, 19, 17, 0.06);
+
+    --text-primary: #171613;
+    --text-secondary: #5C5A54;
+    --text-tertiary: #8A8780;
+    --text-disabled: #B5B2AA;
+    --text-on-accent: #FBFAF7;
+
+    --accent-solid: #171613;
+    --accent-hover: #000000;
+    --accent-soft: rgba(23, 22, 19, 0.08);
+    --accent-ring: rgba(23, 22, 19, 0.32);
+
+    --background: 40 25% 98%;
+    --foreground: 45 10% 9%;
+
 
     --card: 0 0% 99%;
     --card-foreground: 0 0% 7%;
