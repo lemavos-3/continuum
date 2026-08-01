@@ -5,69 +5,113 @@
 @tailwind utilities;
 
 /* ============================================================
-   PURE MONOCHROME — black & white only.
-   No gradients, no glows, no colored accents.
-   Hairline borders @ 8% white. Surfaces by elevation only.
+   CONTINUUM VISUAL SYSTEM
+   Warm off-white on layered blacks. No borders as decoration —
+   elevation via background steps only. Status colors = meaning.
    ============================================================ */
 
 @layer base {
   :root {
+    /* --- Continuum raw tokens (source of truth) --- */
+    --bg-base: #000000;
+    --bg-surface: #0D0D0D;
+    --bg-surface-2: #161616;
+    --bg-hover: #212121;
+    --bg-active: #292929;
+    --bg-selected: rgba(243, 241, 235, 0.08);
+
+    --text-primary: #EAE8E2;
+    --text-secondary: #A3A19B;
+    --text-tertiary: #726F69;
+    --text-disabled: #4D4B47;
+    --text-on-accent: #0B0A09;
+
+    --accent-solid: #F3F1EB;
+    --accent-hover: #FFFFFF;
+    --accent-soft: rgba(243, 241, 235, 0.14);
+    --accent-ring: rgba(243, 241, 235, 0.38);
+
+    --success-color: #3DD68C;
+    --warning-color: #E8B14D;
+    --danger-color: #F0616D;
+    --info-color: #5BA8F0;
+
+    --radius-sm: 6px;
+    --radius-md: 8px;
+    --radius-lg: 10px;
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 6px 16px rgba(0, 0, 0, 0.5);
+    --shadow-md: 0 16px 40px rgba(0, 0, 0, 0.6);
+
+    --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --dur-fast: 120ms;
+    --dur-base: 180ms;
+    --dur-slow: 240ms;
+
+    --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-serif-stack: 'Playfair Display', ui-serif, Georgia, Cambria, serif;
+    --font-mono-stack: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+    /* --- shadcn bridge (HSL) --- */
     --background: 0 0% 0%;
-    --foreground: 0 0% 100%;
+    --foreground: 45 12% 90%;
 
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 100%;
+    --card: 0 0% 5%;
+    --card-foreground: 45 12% 90%;
 
-    --popover: 0 0% 6%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 0 0% 9%;
+    --popover-foreground: 45 12% 90%;
 
-    --primary: 0 0% 100%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 45 25% 94%;
+    --primary-foreground: 30 12% 4%;
 
-    --secondary: 0 0% 9%;
-    --secondary-foreground: 0 0% 95%;
+    --secondary: 0 0% 13%;
+    --secondary-foreground: 45 12% 90%;
 
-    --muted: 0 0% 8%;
-    --muted-foreground: 0 0% 60%;
+    --muted: 0 0% 9%;
+    --muted-foreground: 45 4% 62%;
 
-    --accent: 0 0% 12%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 13%;
+    --accent-foreground: 45 12% 90%;
 
-    --destructive: 0 0% 100%;
-    --destructive-foreground: 0 0% 0%;
+    --destructive: 355 82% 66%;
+    --destructive-foreground: 30 12% 4%;
 
-    --border: 0 0% 100% / 0.08;
-    --input: 0 0% 100% / 0.08;
-    --ring: 0 0% 100% / 0.20;
+    --border: 0 0% 100% / 0.06;
+    --input: 0 0% 100% / 0.06;
+    --ring: 45 25% 94% / 0.38;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 0 0% 3%;
-    --sidebar-foreground: 0 0% 70%;
-    --sidebar-primary: 0 0% 100%;
-    --sidebar-primary-foreground: 0 0% 0%;
-    --sidebar-accent: 0 0% 8%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 100% / 0.06;
-    --sidebar-ring: 0 0% 100% / 0.18;
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 45 4% 62%;
+    --sidebar-primary: 45 25% 94%;
+    --sidebar-primary-foreground: 30 12% 4%;
+    --sidebar-accent: 0 0% 13%;
+    --sidebar-accent-foreground: 45 12% 90%;
+    --sidebar-border: 0 0% 100% / 0.05;
+    --sidebar-ring: 45 25% 94% / 0.38;
 
-    --success: 0 0% 100%;
-    --success-foreground: 0 0% 0%;
-    --warning: 0 0% 100%;
-    --warning-foreground: 0 0% 0%;
-    --info: 0 0% 100%;
-    --info-foreground: 0 0% 0%;
+    --success: 154 66% 54%;
+    --success-foreground: 30 12% 4%;
+    --warning: 39 78% 61%;
+    --warning-foreground: 30 12% 4%;
+    --info: 209 83% 65%;
+    --info-foreground: 30 12% 4%;
 
     --bento-dot: 0 0% 100% / 0.015;
     --bento-border: 0 0% 100% / 0.06;
     --bento-hover-shadow: 0 0% 100% / 0.04;
     --bento-gradient-via: 0 0% 100% / 0.02;
 
-    --popup-background: 0 0% 1%;
-    --popup-foreground: 0 0% 98%;
-    --popup-muted: 0 0% 64%;
-    --popup-border: 0 0% 100% / 0.10;
+    --popup-background: 0 0% 5%;
+    --popup-foreground: 45 12% 90%;
+    --popup-muted: 45 4% 62%;
+    --popup-border: 0 0% 100% / 0.06;
   }
+
 
   /* Light theme — soft paper aesthetic, hairline borders @ 8% black. */
   .light {
