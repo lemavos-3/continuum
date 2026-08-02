@@ -850,7 +850,15 @@ export default function Notes() {
         </div>
       </div>
 
+      <FloatingCreateButton
+        label={creating ? t("notes_creating") : t("notes_new")}
+        disabled={creating}
+        onClick={handleCreate}
+        icon={<Plus className="h-4 w-4" />}
+      />
+
       <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason={t("notes_limit")} />
+
       <ConfirmDialog
         open={!!pendingDelete}
         onOpenChange={(open) => !open && setPendingDelete(null)}
