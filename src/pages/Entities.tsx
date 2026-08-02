@@ -531,9 +531,15 @@ export default function Entities() {
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-serif text-xl leading-snug text-white/90 transition-colors group-hover:text-white">
+                        <FitText
+                          as="h3"
+                          max={20}
+                          min={13}
+                          className="font-serif leading-snug text-white/90 transition-colors group-hover:text-white"
+                        >
                           {entity.title || t("notes_untitled")}
-                        </h3>
+                        </FitText>
+
                         {entity.description && (
                           <p className="mt-1 line-clamp-1 text-sm text-white/45">{entity.description}</p>
                         )}
