@@ -20,6 +20,10 @@ import {
   X,
 } from "@/lib/heroicons";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { FilterChips } from "@/components/ui/filter-chips";
+import { FitText } from "@/components/ui/fit-text";
+import { FloatingCreateButton } from "@/components/ui/floating-create-button";
+
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useLongPress } from "@/hooks/useLongPress";
