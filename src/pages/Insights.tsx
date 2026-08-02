@@ -401,13 +401,11 @@ export default function Insights() {
     <AppLayout>
       <div
         className="relative min-h-full"
-        onTouchStart={onSwipeStart}
-        onTouchEnd={onSwipeEnd}
       >
         {/* Edge swipe hint (mobile only) */}
         <div
           aria-hidden
-          className="pointer-events-none fixed left-0 top-1/2 z-20 hidden h-24 w-[3px] -translate-y-1/2 rounded-r bg-white/15 max-lg:block"
+          className="pointer-events-none fixed left-0 top-1/2 z-20 hidden h-24 w-[3px] -translate-y-1/2 rounded-r bg-white/15"
         />
 
         {/* Menu Lateral Mobile */}
