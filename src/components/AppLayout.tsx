@@ -61,6 +61,15 @@ const mobileTabs = [
   { to: "/insights", icon: BarChart3, iconSolid: BarChart3Solid, key: "nav_insights" },
 ];
 
+// Mobile top bar shows the page title instead of the app logo on list screens.
+const MOBILE_TITLES: [string, string][] = [
+  ["/notes", "notes_title"],
+  ["/entities", "entities_title"],
+  ["/insights", "ins_title"],
+  ["/projects", "projects_title"],
+  ["/activities", "activities_title"],
+];
+
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
@@ -68,6 +77,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const isGraphPage = location.pathname.startsWith("/graph");
+  const mobileTitleKey = MOBILE_TITLES.find(([p]) => location.pathname === p)?.[1];
+
   
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
