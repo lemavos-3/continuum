@@ -61,6 +61,15 @@ const mobileTabs = [
   { to: "/insights", icon: BarChart3, iconSolid: BarChart3Solid, key: "nav_insights" },
 ];
 
+// Mobile top bar shows the page title instead of the app logo on list screens.
+const MOBILE_TITLES: [string, string][] = [
+  ["/notes", "notes_title"],
+  ["/entities", "entities_title"],
+  ["/insights", "ins_title"],
+  ["/projects", "projects_title"],
+  ["/activities", "activities_title"],
+];
+
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
@@ -68,6 +77,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const isGraphPage = location.pathname.startsWith("/graph");
+  const mobileTitleKey = MOBILE_TITLES.find(([p]) => location.pathname === p)?.[1];
+
   
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
 
@@ -90,10 +101,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile top bar */}
       <div className="fixed left-0 right-0 top-0 z-40 flex items-center gap-3 border-b border-white/5 bg-background/80 px-4 py-3 backdrop-blur-md lg:hidden">
-        <div className="flex items-center gap-2">
-          <img src="/favicon.ico" alt="Continuum" className="h-7 w-7 rounded-lg object-contain" />
-          <span className="text-base font-serif tracking-tight">Continuum</span>
-        </div>
+        {mobileTitleKey ? (
+          <h1 className="min-w-0 truncate font-serif text-xl tracking-tight text-foreground">
+            {t(mobileTitleKey)}
+          </h1>
+        ) : (
+          <div className="flex items-center gap-2">
+            <img src="/favicon.ico" alt="Continuum" className="h-7 w-7 rounded-lg object-contain" />
+            <span className="text-base font-serif tracking-tight">Continuum</span>
+          </div>
+        )}
+
 
         <div className="flex-1" />
 

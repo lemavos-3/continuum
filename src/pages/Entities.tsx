@@ -20,6 +20,10 @@ import {
   X,
 } from "@/lib/heroicons";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { FilterChips } from "@/components/ui/filter-chips";
+import { FitText } from "@/components/ui/fit-text";
+import { FloatingCreateButton } from "@/components/ui/floating-create-button";
+
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useLongPress } from "@/hooks/useLongPress";
@@ -319,13 +323,11 @@ export default function Entities() {
     <AppLayout>
       <div
         className="relative min-h-full"
-        onTouchStart={onSwipeStart}
-        onTouchEnd={onSwipeEnd}
       >
         {/* Indicador visual lateral para mobile */}
         <div
           aria-hidden
-          className="pointer-events-none fixed left-0 top-1/2 z-20 hidden h-24 w-[3px] -translate-y-1/2 rounded-r bg-white/15 max-lg:block"
+          className="pointer-events-none fixed left-0 top-1/2 z-20 hidden h-24 w-[3px] -translate-y-1/2 rounded-r bg-white/15"
         />
 
         {/* Menu Lateral Mobile */}
@@ -336,7 +338,7 @@ export default function Entities() {
           </SheetContent>
         </Sheet>
 
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-10 lg:flex-row lg:gap-16 lg:px-12 lg:py-16">
+        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-5 lg:flex-row lg:gap-16 lg:px-12 lg:py-16">
           {/* Sidebar Desktop */}
           <aside className="hidden lg:sticky lg:top-16 lg:block lg:w-52 lg:shrink-0 lg:self-start">
             {SidebarContent}
@@ -344,8 +346,8 @@ export default function Entities() {
 
           {/* Conteúdo Principal */}
           <main className="min-w-0 flex-1">
-            {/* Header */}
-            <header className="mb-8">
+            {/* Header (desktop) */}
+            <header className="mb-8 hidden lg:block">
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">
@@ -355,15 +357,6 @@ export default function Entities() {
                   <p className="mt-2 text-sm text-white/50">{t("entities_tagline")}</p>
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setFilterDrawerOpen(true)}
-                    className="lg:hidden h-9 w-9 p-0 text-white/80"
-                    aria-label={t("notes_filters")}
-                  >
-                    <SlidersHorizontal className="h-4 w-4" />
-                  </Button>
                   {selectMode && (
                     <Button size="sm" className="gap-2" onClick={exitSelectMode}>
                       <X className="h-3.5 w-3.5" /> {t("select_done")}
@@ -377,8 +370,37 @@ export default function Entities() {
               </div>
             </header>
 
-            {/* Input de Busca Fixo */}
-            <div className="sticky top-14 z-10 -mx-4 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
+            {/* Mobile: search + type chips */}
+            <div className="mb-5 space-y-3 lg:hidden">
+              {selectMode && (
+                <Button size="sm" className="gap-2" onClick={exitSelectMode}>
+                  <X className="h-3.5 w-3.5" /> {t("select_done")}
+                </Button>
+              )}
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("entities_searchAmong", { n: counts.all }) || `Search among ${counts.all} entities…`}
+                  className="h-12 w-full rounded-2xl bg-accent pl-11 text-[15px] placeholder:italic placeholder:text-muted-foreground"
+                />
+              </div>
+              <FilterChips
+                value={selectedType ?? "ALL"}
+                onChange={(v) => setSelectedType(v === "ALL" ? null : v)}
+                options={[
+                  { value: "ALL", label: t("entities_all") },
+                  ...types.map((tp) => ({
+                    value: tp,
+                    label: t(`entities_type_${tp}`) ?? typeLabels[tp],
+                  })),
+                ]}
+              />
+            </div>
+
+            {/* Input de Busca Fixo (desktop) */}
+            <div className="sticky top-14 z-10 -mx-4 hidden border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl lg:block">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
                 <Input
@@ -390,6 +412,7 @@ export default function Entities() {
                 />
               </div>
             </div>
+
 
             {/* Barra de ferramentas: Contagem e Controles de Ordenação */}
             <div className="flex items-center justify-between border-b border-white/5 pb-3 pt-4 mb-6 text-[11px] text-white/40">
@@ -506,9 +529,15 @@ export default function Entities() {
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <h3 className="font-serif text-xl leading-snug text-white/90 transition-colors group-hover:text-white">
+                        <FitText
+                          as="h3"
+                          max={20}
+                          min={13}
+                          className="font-serif leading-snug text-white/90 transition-colors group-hover:text-white"
+                        >
                           {entity.title || t("notes_untitled")}
-                        </h3>
+                        </FitText>
+
                         {entity.description && (
                           <p className="mt-1 line-clamp-1 text-sm text-white/45">{entity.description}</p>
                         )}
@@ -545,6 +574,13 @@ export default function Entities() {
           </main>
         </div>
       </div>
+
+      <FloatingCreateButton
+        label={t("entities_new")}
+        onClick={() => setCreateOpen(true)}
+        icon={<Plus className="h-4 w-4" />}
+      />
+
 
       <CreateEntityDialog
         open={createOpen}
