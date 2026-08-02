@@ -344,8 +344,8 @@ export default function Entities() {
 
           {/* Conteúdo Principal */}
           <main className="min-w-0 flex-1">
-            {/* Header */}
-            <header className="mb-8">
+            {/* Header (desktop) */}
+            <header className="mb-8 hidden lg:block">
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">
@@ -355,15 +355,6 @@ export default function Entities() {
                   <p className="mt-2 text-sm text-white/50">{t("entities_tagline")}</p>
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setFilterDrawerOpen(true)}
-                    className="lg:hidden h-9 w-9 p-0 text-white/80"
-                    aria-label={t("notes_filters")}
-                  >
-                    <SlidersHorizontal className="h-4 w-4" />
-                  </Button>
                   {selectMode && (
                     <Button size="sm" className="gap-2" onClick={exitSelectMode}>
                       <X className="h-3.5 w-3.5" /> {t("select_done")}
@@ -377,8 +368,37 @@ export default function Entities() {
               </div>
             </header>
 
-            {/* Input de Busca Fixo */}
-            <div className="sticky top-14 z-10 -mx-4 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
+            {/* Mobile: search + type chips */}
+            <div className="mb-5 space-y-3 lg:hidden">
+              {selectMode && (
+                <Button size="sm" className="gap-2" onClick={exitSelectMode}>
+                  <X className="h-3.5 w-3.5" /> {t("select_done")}
+                </Button>
+              )}
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder={t("entities_searchAmong", { n: counts.all }) || `Search among ${counts.all} entities…`}
+                  className="h-12 w-full rounded-2xl bg-accent pl-11 text-[15px] placeholder:italic placeholder:text-muted-foreground"
+                />
+              </div>
+              <FilterChips
+                value={selectedType ?? "ALL"}
+                onChange={(v) => setSelectedType(v === "ALL" ? null : v)}
+                options={[
+                  { value: "ALL", label: t("entities_all") },
+                  ...types.map((tp) => ({
+                    value: tp,
+                    label: t(`entities_type_${tp}`) ?? typeLabels[tp],
+                  })),
+                ]}
+              />
+            </div>
+
+            {/* Input de Busca Fixo (desktop) */}
+            <div className="sticky top-14 z-10 -mx-4 hidden border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl lg:block">
               <div className="relative">
                 <Search className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
                 <Input
@@ -390,6 +410,7 @@ export default function Entities() {
                 />
               </div>
             </div>
+
 
             {/* Barra de ferramentas: Contagem e Controles de Ordenação */}
             <div className="flex items-center justify-between border-b border-white/5 pb-3 pt-4 mb-6 text-[11px] text-white/40">
