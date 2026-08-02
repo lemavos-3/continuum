@@ -203,9 +203,15 @@ function InsightRow({ item }: { item: InsightItem }) {
             </span>
           </div>
 
-          <h3 className="mt-2 font-serif text-xl leading-snug text-white/95 group-hover:text-white transition-colors">
+          <FitText
+            as="h3"
+            max={20}
+            min={13}
+            className="mt-2 font-serif leading-snug text-white/95 transition-colors group-hover:text-white"
+          >
             {item.title}
-          </h3>
+          </FitText>
+
 
           <div className="mt-3 flex flex-wrap items-center gap-1.5">
             {item.metaDetails.mentions ? <StatChip>{t("ins_mentions", { count: item.metaDetails.mentions })}</StatChip> : null}
