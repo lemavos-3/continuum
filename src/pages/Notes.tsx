@@ -772,12 +772,18 @@ export default function Notes() {
                                   </div>
 
                                   <div className="min-w-0 flex-1">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                      <h3 className="font-serif text-xl leading-snug text-white/90 transition-colors group-hover:text-white">
+                                    <div className="flex min-w-0 items-center gap-2">
+                                      <FitText
+                                        as="h3"
+                                        max={20}
+                                        min={13}
+                                        className="min-w-0 flex-1 font-serif leading-snug text-white/90 transition-colors group-hover:text-white"
+                                      >
                                         {note.title || t("notes_untitled")}
-                                      </h3>
+                                      </FitText>
                                       <InsightSignalBadge kind="note" id={note.id} />
                                     </div>
+
                                     {preview && (
                                       <p className="mt-1 line-clamp-1 text-sm text-white/45">{preview}</p>
                                     )}
