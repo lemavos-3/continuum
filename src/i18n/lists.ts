@@ -22,6 +22,9 @@ export const dict: Module = {
     ls_profile_pending_changes_one: "{n} pending change",
     ls_profile_google_provider: "Google",
     ls_profile_vault_storage: "Vault Storage",
+    notes_searchAmong: "Search among {n} notes…",
+    entities_searchAmong: "Search among {n} entities…",
+    ins_searchAmong: "Search among {n} signals…",
   },
   es: {
     ls_notes_error_loading_archive: "Error al cargar el archivo",
@@ -44,6 +47,9 @@ export const dict: Module = {
     ls_profile_pending_changes_one: "{n} cambio pendiente",
     ls_profile_google_provider: "Google",
     ls_profile_vault_storage: "Almacenamiento de la Bóveda",
+    notes_searchAmong: "Buscar entre {n} notas…",
+    entities_searchAmong: "Buscar entre {n} entidades…",
+    ins_searchAmong: "Buscar entre {n} señales…",
   },
   pt: {
     ls_notes_error_loading_archive: "Erro ao carregar o arquivo",
@@ -66,6 +72,9 @@ export const dict: Module = {
     ls_profile_pending_changes_one: "{n} alteração pendente",
     ls_profile_google_provider: "Google",
     ls_profile_vault_storage: "Armazenamento do Vault",
+    notes_searchAmong: "Buscar entre {n} notas…",
+    entities_searchAmong: "Buscar entre {n} entidades…",
+    ins_searchAmong: "Buscar entre {n} sinais…",
   },
   fr: {
     ls_notes_error_loading_archive: "Erreur lors du chargement des archives",
@@ -88,5 +97,8 @@ export const dict: Module = {
     ls_profile_pending_changes_one: "{n} modification en attente",
     ls_profile_google_provider: "Google",
     ls_profile_vault_storage: "Stockage du Coffre",
+    notes_searchAmong: "Rechercher parmi {n} notes…",
+    entities_searchAmong: "Rechercher parmi {n} entités…",
+    ins_searchAmong: "Rechercher parmi {n} signaux…",
   },
 };
