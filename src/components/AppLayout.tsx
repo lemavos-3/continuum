@@ -90,10 +90,17 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
       {/* Mobile top bar */}
       <div className="fixed left-0 right-0 top-0 z-40 flex items-center gap-3 border-b border-white/5 bg-background/80 px-4 py-3 backdrop-blur-md lg:hidden">
-        <div className="flex items-center gap-2">
-          <img src="/favicon.ico" alt="Continuum" className="h-7 w-7 rounded-lg object-contain" />
-          <span className="text-base font-serif tracking-tight">Continuum</span>
-        </div>
+        {mobileTitleKey ? (
+          <h1 className="min-w-0 truncate font-serif text-xl tracking-tight text-foreground">
+            {t(mobileTitleKey)}
+          </h1>
+        ) : (
+          <div className="flex items-center gap-2">
+            <img src="/favicon.ico" alt="Continuum" className="h-7 w-7 rounded-lg object-contain" />
+            <span className="text-base font-serif tracking-tight">Continuum</span>
+          </div>
+        )}
+
 
         <div className="flex-1" />
 
