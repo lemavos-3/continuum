@@ -577,6 +577,13 @@ export default function Entities() {
         </div>
       </div>
 
+      <FloatingCreateButton
+        label={t("entities_new")}
+        onClick={() => setCreateOpen(true)}
+        icon={<Plus className="h-4 w-4" />}
+      />
+
+
       <CreateEntityDialog
         open={createOpen}
         onOpenChange={setCreateOpen}
