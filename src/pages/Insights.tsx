@@ -417,7 +417,7 @@ export default function Insights() {
 
           {/* Conteúdo Principal */}
           <main className="min-w-0 flex-1">
-            <header className="mb-8">
+            <header className="mb-8 hidden lg:block">
               <div className="flex items-end justify-between gap-4">
                 <div className="min-w-0">
                   <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">{t("ins_intelligence")}</p>
@@ -427,16 +427,6 @@ export default function Insights() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                    <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="grid h-9 w-9 place-items-center text-white/80 lg:hidden"
-                    onClick={() => setFilterDrawerOpen(true)}
-                    aria-label={t("ins_open_filters")}
-                  >
-                    <AdjustmentsHorizontalIcon className="h-3.5 w-3.5" />
-                  </Button>
                   <Button
                     onClick={() => load(true)}
                     disabled={refreshing}
@@ -451,7 +441,7 @@ export default function Insights() {
             </header>
 
             {/* Métricas Superiores em Grid */}
-            <div className="grid gap-4 grid-cols-2 md:grid-cols-3 mb-8">
+            <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:mb-8 lg:gap-4">
               <Card variant="subtle" className="p-4">
                 <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_signals_found")}</p>
                 <p className="mt-2 text-2xl font-mono tracking-tight text-white">{counts.all}</p>
@@ -466,8 +456,42 @@ export default function Insights() {
               </Card>
             </div>
 
-            {/* Input de Busca Sticky */}
-            <div className="sticky top-14 z-10 -mx-4 border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl">
+            {/* Mobile: search + category chips */}
+            <div className="mb-5 space-y-3 lg:hidden">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={t("ins_searchAmong", { n: counts.all }) || `Search among ${counts.all} signals…`}
+                    className="h-12 w-full rounded-2xl bg-accent pl-11 text-[15px] placeholder:italic placeholder:text-muted-foreground"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="h-12 w-12 shrink-0 rounded-2xl bg-accent"
+                  onClick={() => load(true)}
+                  disabled={refreshing}
+                  aria-label={t("ins_refresh")}
+                >
+                  <ArrowPathIcon className={cn("h-4 w-4", refreshing && "animate-spin")} />
+                </Button>
+              </div>
+              <FilterChips
+                value={view}
+                onChange={(v) => setView(v as View)}
+                options={[
+                  { value: "all", label: t("ins_all_insights") },
+                  ...categoryOrder.map((cat) => ({ value: cat, label: t(CATEGORY_META[cat].labelKey) })),
+                ]}
+              />
+            </div>
+
+            {/* Input de Busca Sticky (desktop) */}
+            <div className="sticky top-14 z-10 -mx-4 hidden border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl lg:block">
               <div className="relative">
                 <MagnifyingGlassIcon className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
                 <Input
@@ -478,6 +502,7 @@ export default function Insights() {
                 />
               </div>
             </div>
+
 
             <div className="flex items-center justify-between border-b border-white/5 pb-3 pt-4 mb-4 text-[11px] text-white/40">
               <div>
