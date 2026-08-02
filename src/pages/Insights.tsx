@@ -15,6 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { FilterChips } from "@/components/ui/filter-chips";
+import { FitText } from "@/components/ui/fit-text";
+
 import { cn } from "@/lib/utils";
 import { insightsApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
