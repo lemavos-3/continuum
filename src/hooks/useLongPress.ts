@@ -23,18 +23,41 @@ export function useLongPress({ onLongPress, onClick, ms = 500, moveTolerance = 1
     }
   }, []);
 
+  const isInteractiveTarget = useCallback((target: EventTarget | null) => {
+    if (!(target instanceof Element)) return false;
+    return !!target.closest(
+      'button, [role="button"], [role="link"], a[href], input, textarea, select, summary, [contenteditable="true"]',
+    );
+  }, []);
+
   const begin = useCallback(
-    (x: number, y: number) => {
+    (e: React.PointerEvent) => {
+      if (isInteractiveTarget(e.target)) {
+        return;
+      }
+
       triggered.current = false;
-      start.current = { x, y };
+      start.current = { x: e.clientX, y: e.clientY };
       clear();
       timer.current = window.setTimeout(() => {
         triggered.current = true;
         onLongPress();
       }, ms);
     },
-    [ms, onLongPress, clear],
+    [ms, onLongPress, clear, isInteractiveTarget],
   );
+
+  return {
+    onPointerDown: begin,
+    onPointerMove: (e: React.PointerEvent) => move(e.clientX, e.clientY),
+    onPointerUp: (e: React.PointerEvent) => end(e),
+    onPointerLeave: () => clear(),
+    onPointerCancel: () => clear(),
+    onContextMenu: (e: React.MouseEvent) => {
+      // Suppress the native context menu when we've already triggered on touch.
+      if (triggered.current) e.preventDefault();
+    },
+  };
 
   const move = useCallback(
     (x: number, y: number) => {

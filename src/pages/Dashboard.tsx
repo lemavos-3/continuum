@@ -1,13 +1,12 @@
-import { Children, ComponentType, ReactNode, useEffect, useMemo, useState } from "react";
+import { ComponentType, ReactNode, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AppLayout from "@/components/AppLayout";
 import { SummaryMetric, SummaryMetricRow } from "@/components/ui/summary-metric";
 import { FloatingCreateButton } from "@/components/ui/floating-create-button";
-import { dashboardApi, graphApi, metricsApi, notesApi, vaultApi, insightsApi } from "@/lib/api";
+import { dashboardApi, entitiesApi, graphApi, metricsApi, notesApi, vaultApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { useCreateNote } from "@/hooks/useCreateNote";
 import UpgradeModal from "@/components/UpgradeModal";
@@ -17,8 +16,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, cardVariants } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChartContainer } from "@/components/ui/chart";
-import { Badge } from "@/components/ui/badge";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
@@ -31,45 +28,15 @@ import {
 } from "recharts";
 import {
   ArrowRight,
-  HardDrive,
-  Network,
-  FileText,
-  Tag,
   Flame,
-  Users,
   Clock,
-  TrendingUp,
-  StickyNote,
   RefreshCw,
   Plus,
+  Check,
   Loader2
 } from "@/lib/heroicons";
 
 // --- TYPES & HELPERS ---
-interface NoteInsight {
-  note: { id: string; title: string; type?: string; entityIds?: string[]; updatedAt?: string; };
-  score: number;
-  badge: string;
-  mentionCount: number;
-  recentMentions: number;
-  hoursTracked: number;
-  entityConnections: number;
-  uniqueDaysReferenced: number;
-  daysSinceLastInteraction: number;
-}
-
-interface EntityInsight {
-  entity: { id: string; title: string; type?: string; };
-  score: number;
-  badge: string;
-  mentionCount: number;
-  recentMentions: number;
-  hoursTracked: number;
-  relationsCount: number;
-  uniqueDaysMentioned: number;
-  daysSinceLastMention: number;
-}
-
 const rangeDaysMap = {
   "14d": 14,
   "1mo": 30,
@@ -91,13 +58,6 @@ const formatDays = (d: number, t: (key: string, vars?: Record<string, string | n
   if (d < 30) return t("db_dAgo", { n: d });
   if (d < 365) return t("db_moAgo", { n: Math.round(d / 30) });
   return t("db_yAgo", { n: Math.round(d / 365) });
-};
-
-const badgeStyle = (badge: string) => {
-  const b = badge?.toLowerCase() || "";
-  if (b.includes("hot")) return "bg-white/[0.06] text-white/90 border-white/20";
-  if (b.includes("forgotten") || b.includes("gem")) return "bg-white/[0.04] text-white/70 border-white/10";
-  return "bg-transparent text-white/50 border-white/10";
 };
 
 const formatNoteDate = (timestamp?: number) => {
@@ -162,189 +122,10 @@ function WeeklySummary({ notes, totalNotes, totalEntities, graphNodeCount, curre
 
 
 
-function StatChip({ children }: { children: ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-1 rounded-sm border border-white/5 bg-white/[0.02] px-1.5 py-0.5 font-mono text-[10px] text-white/40">
-      {children}
-    </span>
-  );
-}
-
-function NoteCard({ item, onOpen }: { item: NoteInsight; onOpen: () => void }) {
-  const { t } = useLanguage();
-  return (
-    <motion.button
-      whileHover={{ y: -1 }}
-      whileTap={{ scale: 0.99 }}
-      onClick={onOpen}
-      className={cn(
-        cardVariants(),
-        "group relative flex w-full flex-col gap-3 overflow-hidden p-4 text-left",
-        "transition duration-300 hover:border-white/10 hover:bg-white/5",
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <Badge variant="outline" className={cn("text-[9px] font-medium px-1.5 py-0 shadow-sm", badgeStyle(item.badge))}>
-          {item.badge}
-        </Badge>
-        <span className="font-mono text-[9px] text-white/60">{item.score.toFixed(1)}</span>
-      </div>
-      <div className="flex items-start gap-2 flex-1 min-w-0">
-        <div className="mt-0.5 rounded-lg bg-white/[0.04] p-1 shrink-0">
-          <StickyNote className="h-3.5 w-3.5 text-neutral-400" />
-        </div>
-        <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-white transition-colors">{item.note.title || t("db_untitled")}</h3>
-      </div>
-      <div className="mt-auto flex flex-wrap gap-1 pt-2">
-        {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
-        {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)}</StatChip>}
-        <StatChip>{formatDays(item.daysSinceLastInteraction, t)}</StatChip>
-      </div>
-    </motion.button>
-  );
-}
-
-function EntityCard({ item, onOpen }: { item: EntityInsight; onOpen: () => void }) {
-  const { t } = useLanguage();
-  return (
-    <motion.button
-      whileHover={{ y: -1 }}
-      whileTap={{ scale: 0.99 }}
-      onClick={onOpen}
-      className={cn(
-        cardVariants(),
-        "group relative flex w-full flex-col gap-3 overflow-hidden p-4 text-left",
-        "transition duration-300 hover:border-white/10 hover:bg-white/5",
-      )}
-    >
-      <div className="flex items-center justify-between gap-2">
-        <Badge variant="outline" className={cn("text-[9px] font-medium px-1.5 py-0 shadow-sm", badgeStyle(item.badge))}>
-          {item.badge}
-        </Badge>
-        <span className="font-mono text-[9px] text-white/60">{item.score.toFixed(1)}</span>
-      </div>
-      <div className="flex items-start gap-2 flex-1 min-w-0">
-        <div className="mt-0.5 rounded-lg bg-white/[0.04] p-1 shrink-0">
-          <Network className="h-3.5 w-3.5 text-neutral-400" />
-        </div>
-        <div className="min-w-0">
-          <h3 className="line-clamp-2 text-xs sm:text-sm font-medium text-white transition-colors">{item.entity.title}</h3>
-          {item.entity.type && (
-            <p className="mt-0.5 text-[8px] font-semibold uppercase tracking-wider text-white/50 truncate">{item.entity.type}</p>
-          )}
-        </div>
-      </div>
-      <div className="mt-auto flex flex-wrap gap-1 pt-2">
-        {item.mentionCount > 0 && <StatChip>{item.mentionCount} m</StatChip>}
-        {item.hoursTracked > 0 && <StatChip>{formatHours(item.hoursTracked)}</StatChip>}
-        <StatChip>{formatDays(item.daysSinceLastMention, t)}</StatChip>
-      </div>
-    </motion.button>
-  );
-}
-
-function DashboardInsightSection({
-  title, subtitle, icon: Icon, children, empty, loading, className, onRefresh, refreshing, viewMoreHref, viewMoreLabel, gridColsClass = "grid-cols-1"
-}: {
-  title: string; subtitle?: string; icon: ComponentType<{ className?: string }>; children: ReactNode; empty: boolean; loading: boolean; className?: string; onRefresh?: () => void; refreshing?: boolean; viewMoreHref?: string; viewMoreLabel?: string; gridColsClass?: string;
-}) {
-  const navigate = useNavigate();
-  const { t } = useLanguage();
-  const items = Children.toArray(children);
-  const previewItems = items.slice(0, 4);
-  const expandedItems = items.slice(4, 10);
-  const totalCount = items.length;
-  const visibleCount = Math.min(10, totalCount);
-  const showAccordion = !loading && !empty && items.length > 4;
-
-  return (
-    <div className={cn("rounded-sm bg-neutral-950/70 p-4 sm:p-6 flex flex-col shadow-sm", className)}>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 sm:mb-5">
-        <div>
-          <p className="text-[10px] uppercase tracking-[0.32em] text-white/40 font-mono">{t("db_signal")}</p>
-          <h2 className="mt-1 font-serif text-xl text-white">{title}</h2>
-          {subtitle && <p className="mt-1 text-xs text-white/50">{subtitle}</p>}
-        </div>
-        <div className="flex items-center justify-end gap-4 mt-1 sm:mt-0">
-          {onRefresh && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onRefresh}
-              disabled={refreshing}
-              className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors flex items-center gap-1.5"
-            >
-              <RefreshCw className={cn("h-3 w-3", refreshing && "animate-spin")} />
-              <span>{t("db_refresh")}</span>
-            </Button>
-          )}
-          {viewMoreHref && (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => navigate(viewMoreHref)}
-              className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors"
-            >
-              {viewMoreLabel || t("db_viewAll")}
-            </Button>
-          )}
-        </div>
-      </div>
-      <div className="flex-1 flex flex-col justify-between min-h-0">
-        {loading ? (
-          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
-            {[0, 1].map((i) => (
-              <div key={i} className="h-[120px] w-full animate-pulse rounded-xl bg-neutral-900/40" />
-            ))}
-          </div>
-        ) : empty ? (
-          <div className="rounded-xl bg-neutral-900/50 p-6 text-center text-xs text-white/40 h-full flex flex-col items-center justify-center min-h-[120px]">
-            {t("db_nothingToShow")}
-          </div>
-        ) : (
-          <>
-            <div className={cn("grid gap-3", gridColsClass)}>{previewItems}</div>
-            {showAccordion ? (
-              <Accordion type="single" collapsible className="mt-3">
-                <AccordionItem value={title} className="border-none">
-                  <AccordionTrigger className="px-0 py-0 hover:no-underline">
-                    <div className="flex w-full items-center justify-between gap-3 rounded-xl bg-neutral-900/50 px-3 py-2 text-xs font-medium text-white/50 hover:bg-neutral-900/60 transition-colors">
-                      <span>{t("db_showMore", { n: visibleCount - previewItems.length })}</span>
-                      <span>{t("db_countOfTotal", { count: visibleCount, total: totalCount })}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-0 pt-3 pb-0">
-                    <div className={cn("grid gap-3 mb-3", gridColsClass)}>
-                      {expandedItems}
-                    </div>
-                    <div className="flex items-center justify-between gap-3 text-[10px] text-white/40 pt-2 border-t border-white/10">
-                      <span>{totalCount > visibleCount ? t("db_showingOfTotal", { count: visibleCount, total: totalCount }) : t("db_showingAll", { count: visibleCount })}</span>
-                      {viewMoreHref && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          onClick={() => navigate(viewMoreHref)}
-                          className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-[10px] text-white/50 hover:text-white transition-colors"
-                        >
-                          {viewMoreLabel || t("db_viewAll")}
-                        </Button>
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            ) : null}
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// --- MAIN DASHBOARD ---
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { usage, applyUsageDelta } = usePlanGate();
   const { t } = useLanguage();
   const limits = getPlanLimits(user);
@@ -352,6 +133,7 @@ export default function Dashboard() {
   const [timeRange, setTimeRange] = useState<TimeRange>("14d");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
+  const [markingActivities, setMarkingActivities] = useState(false);
   const { createNote, creating } = useCreateNote({ onLimitReached: () => setUpgradeOpen(true) });
 
   // Check for new account onboarding popup
@@ -363,50 +145,56 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Insights State
-  const [insightsLoading, setInsightsLoading] = useState(true);
-  const [refreshingInsights, setRefreshingInsights] = useState(false);
-  const [hotNotes, setHotNotes] = useState<NoteInsight[]>([]);
-  const [forgottenNotes, setForgottenNotes] = useState<NoteInsight[]>([]);
-  const [hotEntities, setHotEntities] = useState<EntityInsight[]>([]);
-  const [forgottenEntities, setForgottenEntities] = useState<EntityInsight[]>([]);
-
-  const loadInsights = async (silent = false) => {
-    if (!silent) setInsightsLoading(true);
-    else setRefreshingInsights(true);
-    try {
-      const [hn, fn, he, fe] = await Promise.all([
-        insightsApi.hotNotes(12),
-        insightsApi.forgottenNotes(12),
-        insightsApi.hotEntities(12),
-        insightsApi.forgottenEntities(12),
-      ]);
-      
-      const extractData = (res: any) => {
-        if (!res) return [];
-        const d = res.data;
-        if (Array.isArray(d)) return d;
-        if (d && typeof d === 'object') {
-          return d.items || d.content || d.data || d.insights || [];
-        }
-        return [];
-      };
-
-      setHotNotes(extractData(hn));
-      setForgottenNotes(extractData(fn));
-      setHotEntities(extractData(he));
-      setForgottenEntities(extractData(fe));
-    } catch (err) {
-      toast({ title: t("db_toastInsightsFailTitle"), description: t("db_toastTryAgain"), variant: "destructive" });
-    } finally {
-      setInsightsLoading(false);
-      setRefreshingInsights(false);
-    }
+  const getTodayKey = () => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
   };
 
-  useEffect(() => {
-    loadInsights();
-  }, []);
+  const isTrackedToday = (trackingDates?: string[]) => {
+    if (!trackingDates?.length) return false;
+    const key = getTodayKey();
+    return trackingDates.some((d) => d.split("T")[0] === key);
+  };
+
+  const handleMarkPendingActivities = async () => {
+    if (markingActivities) return;
+    setMarkingActivities(true);
+
+    try {
+      const response = await entitiesApi.list();
+      const activities = Array.isArray(response.data) ? (response.data as Entity[]) : [];
+      const pendingActivities = activities.filter(
+        (entity) => entity.type === "ACTIVITY" && !isTrackedToday(entity.trackingDates),
+      );
+
+      if (pendingActivities.length === 0) {
+        toast({ title: t("db_markPendingActivitiesNone") });
+        return;
+      }
+
+      const results = await Promise.allSettled(
+        pendingActivities.map((activity) => entitiesApi.track(activity.id)),
+      );
+      await queryClient.invalidateQueries({ queryKey: ["entities"] });
+
+      const failed = results.filter((result) => result.status === "rejected").length;
+      if (failed === 0) {
+        toast({ title: t("db_markPendingActivitiesSuccess") });
+      } else {
+        toast({
+          title: t("db_markPendingActivitiesPartial", {
+            succeeded: pendingActivities.length - failed,
+            total: pendingActivities.length,
+          }),
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({ title: t("db_markPendingActivitiesError"), variant: "destructive" });
+    } finally {
+      setMarkingActivities(false);
+    }
+  };
 
   const handleExportData = async () => {
     if (exporting) return;
@@ -664,7 +452,6 @@ export default function Dashboard() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_signal")}</p>
                     <h2 className="mt-1 font-serif text-2xl text-white">{t("db_scoreEvolution")}</h2>
                     <p className="mt-1 text-xs text-white/50">{t("db_scoreEvolutionSubtitle")}</p>
                   </div>
@@ -906,13 +693,30 @@ export default function Dashboard() {
           {/* RECENT NOTES CARD */}
           <Card variant="faint" className="lg:col-span-4 flex flex-col">
             <CardContent className="p-4 sm:p-6 flex flex-col flex-1">
-            <div className="flex items-center justify-between gap-3 mb-4">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_stream")}</p>
-                <h2 className="mt-1 font-serif text-xl text-white">{t("db_recentNotes")}</h2>
+            <div className="flex flex-col gap-3 mb-4">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_stream")}</p>
+                  <h2 className="mt-1 font-serif text-xl text-white">{t("db_recentNotes")}</h2>
+                </div>
+                <Button type="button" variant="ghost" onClick={() => navigate("/notes")} className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors">
+                  {t("db_viewAll")}
+                </Button>
               </div>
-              <Button type="button" variant="ghost" onClick={() => navigate("/notes")} className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-[11px] font-mono uppercase tracking-widest text-white/40 hover:text-white transition-colors">
-                {t("db_viewAll")}
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={handleMarkPendingActivities}
+                disabled={markingActivities}
+                className="self-start gap-2"
+              >
+                {markingActivities ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Check className="h-3.5 w-3.5" />
+                )}
+                {t("db_markPendingActivities")}
               </Button>
             </div>
             <div className="space-y-1 flex-1 overflow-y-auto max-h-[280px] sm:max-h-[310px] pr-1 scrollbar-thin">
@@ -940,77 +744,6 @@ export default function Dashboard() {
             </div>
             </CardContent>
           </Card>
-
-          {/* INSIGHTS: HOT RIGHT NOW */}
-          <DashboardInsightSection
-            title={t("db_hotRightNow")}
-            subtitle={t("db_hotRightNowSubtitle")}
-            icon={Flame}
-            loading={insightsLoading}
-            empty={hotNotes.length === 0}
-            className="lg:col-span-8"
-            gridColsClass="grid-cols-1 sm:grid-cols-2"
-            onRefresh={() => loadInsights(true)}
-            refreshing={refreshingInsights}
-            viewMoreHref="/notes"
-            viewMoreLabel={t("db_viewAllNotes")}
-          >
-            {hotNotes.map((n) => (
-              <NoteCard key={n.note.id} item={n} onOpen={() => navigate(`/notes/${n.note.id}`)} />
-            ))}
-          </DashboardInsightSection>
-
-          {/* BLOCO 3: GRAPH DISCOVERY */}
-          {/* INSIGHTS: KEY PEOPLE & PROJECTS */}
-          <DashboardInsightSection
-            title={t("db_keyPeopleProjects")}
-            subtitle={t("db_keyPeopleProjectsSubtitle")}
-            icon={Users}
-            loading={insightsLoading}
-            empty={hotEntities.length === 0}
-            className="lg:col-span-4"
-            gridColsClass="grid-cols-1"
-            viewMoreHref="/entities"
-            viewMoreLabel={t("db_viewAllEntities")}
-          >
-            {hotEntities.map((e) => (
-              <EntityCard key={e.entity.id} item={e} onOpen={() => navigate(`/entities/${e.entity.id}`)} />
-            ))}
-          </DashboardInsightSection>
-
-          {/* INSIGHTS: WORTH REVISITING */}
-          <DashboardInsightSection
-            title={t("db_worthRevisiting")}
-            subtitle={t("db_worthRevisitingSubtitle")}
-            icon={Clock}
-            loading={insightsLoading}
-            empty={forgottenNotes.length === 0}
-            className="lg:col-span-4"
-            gridColsClass="grid-cols-1"
-            viewMoreHref="/notes"
-            viewMoreLabel={t("db_viewAllNotes")}
-          >
-            {forgottenNotes.map((n) => (
-              <NoteCard key={n.note.id} item={n} onOpen={() => navigate(`/notes/${n.note.id}`)} />
-            ))}
-          </DashboardInsightSection>
-
-          {/* INSIGHTS: FORGOTTEN GEMS */}
-          <DashboardInsightSection
-            title={t("db_forgottenGems")}
-            subtitle={t("db_forgottenGemsSubtitle")}
-            icon={TrendingUp}
-            loading={insightsLoading}
-            empty={forgottenEntities.length === 0}
-            className="lg:col-span-4"
-            gridColsClass="grid-cols-1"
-            viewMoreHref="/entities"
-            viewMoreLabel={t("db_viewAllEntities")}
-          >
-            {forgottenEntities.map((e) => (
-              <EntityCard key={e.entity.id} item={e} onOpen={() => navigate(`/entities/${e.entity.id}`)} />
-            ))}
-          </DashboardInsightSection>
 
         </section>
       </div>
