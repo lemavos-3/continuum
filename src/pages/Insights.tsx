@@ -184,47 +184,37 @@ function InsightRow({ item }: { item: InsightItem }) {
     <li>
       <button
         onClick={item.onOpen}
-        className="group relative flex w-full items-start gap-4 py-5 text-left transition-colors hover:bg-white/[0.02]"
+        className="group relative flex w-full items-center gap-4 py-4 text-left transition-colors hover:bg-white/[0.02]"
       >
-        <span
-          aria-hidden
-          className="absolute left-0 top-1/2 h-8 w-px -translate-x-3 -translate-y-1/2 bg-white opacity-0 transition-opacity group-hover:opacity-100"
-        />
-
-        <div className="hidden w-16 shrink-0 pt-1 sm:block">
-          <p className="font-mono text-xs font-medium text-white/40 group-hover:text-white/80 transition-colors">
-            {item.score.toFixed(1)}
-          </p>
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2.5">
-            <Badge variant="outline" className={cn("rounded-sm px-1.5 py-0 text-[9px] font-mono tracking-wider uppercase", badgeStyle(item.badge))}>
-              {translateBadge(item.badge, t)}
-            </Badge>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-white/30">
+        <ListRowContent
+          icon={
+            item.kind === "note" ? (
+              <StickyNote className="h-5 w-5" />
+            ) : (
+              <EntityTypeIcon type={item.subtitle} className="h-5 w-5" />
+            )
+          }
+          title={item.title}
+          meta={
+            <>
               {item.subtitle}
-            </span>
-          </div>
-
-          <FitText
-            as="h3"
-            max={20}
-            min={13}
-            className="mt-2 font-serif leading-snug text-white/95 transition-colors group-hover:text-white"
-          >
-            {item.title}
-          </FitText>
-
-
-          <div className="mt-3 flex flex-wrap items-center gap-1.5">
-            {item.metaDetails.mentions ? <StatChip>{t("ins_mentions", { count: item.metaDetails.mentions })}</StatChip> : null}
-            {item.metaDetails.links ? <StatChip>{t("ins_links", { count: item.metaDetails.links })}</StatChip> : null}
-            {item.metaDetails.hours ? <StatChip>{t("ins_hours_tracked", { hours: formatHours(item.metaDetails.hours) })}</StatChip> : null}
-            <StatChip>{formatDays(item.metaDetails.daysAgo, t)}</StatChip>
-          </div>
-        </div>
+              {" · "}
+              {formatDays(item.metaDetails.daysAgo, t)}
+              {item.metaDetails.mentions ? ` · ${t("ins_mentions", { count: item.metaDetails.mentions })}` : ""}
+              {item.metaDetails.hours ? ` · ${t("ins_hours_tracked", { hours: formatHours(item.metaDetails.hours) })}` : ""}
+            </>
+          }
+          trailing={
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className={cn("rounded-sm px-1.5 py-0 text-[9px] font-mono tracking-wider uppercase", badgeStyle(item.badge))}>
+                {translateBadge(item.badge, t)}
+              </Badge>
+              <span className="hidden font-mono text-xs text-white/40 sm:inline">{item.score.toFixed(1)}</span>
+            </div>
+          }
+        />
       </button>
+
     </li>
   );
 }
