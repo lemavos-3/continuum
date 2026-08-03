@@ -787,8 +787,8 @@ export default function Notes() {
                                       variant="ghost"
                                       size="icon"
                                       className={cn(
-                                        "transition-colors p-1.5",
-                                        note.favorite ? "text-white" : "text-white/40 hover:text-white/70"
+                                        "transition-colors p-1.5 opacity-70 hover:opacity-100",
+                                        note.favorite ? "text-white" : "text-white"
                                       )}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -797,16 +797,16 @@ export default function Notes() {
                                       aria-label={note.favorite ? t("notes_unfavorite") : t("notes_favorite")}
                                     >
                                       {note.favorite ? (
-                                        <BookmarkCheck className="h-3.5 w-3.5 fill-current" />
+                                        <BookmarkCheck className="h-3 w-3 fill-current" />
                                       ) : (
-                                        <Bookmark className="h-3.5 w-3.5" />
+                                        <Bookmark className="h-3 w-3" />
                                       )}
                                     </Button>
                                     <Button
                                       type="button"
                                       variant="ghost"
                                       size="icon"
-                                      className="text-white/40 transition hover:text-white/70 p-1.5"
+                                      className="text-white transition p-1.5 opacity-70 hover:opacity-100"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         e.preventDefault();
@@ -814,7 +814,7 @@ export default function Notes() {
                                       }}
                                       aria-label={t("common_delete")}
                                     >
-                                      <Trash2 className="h-3.5 w-3.5" />
+                                      <Trash2 className="h-3 w-3" />
                                     </Button>
                                     <InsightSignalBadge kind="note" id={note.id} />
                                   </div>

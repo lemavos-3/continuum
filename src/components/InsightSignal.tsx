@@ -89,7 +89,7 @@ export function InsightSignalBadge({ kind, id, className }: { kind: Kind; id?: s
     <Badge
       variant="outline"
       className={cn(
-        "inline-flex items-center gap-1 border text-[9px] font-medium uppercase tracking-wider",
+        "inline-flex items-center gap-1 border text-[9px] font-medium uppercase tracking-wider h-5 px-2",
         isHot
           ? "border-orange-500/30 bg-orange-500/10 text-orange-300"
           : "border-violet-500/30 bg-violet-500/10 text-violet-300",
@@ -97,8 +97,8 @@ export function InsightSignalBadge({ kind, id, className }: { kind: Kind; id?: s
       )}
       title={`${BADGE_KEY_MAP[signal.badge?.toLowerCase()?.trim()] ? t(BADGE_KEY_MAP[signal.badge.toLowerCase().trim()]) : signal.badge} · score ${signal.score.toFixed(1)}`}
     >
-      <Icon className="h-2.5 w-2.5" />
-      {BADGE_KEY_MAP[signal.badge?.toLowerCase()?.trim()] ? t(BADGE_KEY_MAP[signal.badge.toLowerCase().trim()]) : signal.badge}
+      <Icon className="h-3 w-3" />
+      {BADGE_KEY_MAP[signal.badge?.toLowerCase()?.trim()] ? t(BADGE_KEY_MAP[signal.badge?.toLowerCase()?.trim()]) : signal.badge}
     </Badge>
   );
 }
