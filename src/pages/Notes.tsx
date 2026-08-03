@@ -789,6 +789,20 @@ export default function Notes() {
                                       type="button"
                                       variant="ghost"
                                       size="icon"
+                                      className="text-white/20 opacity-0 transition hover:text-white/70 group-hover:opacity-100 p-1.5"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        setPendingDelete(note);
+                                      }}
+                                      aria-label={t("common_delete")}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
                                       className={cn(
                                         "transition-colors p-1.5",
                                         note.favorite ? "text-white" : "text-white/20 opacity-0 hover:text-white/70 group-hover:opacity-100"
@@ -805,21 +819,17 @@ export default function Notes() {
                                         <Bookmark className="h-3.5 w-3.5" />
                                       )}
                                     </Button>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-white/20 opacity-0 transition hover:text-white/70 group-hover:opacity-100 p-1.5"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        e.preventDefault();
-                                        setPendingDelete(note);
-                                      }}
-                                      aria-label={t("common_delete")}
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
                                   </div>
+                                  )}
+                                  {selectMode && (
+                                    <span
+                                      className={cn(
+                                        "mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-sm border transition-colors",
+                                        selected ? "border-white bg-white text-black" : "border-white/30 text-transparent"
+                                      )}
+                                    >
+                                      <Check className="h-3.5 w-3.5" />
+                                    </span>
                                   )}
                               </NoteRow>
                             );

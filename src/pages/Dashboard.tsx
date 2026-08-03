@@ -236,6 +236,22 @@ export default function Dashboard() {
     queryFn: () => graphApi.data().then((r) => r.data),
   });
 
+  const { data: allEntities } = useQuery({
+    queryKey: ["entities", "list"],
+    queryFn: () => entitiesApi.list().then((r) => r.data),
+  });
+
+  const pendingActivities = useMemo(() => {
+    const entities = Array.isArray(allEntities)
+      ? (allEntities as Entity[])
+      : allEntities && typeof allEntities === "object"
+      ? ((allEntities as any).content || (allEntities as any).data || [])
+      : [];
+    return entities.filter(
+      (entity) => entity.type === "ACTIVITY" && !isTrackedToday(entity.trackingDates),
+    );
+  }, [allEntities]);
+
   const {
     data: scoreTimeline,
     isLoading: scoreTimelineLoading,
@@ -415,18 +431,6 @@ export default function Dashboard() {
             </p>
           </div>
           <div className="flex items-center gap-1.5 self-start sm:self-auto">
-            <Button size="sm" variant="outline" onClick={() => navigate("/activities")} className="gap-1 h-7 px-2.5 text-[11px]">
-              <Flame className="h-3 w-3" />
-              {t("db_activities")}
-            </Button>
-            <Button size="sm" variant="outline" onClick={() => navigate("/projects")} className="gap-1 h-7 px-2.5 text-[11px]">
-              <Clock className="h-3 w-3" />
-              {t("db_project")}
-            </Button>
-            <Button size="sm" onClick={() => void createNote()} disabled={creating} className="gap-1 h-7 px-2.5 text-[11px]">
-              {creating ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
-              {creating ? t("db_creating") : t("db_newNote")}
-            </Button>
           </div>
 
 
@@ -691,6 +695,38 @@ export default function Dashboard() {
           </Card>
 
           {/* BLOCO 2: WORKSPACE ACTIVITY */}
+          <Card variant="faint" className="lg:col-span-4 flex flex-col">
+            <CardContent className="p-4 sm:p-6 flex flex-col flex-1">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_stream")}</p>
+                  <h2 className="mt-1 font-serif text-xl text-white">{t("db_pendingActivitiesTitle")}</h2>
+                  <p className="mt-2 text-sm text-white/50">{t("db_pendingActivitiesSubtitle")}</p>
+                </div>
+              </div>
+              <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5 flex-1 flex flex-col justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.28em] text-white/40 font-mono">{t("db_pendingActivitiesCountLabel")}</p>
+                  <p className="mt-3 text-4xl font-semibold text-white">{pendingActivities.length}</p>
+                  <p className="mt-2 text-sm text-white/50">{t("db_pendingActivitiesCountDescription")}</p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleMarkPendingActivities}
+                  disabled={markingActivities || pendingActivities.length === 0}
+                  className="mt-5 w-full gap-2"
+                >
+                  {markingActivities ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Check className="h-3.5 w-3.5" />
+                  )}
+                  {t("db_markPendingActivities")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* RECENT NOTES CARD */}
           <Card variant="faint" className="lg:col-span-4 flex flex-col">
             <CardContent className="p-4 sm:p-6 flex flex-col flex-1">
@@ -704,21 +740,6 @@ export default function Dashboard() {
                   {t("db_viewAll")}
                 </Button>
               </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="secondary"
-                onClick={handleMarkPendingActivities}
-                disabled={markingActivities}
-                className="self-start gap-2"
-              >
-                {markingActivities ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                ) : (
-                  <Check className="h-3.5 w-3.5" />
-                )}
-                {t("db_markPendingActivities")}
-              </Button>
             </div>
             <div className="space-y-1 flex-1 overflow-y-auto max-h-[280px] sm:max-h-[310px] pr-1 scrollbar-thin">
               {recentNotes.length > 0 ? (
