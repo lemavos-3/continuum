@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AppLayout from "@/components/AppLayout";
+import { SummaryMetric, SummaryMetricRow } from "@/components/ui/summary-metric";
+import { FloatingCreateButton } from "@/components/ui/floating-create-button";
 import { dashboardApi, graphApi, metricsApi, notesApi, vaultApi, insightsApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { useCreateNote } from "@/hooks/useCreateNote";
