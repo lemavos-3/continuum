@@ -1060,7 +1060,14 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <FloatingCreateButton
+        label={t("db_newNote")}
+        onClick={() => void createNote()}
+        icon={<Plus className="h-4 w-4" />}
+      />
     </AppLayout>
+
 
   );
 }
