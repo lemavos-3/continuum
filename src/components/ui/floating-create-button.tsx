@@ -44,7 +44,7 @@ export function FloatingCreateButton({
   return (
     <div
       className={cn(
-        "pointer-events-none fixed inset-x-0 z-30 flex justify-center transition-all duration-300 lg:hidden",
+        "pointer-events-none fixed inset-x-0 z-30 flex justify-end px-4 transition-all duration-300 lg:hidden",
         visible ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0",
         className,
       )}
