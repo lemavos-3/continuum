@@ -447,26 +447,21 @@ export default function Insights() {
               </div>
             </header>
 
-            {/* Métricas Superiores em Grid */}
-            <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 lg:mb-8 lg:gap-4">
-              <Card variant="subtle" className="p-4">
-                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_signals_found")}</p>
-                <p className="mt-2 text-2xl font-mono tracking-tight text-white">{counts.all}</p>
-              </Card>
-              <Card variant="subtle" className="p-4">
-                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_top_strength")}</p>
-                <p className="mt-2 text-2xl font-mono tracking-tight text-white">{topScore.toFixed(1)}</p>
-              </Card>
-              <Card variant="subtle" className="p-4 col-span-2 md:col-span-1">
-                <p className="text-[9px] uppercase tracking-widest text-white/30 font-mono">{t("ins_archived_gems")}</p>
-                <p className="mt-2 text-2xl font-mono tracking-tight text-white">{counts.worthRevisiting + counts.forgottenGems}</p>
-              </Card>
-            </div>
+            {/* Métricas superiores — mesmo padrão do Dashboard */}
+            <SummaryMetricRow className="mb-6 lg:mb-8">
+              <SummaryMetric label={t("ins_signals_found")} value={String(counts.all)} />
+              <SummaryMetric label={t("ins_top_strength")} value={topScore.toFixed(1)} />
+              <SummaryMetric
+                label={t("ins_archived_gems")}
+                value={String(counts.worthRevisiting + counts.forgottenGems)}
+              />
+            </SummaryMetricRow>
+
 
             {/* Mobile: search + category chips */}
             <div className="mb-5 space-y-3 lg:hidden">
               <div className="flex items-center gap-2">
-                <div className="relative flex-1">
+                <div className="relative z-0 flex-1">
                   <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     value={search}
