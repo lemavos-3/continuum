@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Plus, ChevronDown, FolderOpen, Loader2, Check } from "@/lib/heroicons";
 import { CreateEntityDialog } from '@/components/CreateEntityDialog';
+import { ListRowContent } from '@/components/ui/list-row-content';
+import { EntityTypeIcon } from '@/components/ui/entity-type-icon';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ActivityCompletionCalendar } from '@/components/ActivityCompletionCalendar';
 import type { Entity } from '@/types';
