@@ -154,19 +154,24 @@ export function TimeTrackingList({
                     className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     aria-expanded={isOpen}
                   >
-                    <ChevronDown className={cn('w-4 h-4 shrink-0 text-white/40 transition-transform', isOpen && 'rotate-180')} />
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-white">{entity.title || t('tm_untitled')}</p>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-white/40">
-                        <span className="uppercase tracking-wider">{typeLabels[entity.type] ?? entity.type}</span>
-                        {isProject ? (
-                          <span className="font-mono">{summary?.formattedTotal || '00:00:00'}</span>
-                        ) : (
-                          <span>{t('tm_done_count', { count: entity.trackingDates?.length ?? 0 })}</span>
-                        )}
-                      </div>
-                    </div>
+                    <ListRowContent
+                      icon={<EntityTypeIcon type={entity.type} className="h-5 w-5" />}
+                      title={entity.title || t('tm_untitled')}
+                      meta={
+                        <>
+                          {typeLabels[entity.type] ?? entity.type}
+                          {' · '}
+                          {isProject
+                            ? summary?.formattedTotal || '00:00:00'
+                            : t('tm_done_count', { count: entity.trackingDates?.length ?? 0 })}
+                        </>
+                      }
+                      trailing={
+                        <ChevronDown className={cn('h-4 w-4 shrink-0 text-white/40 transition-transform', isOpen && 'rotate-180')} />
+                      }
+                    />
                   </button>
+
 
                   {/* Quick action: complete today for activities */}
                   {!isProject && (
