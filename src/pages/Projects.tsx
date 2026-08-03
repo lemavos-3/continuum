@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import { TimeTrackingList } from "@/components/TimeTrackingList";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,8 @@ export default function Projects() {
   const [sortBy, setSortBy] = useState<"createdAt" | "updatedAt">("updatedAt");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
   const [createOpen, setCreateOpen] = useState(false);
+  const [total, setTotal] = useState(0);
+  const handleCount = useCallback((n: number) => setTotal(n), []);
 
   return (
     <AppLayout>
@@ -29,12 +31,12 @@ export default function Projects() {
 
           {/* Mobile search */}
           <div className="mb-5 lg:hidden">
-            <div className="relative">
+            <div className="relative z-0">
               <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("common_search") + "…"}
+                placeholder={t("projects_searchAmong", { n: total })}
                 className="h-12 w-full rounded-2xl bg-accent pl-11 text-[15px] placeholder:italic placeholder:text-muted-foreground"
               />
             </div>
@@ -47,7 +49,7 @@ export default function Projects() {
                 <Input
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder={t("common_search") + "…"}
+                  placeholder={t("projects_searchAmong", { n: total })}
                   variant="ghost"
                   className="pl-6 text-sm text-white placeholder:italic placeholder:text-white/30"
                 />
@@ -94,6 +96,7 @@ export default function Projects() {
             hideInternalSearch={true}
             createOpen={createOpen}
             onCreateOpenChange={setCreateOpen}
+            onCountChange={handleCount}
           />
         </main>
       </div>

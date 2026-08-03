@@ -25,6 +25,8 @@ export const dict: Module = {
     notes_searchAmong: "Search among {n} notes…",
     entities_searchAmong: "Search among {n} entities…",
     ins_searchAmong: "Search among {n} signals…",
+    projects_searchAmong: "Search among {n} projects…",
+    activities_searchAmong: "Search among {n} activities…",
   },
   es: {
     ls_notes_error_loading_archive: "Error al cargar el archivo",
@@ -50,6 +52,8 @@ export const dict: Module = {
     notes_searchAmong: "Buscar entre {n} notas…",
     entities_searchAmong: "Buscar entre {n} entidades…",
     ins_searchAmong: "Buscar entre {n} señales…",
+    projects_searchAmong: "Buscar entre {n} proyectos…",
+    activities_searchAmong: "Buscar entre {n} actividades…",
   },
   pt: {
     ls_notes_error_loading_archive: "Erro ao carregar o arquivo",
@@ -75,6 +79,8 @@ export const dict: Module = {
     notes_searchAmong: "Buscar entre {n} notas…",
     entities_searchAmong: "Buscar entre {n} entidades…",
     ins_searchAmong: "Buscar entre {n} sinais…",
+    projects_searchAmong: "Buscar entre {n} projetos…",
+    activities_searchAmong: "Buscar entre {n} atividades…",
   },
   fr: {
     ls_notes_error_loading_archive: "Erreur lors du chargement des archives",
@@ -100,5 +106,7 @@ export const dict: Module = {
     notes_searchAmong: "Rechercher parmi {n} notes…",
     entities_searchAmong: "Rechercher parmi {n} entités…",
     ins_searchAmong: "Rechercher parmi {n} signaux…",
+    projects_searchAmong: "Rechercher parmi {n} projets…",
+    activities_searchAmong: "Rechercher parmi {n} activités…",
   },
 };
