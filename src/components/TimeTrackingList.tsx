@@ -85,7 +85,12 @@ export function TimeTrackingList({
     );
   }, [lower, all]);
 
+  useEffect(() => {
+    onCountChange?.(all.length, visible.length);
+  }, [all.length, visible.length, onCountChange]);
+
   const placeholder = filterType === 'PROJECT' ? t('tm_search_projects') : filterType === 'ACTIVITY' ? t('tm_search_activities') : t('tm_search_entities');
+
 
   const handleQuickComplete = async (entity: Entity) => {
     if (markingId) return;
