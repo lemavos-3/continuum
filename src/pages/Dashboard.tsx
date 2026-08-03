@@ -1,23 +1,18 @@
-import { ComponentType, ReactNode, useEffect, useMemo, useState } from "react";
+import { ComponentType, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import type { Entity } from "@/types";
 import AppLayout from "@/components/AppLayout";
 import { SummaryMetric, SummaryMetricRow } from "@/components/ui/summary-metric";
 import { FloatingCreateButton } from "@/components/ui/floating-create-button";
-import { dashboardApi, entitiesApi, graphApi, metricsApi, notesApi, vaultApi } from "@/lib/api";
-import { usePlanGate } from "@/hooks/usePlanGate";
+import { dashboardApi, graphApi, metricsApi, notesApi } from "@/lib/api";
 import { useCreateNote } from "@/hooks/useCreateNote";
 import UpgradeModal from "@/components/UpgradeModal";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { getPlanLimits, isUnlimited } from "@/lib/plan";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, cardVariants } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card, CardContent } from "@/components/ui/card";
 import { ChartContainer } from "@/components/ui/chart";
-import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import {
   AreaChart,
@@ -27,15 +22,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from "recharts";
-import {
-  ArrowRight,
-  Flame,
-  Clock,
-  RefreshCw,
-  Plus,
-  Check,
-  Loader2
-} from "@/lib/heroicons";
+import { ArrowRight, RefreshCw, Plus } from "@/lib/heroicons";
 
 // --- TYPES & HELPERS ---
 const rangeDaysMap = {
@@ -126,100 +113,19 @@ function WeeklySummary({ notes, totalNotes, totalEntities, graphNodeCount, curre
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const { usage, applyUsageDelta } = usePlanGate();
   const { t } = useLanguage();
-  const limits = getPlanLimits(user);
-  const [exporting, setExporting] = useState(false);
   const [timeRange, setTimeRange] = useState<TimeRange>("14d");
   const [upgradeOpen, setUpgradeOpen] = useState(false);
   const [showOnboardingPopup, setShowOnboardingPopup] = useState(false);
-  const [markingActivities, setMarkingActivities] = useState(false);
   const { createNote, creating } = useCreateNote({ onLimitReached: () => setUpgradeOpen(true) });
 
-  // Check for new account onboarding popup
   useEffect(() => {
-    const isNewAccount = localStorage.getItem('newAccountCreated') === 'true';
+    const isNewAccount = localStorage.getItem("newAccountCreated") === "true";
     if (isNewAccount) {
       setShowOnboardingPopup(true);
-      localStorage.removeItem('newAccountCreated');
+      localStorage.removeItem("newAccountCreated");
     }
   }, []);
-
-  const getTodayKey = () => {
-    const d = new Date();
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-  };
-
-  const isTrackedToday = (trackingDates?: string[]) => {
-    if (!trackingDates?.length) return false;
-    const key = getTodayKey();
-    return trackingDates.some((d) => d.split("T")[0] === key);
-  };
-
-  const handleMarkPendingActivities = async () => {
-    if (markingActivities) return;
-    setMarkingActivities(true);
-
-    try {
-      const response = await entitiesApi.list();
-      const activities = Array.isArray(response.data) ? (response.data as Entity[]) : [];
-      const pendingActivities = activities.filter(
-        (entity) => entity.type === "ACTIVITY" && !isTrackedToday(entity.trackingDates),
-      );
-
-      if (pendingActivities.length === 0) {
-        toast({ title: t("db_markPendingActivitiesNone") });
-        return;
-      }
-
-      const results = await Promise.allSettled(
-        pendingActivities.map((activity) => entitiesApi.track(activity.id)),
-      );
-      await queryClient.invalidateQueries({ queryKey: ["entities"] });
-
-      const failed = results.filter((result) => result.status === "rejected").length;
-      if (failed === 0) {
-        toast({ title: t("db_markPendingActivitiesSuccess") });
-      } else {
-        toast({
-          title: t("db_markPendingActivitiesPartial", {
-            succeeded: pendingActivities.length - failed,
-            total: pendingActivities.length,
-          }),
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      toast({ title: t("db_markPendingActivitiesError"), variant: "destructive" });
-    } finally {
-      setMarkingActivities(false);
-    }
-  };
-
-  const handleExportData = async () => {
-    if (exporting) return;
-    setExporting(true);
-    try {
-      const { authApi } = await import("@/lib/api");
-      const res = await authApi.exportVaultZip();
-      const blob = res.data instanceof Blob ? res.data : new Blob([res.data], { type: "application/zip" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "continuum-vault.zip";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-      toast({ title: t("db_toastExportReadyTitle"), description: t("db_toastExportReadyDesc") });
-    } catch (e) {
-      console.error("Export failed", e);
-      toast({ title: t("db_toastExportFailedTitle"), description: t("db_toastTryAgain"), variant: "destructive" });
-    } finally {
-      setExporting(false);
-    }
-  };
 
   const { data: summary, isLoading: summaryLoading } = useQuery({
     queryKey: ["dashboard", "summary"],
@@ -236,22 +142,6 @@ export default function Dashboard() {
     queryFn: () => graphApi.data().then((r) => r.data),
   });
 
-  const { data: allEntities } = useQuery({
-    queryKey: ["entities", "list"],
-    queryFn: () => entitiesApi.list().then((r) => r.data),
-  });
-
-  const pendingActivities = useMemo(() => {
-    const entities = Array.isArray(allEntities)
-      ? (allEntities as Entity[])
-      : allEntities && typeof allEntities === "object"
-      ? ((allEntities as any).content || (allEntities as any).data || [])
-      : [];
-    return entities.filter(
-      (entity) => entity.type === "ACTIVITY" && !isTrackedToday(entity.trackingDates),
-    );
-  }, [allEntities]);
-
   const {
     data: scoreTimeline,
     isLoading: scoreTimelineLoading,
@@ -264,33 +154,6 @@ export default function Dashboard() {
     retry: 1,
     staleTime: 60_000,
   });
-
-  const { data: vaultFiles } = useQuery({
-    queryKey: ["vault", "files"],
-    queryFn: () => vaultApi.list().then((r) => r.data),
-  });
-
-  const vaultFilesList = useMemo(() => {
-    if (Array.isArray(vaultFiles)) return vaultFiles;
-    if (vaultFiles && typeof vaultFiles === 'object') {
-      return (vaultFiles as any).files || (vaultFiles as any).data || (vaultFiles as any).content || [];
-    }
-    return [];
-  }, [vaultFiles]);
-
-  const vaultUsedMB = useMemo(() => {
-    return vaultFilesList.reduce((t: number, f: any) => t + (f?.size ?? 0) / (1024 * 1024), 0) ?? 0;
-  }, [vaultFilesList]);
-
-  const vaultMaxMB = limits.maxVaultSizeMB;
-  const storageUsed = `${vaultUsedMB.toFixed(1)} MB`;
-  const storageLimit = isUnlimited(vaultMaxMB) ? "∞" : `${vaultMaxMB} MB`;
-
-  useEffect(() => {
-    if (vaultFilesList == null || usage == null || vaultFilesList.length === 0) return;
-    const storageMB = Number(vaultUsedMB.toFixed(2));
-    applyUsageDelta({ vaultSizeMB: storageMB - usage.vaultSizeMB });
-  }, [vaultFilesList, vaultUsedMB, usage, applyUsageDelta]);
 
   const recentNotes = useMemo(() => {
     const summaryNotes = summary?.recentNotes || (summary && typeof summary === 'object' ? ((summary as any).notes || (summary as any).data) : null);
@@ -422,7 +285,6 @@ export default function Dashboard() {
         {/* HEADER */}
         <header className="border-b border-white/10 pb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_overview")}</p>
             <h1 className="mt-2 font-serif text-4xl sm:text-5xl tracking-tight text-white">
               {greeting}, {displayName}
             </h1>
@@ -606,125 +468,6 @@ export default function Dashboard() {
               )}
             </div>
           </CardContent>
-          </Card>
-
-          {/* PLAN USAGE CARD */}
-          <Card variant="faint" className="hidden lg:col-span-4 flex flex-col justify-between">
-            <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
-            <div>
-              <div className="flex items-center justify-between gap-3 mb-5">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_account")}</p>
-                  <h2 className="mt-1 font-serif text-2xl text-white">{t("db_planLimits")}</h2>
-                </div>
-                <span className="text-[9px] font-mono uppercase tracking-widest text-white/70 border border-white/10 px-2 py-1 rounded-sm">
-                  {user?.plan || t("db_free")}
-                </span>
-              </div>
-
-              {usage ? (
-                <div className="space-y-3.5">
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-white/60">{t("db_notes")}</span>
-                      <span className="text-white/80 font-mono text-[11px] tabular-nums">
-                        {usage.notesCount} / {isUnlimited(limits.maxNotes) ? "∞" : limits.maxNotes}
-                      </span>
-                    </div>
-                    <Progress value={isUnlimited(limits.maxNotes) ? 0 : Math.min((usage.notesCount / limits.maxNotes) * 100, 100)} className="h-1 bg-white/5" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-white/60">{t("db_entities")}</span>
-                      <span className="text-white/80 font-mono text-[11px] tabular-nums">
-                        {usage.entitiesCount} / {isUnlimited(limits.maxEntities) ? "∞" : limits.maxEntities}
-                      </span>
-                    </div>
-                    <Progress value={isUnlimited(limits.maxEntities) ? 0 : Math.min((usage.entitiesCount / limits.maxEntities) * 100, 100)} className="h-1 bg-white/5" />
-                  </div>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-white/60">{t("db_stream")}</span>
-                      <span className="text-white/80 font-mono text-[11px] tabular-nums">{storageUsed} / {storageLimit}</span>
-                    </div>
-                    <Progress value={isUnlimited(limits.maxVaultSizeMB) ? 0 : Math.min((usage.vaultSizeMB / limits.maxVaultSizeMB) * 100, 100)} className="h-1 bg-white/5" />
-                  </div>
-                </div>
-              ) : (
-                <div className="text-xs text-white/40">{t("db_loadingUsage")}</div>
-              )}
-
-              <div className="mt-5 rounded-xl border border-white/5 bg-white/[0.01] p-3.5 text-[11px]">
-                <div className="grid gap-3 grid-cols-2">
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">{t("db_historyRetention")}</span>
-                    <span className="text-neutral-300 font-medium">{isUnlimited(limits.historyDays) ? t("db_unlimited") : t("db_daysUnit", { n: limits.historyDays })}</span>
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <span className="text-neutral-500 text-[9px] uppercase font-semibold tracking-wider">{t("db_metadataLimit")}</span>
-                    <span className="text-neutral-300 font-medium">{isUnlimited(limits.maxMetadataSizeKb) ? t("db_unlimited") : t("db_kbUnit", { n: limits.maxMetadataSizeKb })}</span>
-                  </div>
-                  <div className="flex items-center justify-between col-span-2 pt-2.5 border-t border-white/5 mt-0.5 text-neutral-400">
-                    <span>{t("db_dataExport")}</span>
-                    {user?.dataExport ? (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        onClick={handleExportData}
-                        disabled={exporting}
-                        className="h-auto p-0 bg-transparent hover:bg-transparent normal-case text-neutral-200 underline underline-offset-4 hover:text-white disabled:opacity-50 transition-colors"
-                      >
-                        {exporting ? t("db_exporting") : t("db_downloadBackup")}
-                      </Button>
-                    ) : (
-                      <span className="text-neutral-600 text-[10px]">{t("db_upgradeRequired")}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => navigate("/subscription")}
-              className="h-auto p-0 mt-4 bg-transparent hover:bg-transparent normal-case text-xs text-neutral-400 hover:text-white self-start transition-colors"
-            >
-              {t("db_manageSubscription")}
-            </Button>
-            </CardContent>
-          </Card>
-
-          {/* BLOCO 2: WORKSPACE ACTIVITY */}
-          <Card variant="faint" className="lg:col-span-4 flex flex-col">
-            <CardContent className="p-4 sm:p-6 flex flex-col flex-1">
-              <div className="flex items-center justify-between gap-3 mb-4">
-                <div>
-                  <p className="text-[10px] uppercase tracking-[0.32em] text-white/30 font-mono">{t("db_stream")}</p>
-                  <h2 className="mt-1 font-serif text-xl text-white">{t("db_pendingActivitiesTitle")}</h2>
-                  <p className="mt-2 text-sm text-white/50">{t("db_pendingActivitiesSubtitle")}</p>
-                </div>
-              </div>
-              <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-5 flex-1 flex flex-col justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.28em] text-white/40 font-mono">{t("db_pendingActivitiesCountLabel")}</p>
-                  <p className="mt-3 text-4xl font-semibold text-white">{pendingActivities.length}</p>
-                  <p className="mt-2 text-sm text-white/50">{t("db_pendingActivitiesCountDescription")}</p>
-                </div>
-                <Button
-                  type="button"
-                  onClick={handleMarkPendingActivities}
-                  disabled={markingActivities || pendingActivities.length === 0}
-                  className="mt-5 w-full gap-2"
-                >
-                  {markingActivities ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                  ) : (
-                    <Check className="h-3.5 w-3.5" />
-                  )}
-                  {t("db_markPendingActivities")}
-                </Button>
-              </div>
-            </CardContent>
           </Card>
 
           {/* RECENT NOTES CARD */}

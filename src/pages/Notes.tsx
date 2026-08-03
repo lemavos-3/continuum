@@ -782,28 +782,13 @@ export default function Notes() {
 
                                   {!selectMode && (
                                   <div className="flex shrink-0 items-center gap-1 pt-1">
-                                    <InsightSignalBadge kind="note" id={note.id} />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-white/20 opacity-0 transition hover:text-white/70 group-hover:opacity-100 p-1.5"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        e.preventDefault();
-                                        setPendingDelete(note);
-                                      }}
-                                      aria-label={t("common_delete")}
-                                    >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </Button>
                                     <Button
                                       type="button"
                                       variant="ghost"
                                       size="icon"
                                       className={cn(
                                         "transition-colors p-1.5",
-                                        note.favorite ? "text-white" : "text-white/20 opacity-0 hover:text-white/70 group-hover:opacity-100"
+                                        note.favorite ? "text-white" : "text-white/40 hover:text-white/70"
                                       )}
                                       onClick={(e) => {
                                         e.stopPropagation();
@@ -817,6 +802,21 @@ export default function Notes() {
                                         <Bookmark className="h-3.5 w-3.5" />
                                       )}
                                     </Button>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      className="text-white/40 transition hover:text-white/70 p-1.5"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                        setPendingDelete(note);
+                                      }}
+                                      aria-label={t("common_delete")}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <InsightSignalBadge kind="note" id={note.id} />
                                   </div>
                                   )}
                                   {selectMode && (
