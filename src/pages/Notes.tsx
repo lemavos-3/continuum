@@ -36,6 +36,8 @@ import {
 import { InsightSignalBadge } from "@/components/InsightSignal";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { FitText } from "@/components/ui/fit-text";
+import { ListRowContent } from "@/components/ui/list-row-content";
+import { StickyNote } from "@/lib/heroicons";
 import { FloatingCreateButton } from "@/components/ui/floating-create-button";
 
 
