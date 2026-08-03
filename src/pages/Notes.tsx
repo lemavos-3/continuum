@@ -767,7 +767,6 @@ export default function Notes() {
                                     </span>
                                   )}
 
-
                                   <ListRowContent
                                     icon={<StickyNote className="h-5 w-5" />}
                                     title={note.title || t("notes_untitled")}
@@ -778,13 +777,12 @@ export default function Notes() {
                                         {preview ? ` · ${preview}` : ""}
                                       </>
                                     }
-                                    trailing={<InsightSignalBadge kind="note" id={note.id} />}
                                   />
-
 
 
                                   {!selectMode && (
                                   <div className="flex shrink-0 items-center gap-1 pt-1">
+                                    <InsightSignalBadge kind="note" id={note.id} />
                                     <Button
                                       type="button"
                                       variant="ghost"
