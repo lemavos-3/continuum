@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import AppLayout from "@/components/AppLayout";
+import { SummaryMetric, SummaryMetricRow } from "@/components/ui/summary-metric";
+import { FloatingCreateButton } from "@/components/ui/floating-create-button";
 import { dashboardApi, graphApi, metricsApi, notesApi, vaultApi, insightsApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { useCreateNote } from "@/hooks/useCreateNote";
@@ -134,22 +136,6 @@ function StatCard({ icon: Icon, label, value, hint }: { icon: ComponentType<{ cl
   );
 }
 
-function SummaryMetric({ label, value, delta, comparison }: { label: string; value: string; delta: number; comparison: string }) {
-  const isUp = delta > 0;
-  const isDown = delta < 0;
-  const arrow = isDown ? "↓" : isUp ? "↑" : "–";
-  return (
-    <div className="flex flex-col gap-3 min-w-0">
-      <p className="text-[10px] uppercase tracking-[0.24em] text-white/40 font-mono truncate">{label}</p>
-      <p className="font-serif text-4xl sm:text-5xl text-white leading-none tabular-nums truncate">{value}</p>
-      <div className="inline-flex items-center gap-1.5 self-start rounded-sm border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] font-mono text-white/50">
-        <span className={cn(isDown && "text-red-300/80", isUp && "text-emerald-300/80")}>{arrow} {Math.abs(delta)}</span>
-        <span className="text-white/30">{comparison}</span>
-      </div>
-    </div>
-  );
-}
-
 function WeeklySummary({ notes, totalNotes, totalEntities, graphNodeCount, currentScore }: {
   notes: any[]; totalNotes: number; totalEntities: number; graphNodeCount: number; currentScore: number;
 }) {
@@ -166,18 +152,14 @@ function WeeklySummary({ notes, totalNotes, totalEntities, graphNodeCount, curre
   const notesDelta = thisWeek - lastWeek;
 
   return (
-    <section className="-mt-4 rounded-sm bg-white/[0.02] p-5 sm:-mt-6 sm:p-8">
-      <div className="flex items-center justify-between mb-6">
-        <p className="text-[10px] uppercase tracking-widest text-white/30 font-mono hidden sm:block">{t("db_last7days")}</p>
-      </div>
-      <div className="grid grid-cols-3 gap-4 sm:gap-8">
-        <SummaryMetric label={t("db_notes")} value={String(totalNotes)} delta={notesDelta} comparison={t("db_vsLastWeek")} />
-        <SummaryMetric label={t("db_entities")} value={String(totalEntities)} delta={0} comparison={t("db_nodes", { n: graphNodeCount })} />
-        <SummaryMetric label={t("db_score")} value={currentScore.toFixed(2)} delta={0} comparison={t("db_gravityIndex")} />
-      </div>
-    </section>
+    <SummaryMetricRow eyebrow={t("db_last7days")} className="-mt-4 sm:-mt-6">
+      <SummaryMetric label={t("db_notes")} value={String(totalNotes)} delta={notesDelta} comparison={t("db_vsLastWeek")} />
+      <SummaryMetric label={t("db_entities")} value={String(totalEntities)} delta={0} comparison={t("db_nodes", { n: graphNodeCount })} />
+      <SummaryMetric label={t("db_score")} value={currentScore.toFixed(2)} delta={0} comparison={t("db_gravityIndex")} />
+    </SummaryMetricRow>
   );
 }
+
 
 
 function StatChip({ children }: { children: ReactNode }) {
@@ -1078,7 +1060,14 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <FloatingCreateButton
+        label={t("db_newNote")}
+        onClick={() => void createNote()}
+        icon={<Plus className="h-4 w-4" />}
+      />
     </AppLayout>
+
 
   );
 }

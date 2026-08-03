@@ -20,9 +20,10 @@ export function FilterChips({ options, value, onChange, className }: FilterChips
   return (
     <div
       className={cn(
-        "-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        "relative z-20 -mx-4 flex gap-2 overflow-x-auto px-4 py-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
+
     >
       {options.map((opt) => {
         const active = opt.value === value;

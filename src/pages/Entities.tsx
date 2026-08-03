@@ -22,6 +22,8 @@ import {
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { FitText } from "@/components/ui/fit-text";
+import { ListRowContent } from "@/components/ui/list-row-content";
+import { EntityTypeIcon } from "@/components/ui/entity-type-icon";
 import { FloatingCreateButton } from "@/components/ui/floating-create-button";
 
 import { cn } from "@/lib/utils";
@@ -377,7 +379,7 @@ export default function Entities() {
                   <X className="h-3.5 w-3.5" /> {t("select_done")}
                 </Button>
               )}
-              <div className="relative">
+              <div className="relative z-0">
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={search}
@@ -522,32 +524,19 @@ export default function Entities() {
                         </span>
                       )}
 
-                      <div className="hidden w-20 shrink-0 pt-1 sm:block">
-                        <p className="font-mono text-[10px] uppercase tracking-wider text-white/30">
-                          {relativeDate(targetDate)}
-                        </p>
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <FitText
-                          as="h3"
-                          max={20}
-                          min={13}
-                          className="font-serif leading-snug text-white/90 transition-colors group-hover:text-white"
-                        >
-                          {entity.title || t("notes_untitled")}
-                        </FitText>
-
-                        {entity.description && (
-                          <p className="mt-1 line-clamp-1 text-sm text-white/45">{entity.description}</p>
-                        )}
-                        <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-white/35">
-                          <Badge variant="outline" className="border-white/10 bg-white/5 text-white/65 uppercase tracking-[0.18em]">
+                      <ListRowContent
+                        icon={<EntityTypeIcon type={entity.type} className="h-5 w-5" />}
+                        title={entity.title || t("notes_untitled")}
+                        meta={
+                          <>
                             {t(`entities_type_${entity.type}`) ?? typeLabels[entity.type] ?? entity.type}
-                          </Badge>
-                          <span className="sm:hidden">{relativeDate(targetDate)}</span>
-                        </div>
-                      </div>
+                            {" · "}
+                            {relativeDate(targetDate)}
+                            {entity.description ? ` · ${entity.description}` : ""}
+                          </>
+                        }
+                      />
+
 
                       {!selectMode && (
                         <div className="flex shrink-0 items-center gap-1 pt-1">

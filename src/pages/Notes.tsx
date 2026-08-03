@@ -36,6 +36,8 @@ import {
 import { InsightSignalBadge } from "@/components/InsightSignal";
 import { FilterChips } from "@/components/ui/filter-chips";
 import { FitText } from "@/components/ui/fit-text";
+import { ListRowContent } from "@/components/ui/list-row-content";
+import { StickyNote } from "@/lib/heroicons";
 import { FloatingCreateButton } from "@/components/ui/floating-create-button";
 
 
@@ -559,7 +561,8 @@ export default function Notes() {
                   <X className="h-3.5 w-3.5" /> {t("select_done")}
                 </Button>
               )}
-              <div className="relative">
+              <div className="relative z-0">
+
                 <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   value={search}
@@ -765,37 +768,19 @@ export default function Notes() {
                                   )}
 
 
-                                  <div className="hidden w-20 shrink-0 pt-1 sm:block">
-                                    <p className="font-mono text-[10px] uppercase tracking-wider text-white/30">
-                                      {relativeDate(targetDate)}
-                                    </p>
-                                  </div>
+                                  <ListRowContent
+                                    icon={<StickyNote className="h-5 w-5" />}
+                                    title={note.title || t("notes_untitled")}
+                                    meta={
+                                      <>
+                                        {note.type ? `${note.type} · ` : ""}
+                                        {relativeDate(targetDate)}
+                                        {preview ? ` · ${preview}` : ""}
+                                      </>
+                                    }
+                                    trailing={<InsightSignalBadge kind="note" id={note.id} />}
+                                  />
 
-                                  <div className="min-w-0 flex-1">
-                                    <div className="flex min-w-0 items-center gap-2">
-                                      <FitText
-                                        as="h3"
-                                        max={20}
-                                        min={13}
-                                        className="min-w-0 flex-1 font-serif leading-snug text-white/90 transition-colors group-hover:text-white"
-                                      >
-                                        {note.title || t("notes_untitled")}
-                                      </FitText>
-                                      <InsightSignalBadge kind="note" id={note.id} />
-                                    </div>
-
-                                    {preview && (
-                                      <p className="mt-1 line-clamp-1 text-sm text-white/45">{preview}</p>
-                                    )}
-                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-white/35">
-                                      {note.type && (
-                                        <Badge variant="outline" className="border-white/10 bg-white/5 text-white/65 uppercase tracking-[0.18em]">
-                                          {note.type}
-                                        </Badge>
-                                      )}
-                                      <span className="sm:hidden">{relativeDate(targetDate)}</span>
-                                    </div>
-                                  </div>
 
 
                                   {!selectMode && (

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { entitiesApi } from '@/lib/api';
@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Plus, ChevronDown, FolderOpen, Loader2, Check } from "@/lib/heroicons";
 import { CreateEntityDialog } from '@/components/CreateEntityDialog';
+import { ListRowContent } from '@/components/ui/list-row-content';
+import { EntityTypeIcon } from '@/components/ui/entity-type-icon';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ActivityCompletionCalendar } from '@/components/ActivityCompletionCalendar';
 import type { Entity } from '@/types';
@@ -34,6 +36,7 @@ export function TimeTrackingList({
   createOpen,
   onCreateOpenChange,
   onCreated,
+  onCountChange,
 }: {
   filterType?: string;
   search?: string;
@@ -43,6 +46,7 @@ export function TimeTrackingList({
   createOpen?: boolean;
   onCreateOpenChange?: (open: boolean) => void;
   onCreated?: (entity: Entity) => void;
+  onCountChange?: (total: number, visible: number) => void;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -83,7 +87,12 @@ export function TimeTrackingList({
     );
   }, [lower, all]);
 
+  useEffect(() => {
+    onCountChange?.(all.length, visible.length);
+  }, [all.length, visible.length, onCountChange]);
+
   const placeholder = filterType === 'PROJECT' ? t('tm_search_projects') : filterType === 'ACTIVITY' ? t('tm_search_activities') : t('tm_search_entities');
+
 
   const handleQuickComplete = async (entity: Entity) => {
     if (markingId) return;
@@ -147,19 +156,24 @@ export function TimeTrackingList({
                     className="flex min-w-0 flex-1 items-center gap-3 text-left"
                     aria-expanded={isOpen}
                   >
-                    <ChevronDown className={cn('w-4 h-4 shrink-0 text-white/40 transition-transform', isOpen && 'rotate-180')} />
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-white">{entity.title || t('tm_untitled')}</p>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-[11px] text-white/40">
-                        <span className="uppercase tracking-wider">{typeLabels[entity.type] ?? entity.type}</span>
-                        {isProject ? (
-                          <span className="font-mono">{summary?.formattedTotal || '00:00:00'}</span>
-                        ) : (
-                          <span>{t('tm_done_count', { count: entity.trackingDates?.length ?? 0 })}</span>
-                        )}
-                      </div>
-                    </div>
+                    <ListRowContent
+                      icon={<EntityTypeIcon type={entity.type} className="h-5 w-5" />}
+                      title={entity.title || t('tm_untitled')}
+                      meta={
+                        <>
+                          {typeLabels[entity.type] ?? entity.type}
+                          {' · '}
+                          {isProject
+                            ? summary?.formattedTotal || '00:00:00'
+                            : t('tm_done_count', { count: entity.trackingDates?.length ?? 0 })}
+                        </>
+                      }
+                      trailing={
+                        <ChevronDown className={cn('h-4 w-4 shrink-0 text-white/40 transition-transform', isOpen && 'rotate-180')} />
+                      }
+                    />
                   </button>
+
 
                   {/* Quick action: complete today for activities */}
                   {!isProject && (
