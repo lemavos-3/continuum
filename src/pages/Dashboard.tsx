@@ -1,8 +1,9 @@
 import { ComponentType, ReactNode, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { Entity } from "@/types";
 import AppLayout from "@/components/AppLayout";
 import { SummaryMetric, SummaryMetricRow } from "@/components/ui/summary-metric";
 import { FloatingCreateButton } from "@/components/ui/floating-create-button";
