@@ -34,6 +34,7 @@ export function TimeTrackingList({
   createOpen,
   onCreateOpenChange,
   onCreated,
+  onCountChange,
 }: {
   filterType?: string;
   search?: string;
@@ -43,6 +44,7 @@ export function TimeTrackingList({
   createOpen?: boolean;
   onCreateOpenChange?: (open: boolean) => void;
   onCreated?: (entity: Entity) => void;
+  onCountChange?: (total: number, visible: number) => void;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
