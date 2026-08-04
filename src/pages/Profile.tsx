@@ -125,7 +125,7 @@ function OfflineSyncRow() {
   );
 }
 
-/* ── Page ────────────────────────────────────────────────────────────── */
+/* ── Page ────────────────────────────────────────────────────────────[...]
 
 export default function Profile() {
   const { user, refreshUser, logout } = useAuth();
@@ -478,11 +478,16 @@ export default function Profile() {
           </Card>
         </section>
 
-        <div className="flex justify-end">
-          <Button variant="destructive" onClick={() => setLogoutConfirmOpen(true)} className="normal-case">
-            {t("nav_logout")}
-          </Button>
-        </div>
+-        <div className="flex justify-end">
+-          <Button variant="destructive" onClick={() => setLogoutConfirmOpen(true)} className="normal-case">
+-            {t("nav_logout")}
+-          </Button>
+-        </div>
++        <div>
++          <Button variant="destructive" onClick={() => setLogoutConfirmOpen(true)} className="w-full normal-case">
++            {t("nav_logout")}
++          </Button>
++        </div>
 
         <ConfirmDialog
           open={logoutConfirmOpen}
