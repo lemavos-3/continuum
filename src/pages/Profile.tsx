@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import InstallAppButton from "@/components/pwa/InstallAppButton";
 import { useAuth } from "@/contexts/AuthContext";
@@ -127,7 +128,8 @@ function OfflineSyncRow() {
 /* ── Page ────────────────────────────────────────────────────────────── */
 
 export default function Profile() {
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, logout } = useAuth();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const { usage, loading: usageLoading } = usePlanGate();
   const { t } = useLanguage();
@@ -205,6 +207,11 @@ export default function Profile() {
     }
   };
 
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
+
   const initials = (user?.username || user?.email || "?").slice(0, 1).toUpperCase();
 
   return (
@@ -280,6 +287,14 @@ export default function Profile() {
               >
                 {saving && <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />}
                 {t("profile_saveChanges")}
+              </Button>
+
+              <Button
+                variant="outline"
+                onClick={() => navigate("/subscription")}
+                className="w-full gap-2 normal-case"
+              >
+                {t("nav_subscription")}
               </Button>
 
               <ConfirmDialog
@@ -462,6 +477,11 @@ export default function Profile() {
           </Card>
         </section>
 
+        <div className="flex justify-end">
+          <Button variant="destructive" onClick={handleLogout} className="normal-case">
+            {t("nav_logout")}
+          </Button>
+        </div>
         <div className="flex w-full justify-end pb-4 font-mono text-[10px] text-muted-foreground">{version}</div>
       </div>
 
