@@ -234,12 +234,15 @@ export function SessionNavBar() {
               </button>
 
               <Button
-                variant="ghost"
+                variant="destructive"
                 onClick={() => setLogoutOpen(true)}
-                className="h-9 w-9 p-0 text-sidebar-foreground hover:bg-sidebar-accent"
+                className="h-9 px-3 min-w-[7rem] text-sidebar-foreground"
                 aria-label="Logout"
               >
                 <LogOut className="h-4 w-4" />
+                <motion.span variants={labelVariants} className="ml-2 truncate text-sm font-medium">
+                  {!isCollapsed && t("nav_logout")}
+                </motion.span>
               </Button>
 
               <ConfirmDialog
