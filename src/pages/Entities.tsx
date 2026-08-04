@@ -366,8 +366,8 @@ export default function Entities() {
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   {selectMode && (
-                    <Button size="sm" variant="secondary" className="gap-2" onClick={exitSelectMode}>
-                      <X className="h-3.5 w-3.5" /> {t("select_cancel")}
+                    <Button size="sm" className="gap-2" onClick={exitSelectMode}>
+                      <X className="h-3.5 w-3.5" /> {t("select_done")}
                     </Button>
                   )}
                   <Button size="sm" className="gap-2" onClick={() => setCreateOpen(true)}>
@@ -381,8 +381,8 @@ export default function Entities() {
             {/* Mobile: search + type chips */}
             <div className="mb-5 space-y-3 lg:hidden">
               {selectMode && (
-                <Button size="sm" variant="secondary" className="gap-2" onClick={exitSelectMode}>
-                  <X className="h-3.5 w-3.5" /> {t("select_cancel")}
+                <Button size="sm" className="gap-2" onClick={exitSelectMode}>
+                  <X className="h-3.5 w-3.5" /> {t("select_done")}
                 </Button>
               )}
               <div className="relative z-0">
@@ -474,15 +474,6 @@ export default function Entities() {
                     }}
                   >
                     {filteredAndSorted.length > 0 && filteredAndSorted.every((e) => selectedIds.has(e.id)) ? t("select_clearAll") : t("select_all")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    className="normal-case px-3 py-1.5 text-xs"
-                    onClick={exitSelectMode}
-                  >
-                    {t("select_cancel")}
                   </Button>
                   <Button
                     type="button"
