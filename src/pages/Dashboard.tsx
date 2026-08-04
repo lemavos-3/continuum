@@ -6,6 +6,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import AppLayout from "@/components/AppLayout";
 import { SummaryMetric, SummaryMetricRow } from "@/components/ui/summary-metric";
 import { FloatingCreateButton } from "@/components/ui/floating-create-button";
+import { TodayHabitsCard } from "@/components/dashboard/TodayHabitsCard";
+
 import { dashboardApi, graphApi, metricsApi, notesApi } from "@/lib/api";
 import { useCreateNote } from "@/hooks/useCreateNote";
 import UpgradeModal from "@/components/UpgradeModal";
@@ -313,7 +315,7 @@ export default function Dashboard() {
         <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* BLOCO 1: PERFORMANCE & METRICS */}
-          <Card variant="faint" className="lg:col-span-8 flex flex-col justify-between">
+          <Card variant="faint" className="lg:col-span-12 flex flex-col justify-between">
           <CardContent className="p-4 sm:p-6 flex flex-col justify-between h-full">
             <div className="flex flex-col gap-4 mb-6">
               <div className="flex items-start justify-between gap-3">
@@ -470,8 +472,12 @@ export default function Dashboard() {
           </CardContent>
           </Card>
 
+          {/* HABITS TO COMPLETE TODAY */}
+          <TodayHabitsCard />
+
           {/* RECENT NOTES CARD */}
-          <Card variant="faint" className="lg:col-span-4 flex flex-col">
+          <Card variant="faint" className="lg:col-span-8 flex flex-col">
+
             <CardContent className="p-4 sm:p-6 flex flex-col flex-1">
             <div className="flex flex-col gap-3 mb-4">
               <div className="flex items-center justify-between gap-3">

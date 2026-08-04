@@ -7,6 +7,9 @@ type Options = {
   moveTolerance?: number;
 };
 
+const INTERACTIVE_SELECTOR =
+  'button, [role="button"], [role="link"], a[href], input, textarea, select, summary, [contenteditable="true"]';
+
 /**
  * Cross-input long-press handler. Distinguishes a hold (>= ms) from a tap/click.
  * Returns props to spread on a button/div (touch + pointer + mouse).
@@ -23,11 +26,17 @@ export function useLongPress({ onLongPress, onClick, ms = 500, moveTolerance = 1
     }
   }, []);
 
-  const isInteractiveTarget = useCallback((target: EventTarget | null) => {
+  /**
+   * True only for interactive elements *inside* the row.
+   * The row itself is usually role="button", so it must be excluded —
+   * otherwise every press is ignored and long-press/select never fires.
+   */
+  const isInteractiveChild = useCallback((e: React.SyntheticEvent) => {
+    const target = e.target;
+    const host = e.currentTarget as Element;
     if (!(target instanceof Element)) return false;
-    return !!target.closest(
-      'button, [role="button"], [role="link"], a[href], input, textarea, select, summary, [contenteditable="true"]',
-    );
+    const match = target.closest(INTERACTIVE_SELECTOR);
+    return !!match && match !== host && host.contains(match);
   }, []);
 
   const move = useCallback(
@@ -44,22 +53,31 @@ export function useLongPress({ onLongPress, onClick, ms = 500, moveTolerance = 1
   );
 
   const end = useCallback(
-    (e?: React.SyntheticEvent) => {
+    (e: React.PointerEvent) => {
       clear();
+      // Let nested buttons (delete, favorite, …) handle their own click.
+      if (isInteractiveChild(e)) {
+        triggered.current = false;
+        start.current = null;
+        return;
+      }
       if (triggered.current) {
-        e?.preventDefault();
-        e?.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         triggered.current = false;
         return;
       }
+      if (!start.current) return;
+      start.current = null;
       onClick?.();
     },
-    [onClick, clear],
+    [onClick, clear, isInteractiveChild],
   );
 
   const begin = useCallback(
     (e: React.PointerEvent) => {
-      if (isInteractiveTarget(e.target)) {
+      if (isInteractiveChild(e)) {
+        start.current = null;
         return;
       }
 
@@ -71,7 +89,7 @@ export function useLongPress({ onLongPress, onClick, ms = 500, moveTolerance = 1
         onLongPress();
       }, ms);
     },
-    [ms, onLongPress, clear, isInteractiveTarget],
+    [ms, onLongPress, clear, isInteractiveChild],
   );
 
   return {
