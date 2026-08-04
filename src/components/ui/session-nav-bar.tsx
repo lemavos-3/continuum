@@ -18,9 +18,7 @@ import {
   FolderOpen,
   BarChart3,
   Squares2x2,
-  LogOut,
 } from "@/lib/heroicons";
-import { ChevronsUpDown } from "@/lib/heroicons";
 import {
   Squares2X2Icon as Squares2x2Solid,
   DocumentTextIcon as StickyNoteSolid,
@@ -34,17 +32,10 @@ import {
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+// dropdown-menu not used here anymore
 
 const sidebarVariants = {
   open: { width: "15rem" },
@@ -233,35 +224,7 @@ export function SessionNavBar() {
                 </motion.span>
               </button>
 
-              <Button
-                variant="destructive"
-                onClick={() => setLogoutOpen(true)}
-                className="h-9 px-3 min-w-[7rem] text-sidebar-foreground"
-                aria-label="Logout"
-              >
-                <LogOut className="h-4 w-4" />
-                <motion.span variants={labelVariants} className="ml-2 truncate text-sm font-medium">
-                  {!isCollapsed && t("nav_logout")}
-                </motion.span>
-              </Button>
-
-              <ConfirmDialog
-                open={logoutOpen}
-                onOpenChange={setLogoutOpen}
-                title={t("profile_logoutConfirmTitle") || "Log out?"}
-                description={t("profile_logoutConfirmDesc") || "Are you sure you want to sign out?"}
-                confirmText={t("common_logout") || "Log out"}
-                destructive={true}
-                onConfirm={async () => {
-                  setLogoutOpen(false);
-                  try {
-                    await logout();
-                  } catch (e) {
-                    window.dispatchEvent(new Event('auth:logout'));
-                  }
-                  navigate('/');
-                }}
-              />
+              {/* No logout button here — profile page handles sign out */}
             </div>
           </div>
         </div>

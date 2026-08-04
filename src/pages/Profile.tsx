@@ -441,9 +441,9 @@ export default function Profile() {
         <section className="space-y-4">
           <SectionTitle eyebrow={t("profile_settings")} title={t("profile_supportCenter")} />
 
-          <Card variant="faint">
+          <Card variant="faint" className="w-full">
             <CardContent className="divide-y divide-border p-0">
-              <a href="#/support" className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-accent/40">
+              <a href="#/support" className="flex items-center gap-4 px-4 py-3.5 w-full">
                 <LifebuoyIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-foreground/80">{t("profile_supportCenter")}</p>
@@ -453,7 +453,7 @@ export default function Profile() {
               </a>
               <a
                 href="mailto:feedback@continuum.onl?subject=Continuum%20%E2%80%94%20Feedback"
-                className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-accent/40"
+                className="flex items-center gap-4 px-4 py-3.5 w-full"
               >
                 <ChatBubbleLeftEllipsisIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">
@@ -464,7 +464,7 @@ export default function Profile() {
               </a>
               <a
                 href="mailto:bugs@continuum.onl?subject=Continuum%20%E2%80%94%20Bug%20report"
-                className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-accent/40"
+                className="flex items-center gap-4 px-4 py-3.5 w-full"
               >
                 <BugAntIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                 <div className="min-w-0 flex-1">

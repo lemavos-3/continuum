@@ -10,7 +10,7 @@ const cardVariants = cva(
       variant: {
         default: "",
         subtle: "rounded-md bg-secondary shadow-none",
-        faint: "rounded-md bg-muted/60 shadow-none transition-colors hover:bg-accent",
+        faint: "rounded-md bg-muted/60 shadow-none",
       },
     },
     defaultVariants: {
