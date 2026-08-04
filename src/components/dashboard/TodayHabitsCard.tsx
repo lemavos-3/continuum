@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle, Flame, Loader2 } from "@/lib/heroicons";
+import { Check, Flame, Loader2 } from "@/lib/heroicons";
 
 interface HabitEntity {
   id: string;
@@ -95,7 +95,7 @@ export function TodayHabitsCard() {
             </div>
           ) : pending.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border p-6 text-center">
-              <CheckCircle className="h-5 w-5 text-foreground/60" />
+              <Check className="h-5 w-5 text-foreground/60" />
               <p className="text-xs text-muted-foreground">{t("db_habitsAllDone")}</p>
             </div>
           ) : (
@@ -123,7 +123,7 @@ export function TodayHabitsCard() {
                   {markingId === habit.id ? (
                     <Loader2 className="h-3 w-3 animate-spin" />
                   ) : (
-                    <CheckCircle className="h-3 w-3" />
+                    <Check className="h-3 w-3" />
                   )}
                   {t("db_habitsMarkDone")}
                 </Button>
