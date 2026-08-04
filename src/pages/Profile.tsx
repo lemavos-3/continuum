@@ -125,7 +125,7 @@ function OfflineSyncRow() {
   );
 }
 
-/* ── Page ────────────────────────────────────────────────────────────[...]
+/* ── Page ────────────────────────────────────────────────────────────*/
 
 export default function Profile() {
   const { user, refreshUser, logout } = useAuth();
