@@ -139,6 +139,7 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
   const handleExportData = async () => {
@@ -478,10 +479,23 @@ export default function Profile() {
         </section>
 
         <div className="flex justify-end">
-          <Button variant="destructive" onClick={handleLogout} className="normal-case">
+          <Button variant="destructive" onClick={() => setLogoutConfirmOpen(true)} className="normal-case">
             {t("nav_logout")}
           </Button>
         </div>
+
+        <ConfirmDialog
+          open={logoutConfirmOpen}
+          onOpenChange={setLogoutConfirmOpen}
+          title={t("profile_logoutConfirmTitle") || "Log out?"}
+          description={t("profile_logoutConfirmDesc") || "Are you sure you want to sign out?"}
+          confirmText={t("common_logout") || "Log out"}
+          destructive={true}
+          onConfirm={async () => {
+            setLogoutConfirmOpen(false);
+            await handleLogout();
+          }}
+        />
         <div className="flex w-full justify-center pb-4 font-mono text-[10px] text-muted-foreground">{version}</div>
       </div>
 
