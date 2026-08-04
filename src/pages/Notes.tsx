@@ -289,6 +289,12 @@ export default function Notes() {
     });
   };
 
+  useEffect(() => {
+    if (selectMode && selectedIds.size === 0) {
+      setSelectMode(false);
+    }
+  }, [selectMode, selectedIds]);
+
   const exitSelectMode = () => {
     setSelectMode(false);
     setSelectedIds(new Set());
@@ -541,8 +547,8 @@ export default function Notes() {
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   {selectMode && (
-                    <Button size="sm" className="gap-2" onClick={exitSelectMode}>
-                      <X className="h-3.5 w-3.5" /> {t("select_done")}
+                    <Button size="sm" variant="secondary" className="gap-2" onClick={exitSelectMode}>
+                      <X className="h-3.5 w-3.5" /> {t("select_cancel")}
                     </Button>
                   )}
                   <Button onClick={handleCreate} className="gap-2" disabled={creating}>
@@ -557,8 +563,8 @@ export default function Notes() {
             {/* Mobile: search + view chips */}
             <div className="mb-5 space-y-3 lg:hidden">
               {selectMode && (
-                <Button size="sm" className="gap-2" onClick={exitSelectMode}>
-                  <X className="h-3.5 w-3.5" /> {t("select_done")}
+                <Button size="sm" variant="secondary" className="gap-2" onClick={exitSelectMode}>
+                  <X className="h-3.5 w-3.5" /> {t("select_cancel")}
                 </Button>
               )}
               <div className="relative z-0">
@@ -650,6 +656,15 @@ export default function Notes() {
                     }}
                   >
                     {filtered.length > 0 && filtered.every((n) => selectedIds.has(n.id)) ? t("select_clearAll") : t("select_all")}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    className="normal-case px-3 py-1.5 text-xs"
+                    onClick={exitSelectMode}
+                  >
+                    {t("select_cancel")}
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -789,7 +804,7 @@ export default function Notes() {
                                       className={cn(
                                         "transition-colors p-1.5 opacity-70 hover:opacity-100",
                                         note.favorite ? "text-white" : "text-white"
-                                      )}
+                                      )} 
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         toggleFavorite(note.id, e);

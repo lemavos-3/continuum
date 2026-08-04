@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { entitiesApi, trackingApi } from "@/lib/api";
+import { entitiesApi } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -12,7 +12,19 @@ interface HabitEntity {
   id: string;
   title?: string;
   type?: string;
+  trackingDates?: string[];
 }
+
+const todayKey = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
+const isTrackedToday = (trackingDates?: string[]) => {
+  if (!trackingDates?.length) return false;
+  const key = todayKey();
+  return trackingDates.some((d) => d.split("T")[0] === key);
+};
 
 /** Activities not yet completed today, with one-tap completion. */
 export function TodayHabitsCard() {
@@ -25,25 +37,15 @@ export function TodayHabitsCard() {
   const { data: entities, isLoading: entitiesLoading } = useQuery({
     queryKey: ["entities", "activities"],
     queryFn: async () => {
-      const res = await entitiesApi.list();
+      const res = await entitiesApi.list({ size: 1000 });
       const list = (res.data as HabitEntity[]) ?? [];
       return list.filter((e) => e.type === "ACTIVITY");
     },
   });
 
-  const { data: todayEvents, isLoading: todayLoading } = useQuery({
-    queryKey: ["tracking", "today"],
-    queryFn: () => trackingApi.today().then((r) => r.data as Array<{ entityId?: string }>),
-  });
-
-  const doneIds = useMemo(
-    () => new Set((todayEvents ?? []).map((e) => e?.entityId).filter(Boolean) as string[]),
-    [todayEvents],
-  );
-
   const pending = useMemo(
-    () => (entities ?? []).filter((e) => !doneIds.has(e.id)),
-    [entities, doneIds],
+    () => (entities ?? []).filter((e) => !isTrackedToday(e.trackingDates)),
+    [entities],
   );
 
   const mark = useMutation({
@@ -52,16 +54,13 @@ export function TodayHabitsCard() {
     onSuccess: async (_d, id) => {
       const habit = (entities ?? []).find((e) => e.id === id);
       toast({ title: t("db_habitsMarked"), description: habit?.title });
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["tracking", "today"] }),
-        queryClient.invalidateQueries({ queryKey: ["entities"] }),
-      ]);
+      await queryClient.invalidateQueries({ queryKey: ["entities", "activities"] });
     },
     onError: () => toast({ title: t("db_habitsMarkFailed"), variant: "destructive" }),
     onSettled: () => setMarkingId(null),
   });
 
-  const loading = entitiesLoading || todayLoading;
+  const loading = entitiesLoading;
   const total = entities?.length ?? 0;
 
   return (

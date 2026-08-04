@@ -165,6 +165,7 @@ const en = {
 
   // Selection / list shared
   select_done: "Done",
+  select_cancel: "Cancel selection",
   select_selected: "{n} selected",
   select_all: "Select all",
   select_clearAll: "Clear all",
@@ -573,6 +574,7 @@ const pt: Dict = {
   entities_type_ACTIVITY: "Atividade",
 
   select_done: "Concluir",
+  select_cancel: "Cancelar seleção",
   select_selected: "{n} selecionadas",
   select_all: "Selecionar tudo",
   select_clearAll: "Limpar seleção",
