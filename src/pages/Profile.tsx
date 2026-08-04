@@ -491,9 +491,9 @@ export default function Profile() {
         <ConfirmDialog
           open={logoutConfirmOpen}
           onOpenChange={setLogoutConfirmOpen}
-          title={t("profile_logoutConfirmTitle") || "Log out?"}
-          description={t("profile_logoutConfirmDesc") || "Are you sure you want to sign out?"}
-          confirmText={t("common_logout") || "Log out"}
+          title={t("auth_signOut")}
+          description={t("auth_signOutDesc")}
+          confirmText={t("nav_logout")}
           destructive={true}
           onConfirm={async () => {
             setLogoutConfirmOpen(false);
