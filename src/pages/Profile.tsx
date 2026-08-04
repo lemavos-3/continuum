@@ -482,7 +482,7 @@ export default function Profile() {
             {t("nav_logout")}
           </Button>
         </div>
-        <div className="flex w-full justify-end pb-4 font-mono text-[10px] text-muted-foreground">{version}</div>
+        <div className="flex w-full justify-center pb-4 font-mono text-[10px] text-muted-foreground">{version}</div>
       </div>
 
       <MarkdownImportDialog

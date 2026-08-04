@@ -18,6 +18,7 @@ import {
   FolderOpen,
   BarChart3,
   Squares2x2,
+  LogOut,
 } from "@/lib/heroicons";
 import { ChevronsUpDown } from "@/lib/heroicons";
 import {
@@ -33,6 +34,7 @@ import {
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -125,9 +127,10 @@ function SidebarLink({
 
 export function SessionNavBar() {
   const [isCollapsed, setIsCollapsed] = useState(true);
+  const [logoutOpen, setLogoutOpen] = useState(false);
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { t } = useLanguage();
 
   const initial = (user?.username || user?.email || "U").trim().charAt(0).toUpperCase();
@@ -216,48 +219,47 @@ export function SessionNavBar() {
 
           {/* Footer */}
           <div className="flex flex-col gap-1 border-t border-sidebar-border p-2">
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex h-9 w-full items-center justify-start gap-2 rounded-md px-2 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                >
-                  <div className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-sidebar-primary text-[10px] font-bold text-sidebar-primary-foreground">
-                    {initial}
-                  </div>
-                  <motion.span
-                    variants={labelVariants}
-                    className="flex w-full items-center gap-2 overflow-hidden"
-                  >
-                    {!isCollapsed && (
-                      <>
-                        <span className="truncate text-sm font-medium normal-case tracking-normal">{display}</span>
-                        <ChevronsUpDown className="ml-auto h-3.5 w-3.5 text-sidebar-foreground/70" />
-                      </>
-                    )}
-                  </motion.span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="right"
-                align="end"
-                sideOffset={8}
-                className="w-56"
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => navigate("/profile")}
+                className="flex h-9 items-center gap-2 rounded-md px-2 text-sidebar-foreground"
               >
-                <div className="flex flex-col gap-0.5 px-2 py-1.5">
-                  <span className="truncate text-sm font-medium normal-case tracking-normal text-[hsl(var(--popup-foreground))]">{display}</span>
-                  <span className="truncate text-xs text-[hsl(var(--popup-muted))]">{user?.email}</span>
-                    <span className="mt-1 inline-flex w-fit items-center rounded border border-[hsl(var(--popup-border))] px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-[hsl(var(--popup-muted))]">
-                    {user?.plan === "VISION" ? "VISION" : (user?.plan || "FREE")}
-                  </span>
+                <div className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-sidebar-primary text-[10px] font-bold text-sidebar-primary-foreground">
+                  {initial}
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/profile")}>
-                  <UserCircle className="mr-2 h-4 w-4" /> {t("nav_profile")}
-                </DropdownMenuItem>
+                <motion.span variants={labelVariants} className="flex items-center gap-2 overflow-hidden">
+                  {!isCollapsed && <span className="truncate text-sm font-medium normal-case tracking-normal">{display}</span>}
+                </motion.span>
+              </button>
 
-              </DropdownMenuContent>
-            </DropdownMenu>
+              <Button
+                variant="ghost"
+                onClick={() => setLogoutOpen(true)}
+                className="h-9 w-9 p-0 text-sidebar-foreground hover:bg-sidebar-accent"
+                aria-label="Logout"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+
+              <ConfirmDialog
+                open={logoutOpen}
+                onOpenChange={setLogoutOpen}
+                title={t("profile_logoutConfirmTitle") || "Log out?"}
+                description={t("profile_logoutConfirmDesc") || "Are you sure you want to sign out?"}
+                confirmText={t("common_logout") || "Log out"}
+                destructive={true}
+                onConfirm={async () => {
+                  setLogoutOpen(false);
+                  try {
+                    await logout();
+                  } catch (e) {
+                    window.dispatchEvent(new Event('auth:logout'));
+                  }
+                  navigate('/');
+                }}
+              />
+            </div>
           </div>
         </div>
       </div>
