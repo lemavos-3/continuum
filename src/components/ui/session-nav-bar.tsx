@@ -19,6 +19,7 @@ import {
   BarChart3,
   Squares2x2,
 } from "@/lib/heroicons";
+import { ChevronsUpDown } from "@/lib/heroicons";
 import {
   Squares2X2Icon as Squares2x2Solid,
   DocumentTextIcon as StickyNoteSolid,
@@ -35,6 +36,13 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
 const sidebarVariants = {
   open: { width: "15rem" },
