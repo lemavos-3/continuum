@@ -191,6 +191,9 @@ export default function Vault() {
   const [loading, setLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<VaultFile | null>(null);
   const [pdfPreview, setPdfPreview] = useState<VaultFile | null>(null);
+  const [category, setCategory] = useState<Category>("images");
+  const [search, setSearch] = useState("");
+
   const { toast } = useToast();
   const { user } = useAuth();
   const { loading: authLoading } = useRequireAuth();
