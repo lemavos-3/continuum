@@ -215,10 +215,15 @@ export default function Vault() {
   useEffect(() => { fetchFiles(); }, []);
 
   const grouped = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const visible = q
+      ? files.filter((f) => (f.fileName || "").toLowerCase().includes(q))
+      : files;
     const g: Record<Category, VaultFile[]> = { images: [], audio: [], pdf: [], other: [] };
-    for (const f of files) g[categoryOf(f)].push(f);
+    for (const f of visible) g[categoryOf(f)].push(f);
     return g;
-  }, [files]);
+  }, [files, search]);
+
 
   const confirmDelete = async () => {
     const file = pendingDelete;
