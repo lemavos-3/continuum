@@ -6,7 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { FilterChips } from "@/components/ui/filter-chips";
+import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
+
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -191,6 +194,9 @@ export default function Vault() {
   const [loading, setLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<VaultFile | null>(null);
   const [pdfPreview, setPdfPreview] = useState<VaultFile | null>(null);
+  const [category, setCategory] = useState<Category>("images");
+  const [search, setSearch] = useState("");
+
   const { toast } = useToast();
   const { user } = useAuth();
   const { loading: authLoading } = useRequireAuth();
@@ -212,10 +218,15 @@ export default function Vault() {
   useEffect(() => { fetchFiles(); }, []);
 
   const grouped = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const visible = q
+      ? files.filter((f) => (f.fileName || "").toLowerCase().includes(q))
+      : files;
     const g: Record<Category, VaultFile[]> = { images: [], audio: [], pdf: [], other: [] };
-    for (const f of files) g[categoryOf(f)].push(f);
+    for (const f of visible) g[categoryOf(f)].push(f);
     return g;
-  }, [files]);
+  }, [files, search]);
+
 
   const confirmDelete = async () => {
     const file = pendingDelete;
@@ -253,20 +264,21 @@ export default function Vault() {
       <div className="mx-auto max-w-4xl px-6 py-10 lg:px-12 lg:py-16">
         <main className="min-w-0 flex-1">
           
-          {/* Cabeçalho idêntico ao do Notes e do TimeTracking */}
-          <header className="mb-8">
+          {/* Cabeçalho (desktop) — no mobile o título vem do AppLayout */}
+          <header className="mb-8 hidden lg:block">
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">
+              <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">
                 {t("gr_vault_title")}
               </p>
-              <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">
+              <h1 className="mt-2 font-serif text-5xl tracking-tight text-foreground">
                 {t("vault_title")}
               </h1>
             </div>
-            <p className="mt-3 text-sm text-white/40">
+            <p className="mt-3 text-sm text-muted-foreground">
               {t("gr_vault_subtitle")}
             </p>
           </header>
+
 
           {/* Indicador de Espaço Sutil (Removido o bloco chamativo) */}
           <div className="mb-6 border-b border-white/5 pb-5 pt-2">
@@ -296,70 +308,79 @@ export default function Vault() {
           ) : (
             
             /* Tabs minimalistas estilo Notion/Axiom UI */
-            <Tabs defaultValue="images" className="w-full">
-              <TabsList className="flex items-center gap-4 bg-transparent border-b border-white/5 p-0 rounded-none h-10 w-full justify-start">
-                <TabsTrigger value="images" className="bg-transparent border-b-2 border-transparent px-1 py-2 text-xs text-white/45 data-[state=active]:border-white data-[state=active]:text-white rounded-none shadow-none transition-all">
-                  {t("gr_vault_tab_photos")} <span className="font-mono text-[10px] text-white/30 ml-1">({grouped.images.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="audio" className="bg-transparent border-b-2 border-transparent px-1 py-2 text-xs text-white/45 data-[state=active]:border-white data-[state=active]:text-white rounded-none shadow-none transition-all">
-                  {t("gr_vault_tab_audio")} <span className="font-mono text-[10px] text-white/30 ml-1">({grouped.audio.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="pdf" className="bg-transparent border-b-2 border-transparent px-1 py-2 text-xs text-white/45 data-[state=active]:border-white data-[state=active]:text-white rounded-none shadow-none transition-all">
-                  {t("gr_vault_tab_pdf")} <span className="font-mono text-[10px] text-white/30 ml-1">({grouped.pdf.length})</span>
-                </TabsTrigger>
-                <TabsTrigger value="other" className="bg-transparent border-b-2 border-transparent px-1 py-2 text-xs text-white/45 data-[state=active]:border-white data-[state=active]:text-white rounded-none shadow-none transition-all">
-                  {t("gr_vault_tab_other")} <span className="font-mono text-[10px] text-white/30 ml-1">({grouped.other.length})</span>
-                </TabsTrigger>
-              </TabsList>
+            <div className="w-full">
+              {/* Busca + filtros, mesmo padrão de Notes/Entities */}
+              <div className="mb-5 space-y-3">
+                <div className="relative">
+                  <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={t("vault_searchAmong", { n: files.length })}
+                    className="h-12 w-full rounded-2xl bg-accent pl-11 text-[15px] placeholder:italic placeholder:text-muted-foreground"
+                  />
+                </div>
+                <FilterChips
+                  value={category}
+                  onChange={(v) => setCategory(v as Category)}
+                  options={[
+                    { value: "images", label: `${t("gr_vault_tab_photos")} · ${grouped.images.length}` },
+                    { value: "audio", label: `${t("gr_vault_tab_audio")} · ${grouped.audio.length}` },
+                    { value: "pdf", label: `${t("gr_vault_tab_pdf")} · ${grouped.pdf.length}` },
+                    { value: "other", label: `${t("gr_vault_tab_other")} · ${grouped.other.length}` },
+                  ]}
+                />
+              </div>
 
-              <TabsContent value="images" className="mt-8 outline-none">
-                {grouped.images.length === 0 ? (
-                  <p className="text-sm font-serif italic text-white/30 py-12">{t("gr_vault_no_images")}</p>
+              {category === "images" && (
+                grouped.images.length === 0 ? (
+                  <p className="py-12 font-serif text-sm italic text-muted-foreground">{t("gr_vault_no_images")}</p>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
                     {grouped.images.map((f) => (
                       <ImageThumb key={f.id} file={f} onDelete={setPendingDelete} />
                     ))}
                   </div>
-                )}
-              </TabsContent>
+                )
+              )}
 
-              <TabsContent value="audio" className="mt-8 outline-none">
-                {grouped.audio.length === 0 ? (
-                  <p className="text-sm font-serif italic text-white/30 py-12">{t("gr_vault_no_audio")}</p>
+              {category === "audio" && (
+                grouped.audio.length === 0 ? (
+                  <p className="py-12 font-serif text-sm italic text-muted-foreground">{t("gr_vault_no_audio")}</p>
                 ) : (
                   <div className="grid gap-4 sm:grid-cols-2">
                     {grouped.audio.map((f) => (
                       <AudioPlayer key={f.id} file={f} onDelete={setPendingDelete} />
                     ))}
                   </div>
-                )}
-              </TabsContent>
+                )
+              )}
 
-              <TabsContent value="pdf" className="mt-8 outline-none">
-                {grouped.pdf.length === 0 ? (
-                  <p className="text-sm font-serif italic text-white/30 py-12">{t("gr_vault_no_pdf")}</p>
+              {category === "pdf" && (
+                grouped.pdf.length === 0 ? (
+                  <p className="py-12 font-serif text-sm italic text-muted-foreground">{t("gr_vault_no_pdf")}</p>
                 ) : (
-                  <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
                     {grouped.pdf.map((f) => (
                       <PdfCard key={f.id} file={f} onDelete={setPendingDelete} onOpen={setPdfPreview} />
                     ))}
                   </div>
-                )}
-              </TabsContent>
+                )
+              )}
 
-              <TabsContent value="other" className="mt-8 outline-none">
-                {grouped.other.length === 0 ? (
-                  <p className="text-sm font-serif italic text-white/30 py-12">{t("gr_vault_no_other")}</p>
+              {category === "other" && (
+                grouped.other.length === 0 ? (
+                  <p className="py-12 font-serif text-sm italic text-muted-foreground">{t("gr_vault_no_other")}</p>
                 ) : (
-                  <div className="divide-y divide-white/[0.06]">
+                  <div className="divide-y divide-border">
                     {grouped.other.map((f) => (
                       <OtherFileRow key={f.id} file={f} onDelete={setPendingDelete} />
                     ))}
                   </div>
-                )}
-              </TabsContent>
-            </Tabs>
+                )
+              )}
+            </div>
+
           )}
         </main>
       </div>

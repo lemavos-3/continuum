@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import InstallAppButton from "@/components/pwa/InstallAppButton";
+import SubscriptionModal from "@/components/subscription/SubscriptionModal";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi } from "@/lib/api";
 import { version } from "@/lib/version";
@@ -139,6 +141,8 @@ export default function Profile() {
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  const [subscriptionOpen, setSubscriptionOpen] = useState(false);
+
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
 
@@ -292,11 +296,14 @@ export default function Profile() {
 
               <Button
                 variant="outline"
-                onClick={() => navigate("/subscription")}
+                onClick={() => setSubscriptionOpen(true)}
                 className="w-full gap-2 normal-case"
               >
                 {t("nav_subscription")}
               </Button>
+
+              <SubscriptionModal open={subscriptionOpen} onOpenChange={setSubscriptionOpen} />
+
 
               <ConfirmDialog
                 open={saveConfirmOpen}

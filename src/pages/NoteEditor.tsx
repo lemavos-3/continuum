@@ -420,7 +420,7 @@ export default function NoteEditor() {
 
   return (
     <AppLayout>
-      <div className="flex h-[calc(100vh-3.5rem)] bg-background relative">
+      <div className="relative flex h-[100dvh] bg-background lg:h-[calc(100vh-3.5rem)]">
         {/* Wallpaper layer (global, per-user) - covers entire editor area including sidebar */}
         {wallpaperUrl && (
           <div
@@ -441,7 +441,7 @@ export default function NoteEditor() {
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
           {/* Top Toolbar */}
-          <header className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-white/5 bg-background/30 backdrop-blur-md shrink-0">
+          <header className="relative z-10 flex shrink-0 items-center justify-between border-b border-white/5 bg-background/70 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur-md lg:pt-3">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="icon" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/notes"))} className="text-muted-foreground hover:text-foreground w-8 h-8">
                 <ArrowLeft className="w-4 h-4" />

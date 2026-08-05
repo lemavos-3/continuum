@@ -26,6 +26,7 @@ export const dict: Module = {
     entities_searchAmong: "Search among {n} entities…",
     ins_searchAmong: "Search among {n} signals…",
     projects_searchAmong: "Search among {n} projects…",
+    vault_searchAmong: "Search among {n} files…",
     activities_searchAmong: "Search among {n} activities…",
   },
   es: {
@@ -53,6 +54,7 @@ export const dict: Module = {
     entities_searchAmong: "Buscar entre {n} entidades…",
     ins_searchAmong: "Buscar entre {n} señales…",
     projects_searchAmong: "Buscar entre {n} proyectos…",
+    vault_searchAmong: "Buscar entre {n} archivos…",
     activities_searchAmong: "Buscar entre {n} actividades…",
   },
   pt: {
@@ -80,6 +82,7 @@ export const dict: Module = {
     entities_searchAmong: "Buscar entre {n} entidades…",
     ins_searchAmong: "Buscar entre {n} sinais…",
     projects_searchAmong: "Buscar entre {n} projetos…",
+    vault_searchAmong: "Buscar entre {n} arquivos…",
     activities_searchAmong: "Buscar entre {n} atividades…",
   },
   fr: {
@@ -107,6 +110,7 @@ export const dict: Module = {
     entities_searchAmong: "Rechercher parmi {n} entités…",
     ins_searchAmong: "Rechercher parmi {n} signaux…",
     projects_searchAmong: "Rechercher parmi {n} projets…",
+    vault_searchAmong: "Rechercher parmi {n} fichiers…",
     activities_searchAmong: "Rechercher parmi {n} activités…",
   },
 };
