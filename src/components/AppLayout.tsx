@@ -64,7 +64,9 @@ const MOBILE_TITLES: [string, string][] = [
   ["/insights", "ins_title"],
   ["/projects", "projects_title"],
   ["/activities", "activities_title"],
+  ["/vault", "vault_title"],
 ];
+
 
 
 export default function AppLayout({ children }: { children: ReactNode }) {
