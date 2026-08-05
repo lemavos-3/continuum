@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import InstallAppButton from "@/components/pwa/InstallAppButton";
+import SubscriptionModal from "@/components/subscription/SubscriptionModal";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi } from "@/lib/api";
 import { version } from "@/lib/version";
