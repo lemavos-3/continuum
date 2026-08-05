@@ -126,7 +126,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         {!hideMobileTopBar && <div className="h-14 lg:hidden" />}
         {children}
         {/* Spacer so content isn't hidden behind the floating mobile bottom nav */}
-        <div className="h-[calc(5.5rem+env(safe-area-inset-bottom))] lg:hidden" />
+        {!hideMobileTopBar && <div className="h-[calc(5.5rem+env(safe-area-inset-bottom))] lg:hidden" />}
       </main>
 
 
