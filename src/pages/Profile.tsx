@@ -292,11 +292,14 @@ export default function Profile() {
 
               <Button
                 variant="outline"
-                onClick={() => navigate("/subscription")}
+                onClick={() => setSubscriptionOpen(true)}
                 className="w-full gap-2 normal-case"
               >
                 {t("nav_subscription")}
               </Button>
+
+              <SubscriptionModal open={subscriptionOpen} onOpenChange={setSubscriptionOpen} />
+
 
               <ConfirmDialog
                 open={saveConfirmOpen}
