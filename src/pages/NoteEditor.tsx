@@ -420,7 +420,7 @@ export default function NoteEditor() {
 
   return (
     <AppLayout>
-      <div className="flex h-[calc(100vh-3.5rem)] bg-background relative">
+      <div className="relative flex h-[100dvh] bg-background lg:h-[calc(100vh-3.5rem)]">
         {/* Wallpaper layer (global, per-user) - covers entire editor area including sidebar */}
         {wallpaperUrl && (
           <div
