@@ -75,6 +75,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const isGraphPage = location.pathname.startsWith("/graph");
+  // The note editor owns the top area on mobile — it renders its own header.
+  const hideMobileTopBar = /^\/notes\/[^/]+$/.test(location.pathname);
   const mobileTitleKey = MOBILE_TITLES.find(([p]) => location.pathname === p)?.[1];
 
   const initial = (user?.username || user?.email || "U").trim().charAt(0).toUpperCase();
@@ -85,6 +87,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       <CommandPalette />
 
       {/* Mobile top bar */}
+      {!hideMobileTopBar && (
       <div className="fixed left-0 right-0 top-0 z-40 flex items-center gap-3 border-b border-white/5 bg-background/80 px-4 py-3 backdrop-blur-md lg:hidden">
         {mobileTitleKey ? (
           <h1 className="min-w-0 truncate font-serif text-xl tracking-tight text-foreground">
@@ -113,17 +116,19 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           </button>
         )}
       </div>
+      )}
 
 
       {/* Desktop hover-expand sidebar */}
       <SessionNavBar />
 
       <main className="min-w-0 flex-1 overflow-auto bg-background lg:ml-[3.25rem]">
-        <div className="h-14 lg:hidden" />
+        {!hideMobileTopBar && <div className="h-14 lg:hidden" />}
         {children}
         {/* Spacer so content isn't hidden behind the floating mobile bottom nav */}
         <div className="h-[calc(5.5rem+env(safe-area-inset-bottom))] lg:hidden" />
       </main>
+
 
       {/* Desktop offline / sync indicator — floating top-right pill */}
       <div className="pointer-events-none fixed right-4 top-4 z-40 hidden lg:block">
