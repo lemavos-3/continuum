@@ -261,20 +261,21 @@ export default function Vault() {
       <div className="mx-auto max-w-4xl px-6 py-10 lg:px-12 lg:py-16">
         <main className="min-w-0 flex-1">
           
-          {/* Cabeçalho idêntico ao do Notes e do TimeTracking */}
-          <header className="mb-8">
+          {/* Cabeçalho (desktop) — no mobile o título vem do AppLayout */}
+          <header className="mb-8 hidden lg:block">
             <div className="min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.32em] text-white/30">
+              <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">
                 {t("gr_vault_title")}
               </p>
-              <h1 className="mt-2 font-serif text-5xl tracking-tight text-white">
+              <h1 className="mt-2 font-serif text-5xl tracking-tight text-foreground">
                 {t("vault_title")}
               </h1>
             </div>
-            <p className="mt-3 text-sm text-white/40">
+            <p className="mt-3 text-sm text-muted-foreground">
               {t("gr_vault_subtitle")}
             </p>
           </header>
+
 
           {/* Indicador de Espaço Sutil (Removido o bloco chamativo) */}
           <div className="mb-6 border-b border-white/5 pb-5 pt-2">
