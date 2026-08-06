@@ -637,6 +637,7 @@ export default function NoteEditor() {
               <Input
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
+                readOnly={readOnly}
                 placeholder={t("ed_untitled_note")}
                 className="text-5xl lg:text-6xl font-display font-bold border-0 px-0 focus-visible:ring-0 bg-transparent text-foreground mb-8 h-auto placeholder:text-muted-foreground/30 tracking-tight"
               />
@@ -647,12 +648,11 @@ export default function NoteEditor() {
                     ref={editorRef}
                     content={currentJSON.current}
                     onChange={handleEditorChange}
+                    editable={!readOnly}
                     currentNoteId={note?.id}
-                    onSave={() => {
-                      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-                      void doSave(title, currentJSON.current, type);
-                    }}
+                    onSave={flushSave}
                   />
+
 
                 </div>
               )}
