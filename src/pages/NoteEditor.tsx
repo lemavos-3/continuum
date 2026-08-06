@@ -22,9 +22,9 @@ import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { 
-  ArrowLeft, Save, Loader2, Check, PanelRight, 
+  ArrowLeft, Loader2, Check, PanelRight, 
   Settings2, ImageIcon, FileText, X, Clock,
-  Link2, AtSign
+  Link2, AtSign, Eye, PenLine
 } from "@/lib/heroicons";
 import { useToast } from "@/hooks/use-toast";
 import { TiptapEditor, type TiptapEditorHandle } from "@/components/TiptapEditor";
@@ -80,7 +80,7 @@ export default function NoteEditor() {
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "creating">("idle");
   const [showBacklinks, setShowBacklinks] = useState(false);
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [readOnly, setReadOnly] = useState(false);
 
   // ── Wallpaper (global to all notes, persisted in localStorage) ──────────
   const [wallpaper, setWallpaper] = useState<NoteWallpaperSettings>(() => loadWallpaperSettings());
