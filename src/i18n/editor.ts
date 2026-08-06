@@ -124,6 +124,9 @@ export const dict: Module = {
     ed_slash_table_desc: "3x3 table",
     ed_slash_image_title: "Image",
     ed_slash_image_desc: "Embed by URL",
+    ed_view_mode: "Read mode",
+    ed_edit_mode: "Edit mode",
+    ed_always_on: "Always on",
     ed_slash_upload_title: "Upload file",
     ed_slash_upload_desc: "Image, PDF or audio from your device",
 
@@ -316,6 +319,9 @@ export const dict: Module = {
     ed_slash_table_desc: "Tabla 3x3",
     ed_slash_image_title: "Imagen",
     ed_slash_image_desc: "Insertar por URL",
+    ed_view_mode: "Modo lectura",
+    ed_edit_mode: "Modo edición",
+    ed_always_on: "Siempre activo",
     ed_slash_upload_title: "Subir archivo",
     ed_slash_upload_desc: "Imagen, PDF o audio desde tu dispositivo",
 
@@ -508,6 +514,9 @@ export const dict: Module = {
     ed_slash_table_desc: "Tabela 3x3",
     ed_slash_image_title: "Imagem",
     ed_slash_image_desc: "Incorporar por URL",
+    ed_view_mode: "Modo leitura",
+    ed_edit_mode: "Modo edição",
+    ed_always_on: "Sempre ativo",
     ed_slash_upload_title: "Enviar arquivo",
     ed_slash_upload_desc: "Imagem, PDF ou áudio do seu dispositivo",
 
@@ -700,6 +709,9 @@ export const dict: Module = {
     ed_slash_table_desc: "Tableau 3x3",
     ed_slash_image_title: "Image",
     ed_slash_image_desc: "Intégrer via une URL",
+    ed_view_mode: "Mode lecture",
+    ed_edit_mode: "Mode édition",
+    ed_always_on: "Toujours actif",
     ed_slash_upload_title: "Téléverser un fichier",
     ed_slash_upload_desc: "Image, PDF ou audio depuis votre appareil",
 
