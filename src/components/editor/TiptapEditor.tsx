@@ -496,12 +496,36 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
 
     useEffect(() => {
       if (!editor || !content) return;
+      // never overwrite what the user is actively typing
+      if (editor.isFocused) return;
       const a = JSON.stringify(editor.getJSON());
       const b = JSON.stringify(content);
       if (a !== b && typeof content === "object") editor.commands.setContent(content, { emitUpdate: false });
     }, [content, editor]);
 
-    useEffect(() => { if (editor) editor.setEditable(editable); }, [editor, editable]);
+    useEffect(() => {
+      if (!editor) return;
+      editor.setEditable(editable);
+      const dom = editor.view?.dom as HTMLElement | undefined;
+      dom?.classList.toggle("is-readonly", !editable);
+    }, [editor, editable]);
+
+    // "/" command + toolbar upload entry point
+    useEffect(() => {
+      const open = () => fileInputRef.current?.click();
+      window.addEventListener(EDITOR_UPLOAD_EVENT, open);
+      return () => window.removeEventListener(EDITOR_UPLOAD_EVENT, open);
+    }, []);
+
+    // flush any pending throttled change so nothing is lost on unmount
+    useEffect(() => {
+      return () => {
+        if (updateTimerRef.current) {
+          window.clearTimeout(updateTimerRef.current);
+          updateTimerRef.current = null;
+        }
+      };
+    }, []);
 
     useEffect(() => {
       resetEditorCaches();
