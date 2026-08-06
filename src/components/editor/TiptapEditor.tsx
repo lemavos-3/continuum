@@ -523,9 +523,14 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         if (updateTimerRef.current) {
           window.clearTimeout(updateTimerRef.current);
           updateTimerRef.current = null;
+          try {
+            if (editor && !editor.isDestroyed) onChangeRef.current?.(editor.getJSON());
+          } catch {
+            /* editor already torn down */
+          }
         }
       };
-    }, []);
+    }, [editor]);
 
     useEffect(() => {
       resetEditorCaches();
