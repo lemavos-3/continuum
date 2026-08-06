@@ -697,3 +697,14 @@ function ToolbarBtn({
     </button>
   );
 }
+function TableBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+      className="h-7 shrink-0 whitespace-nowrap rounded px-2.5 text-xs text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+    >
+      {children}
+    </button>
+  );
+}

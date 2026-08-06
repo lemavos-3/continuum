@@ -5,7 +5,7 @@ import tippy, { type Instance as TippyInstance } from "tippy.js";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import {
   Heading1, Heading2, Heading3, List, ListOrdered, ListTodo, Quote,
-  Code, Code2, Minus, Table as TableIcon, Image as ImageIcon, Type,
+  Code, Code2, Minus, Table as TableIcon, Image as ImageIcon, Type, Upload,
 } from "@/lib/heroicons";
 import type { Editor, Range } from "@tiptap/core";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -45,11 +45,16 @@ const items: SlashItem[] = [
     command: ({ editor, range }) => editor.chain().focus().deleteRange(range).setHorizontalRule().run() },
   { titleKey: "ed_slash_table_title", descKey: "ed_slash_table_desc", title: "Table", description: "3x3 table", icon: TableIcon, keywords: ["table"],
     command: ({ editor, range }) => editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run() },
-  { titleKey: "ed_slash_image_title", descKey: "ed_slash_image_desc", title: "Image", description: "Embed by URL", icon: ImageIcon, keywords: ["image", "img", "picture"],
+  { titleKey: "ed_slash_image_title", descKey: "ed_slash_image_desc", title: "Image", description: "Embed by URL", icon: ImageIcon, keywords: ["image", "img", "picture", "url", "web"],
     command: ({ editor, range }) => {
       const url = window.prompt("Image URL");
       if (!url) return;
       editor.chain().focus().deleteRange(range).setImage({ src: url }).run();
+    } },
+  { titleKey: "ed_slash_upload_title", descKey: "ed_slash_upload_desc", title: "Upload file", description: "Image, PDF or audio from your device", icon: Upload, keywords: ["upload", "file", "pdf", "audio", "attach", "vault"],
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      window.dispatchEvent(new CustomEvent("continuum:editor-upload"));
     } },
 ];
 
