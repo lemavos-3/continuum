@@ -41,11 +41,14 @@ import { VaultPdf } from "./VaultPdf";
 import { VaultAudio } from "./VaultAudio";
 import { AutoPair } from "./extensions/AutoPair";
 import { EditorShortcuts } from "./extensions/EditorShortcuts";
+import { HeadingFold } from "./extensions/HeadingFold";
 import { LinkHover } from "./extensions/LinkHover";
 import { SearchHighlight } from "./extensions/SearchHighlight";
 import { FindReplace } from "./FindReplace";
 import { StatusBar } from "./StatusBar";
 import { MobileCommandBar } from "./MobileCommandBar";
+
+export const EDITOR_UPLOAD_EVENT = "continuum:editor-upload";
 
 const IMAGE_MIME_RE = /^image\//i;
 const IMAGE_EXT_RE = /\.(png|jpe?g|webp|gif|svg)$/i;
