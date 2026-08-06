@@ -601,13 +601,20 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
             </BubbleMenu>
 
             {editor.isActive("table") && (
-              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1 bg-black/95 border border-white/10 px-2 py-1.5 rounded-xl shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2">
-                <span className="text-[10px] text-muted-foreground uppercase tracking-wider px-2 font-medium">Table</span>
-                <button type="button" className="text-xs h-7 px-3 rounded hover:bg-white/10 text-neutral-300 transition-colors" onClick={() => editor.chain().focus().addColumnAfter().run()}>+ Col</button>
-                <button type="button" className="text-xs h-7 px-3 rounded hover:bg-white/10 text-neutral-300 transition-colors" onClick={() => editor.chain().focus().addRowAfter().run()}>+ Row</button>
-                <div className="w-[1px] h-4 bg-white/10 mx-1" />
-                <button type="button" className="flex items-center text-xs h-7 px-3 rounded hover:bg-red-500/20 text-red-400 transition-colors" onClick={() => editor.chain().focus().deleteTable().run()}>
-                  <Trash2 className="w-3 h-3 mr-1.5" /> Delete
+              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex max-w-[94vw] items-center gap-1 overflow-x-auto rounded-xl border border-white/10 bg-black/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2">
+                <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Table</span>
+                <TableBtn onClick={() => editor.chain().focus().addColumnBefore().run()}>← Col</TableBtn>
+                <TableBtn onClick={() => editor.chain().focus().addColumnAfter().run()}>Col →</TableBtn>
+                <TableBtn onClick={() => editor.chain().focus().addRowBefore().run()}>↑ Row</TableBtn>
+                <TableBtn onClick={() => editor.chain().focus().addRowAfter().run()}>Row ↓</TableBtn>
+                <div className="mx-1 h-4 w-[1px] bg-white/10" />
+                <TableBtn onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Header</TableBtn>
+                <TableBtn onClick={() => editor.chain().focus().mergeOrSplit().run()}>Merge</TableBtn>
+                <div className="mx-1 h-4 w-[1px] bg-white/10" />
+                <TableBtn onClick={() => editor.chain().focus().deleteColumn().run()}>− Col</TableBtn>
+                <TableBtn onClick={() => editor.chain().focus().deleteRow().run()}>− Row</TableBtn>
+                <button type="button" className="flex items-center rounded px-3 text-xs h-7 text-red-400 transition-colors hover:bg-red-500/20" onClick={() => editor.chain().focus().deleteTable().run()}>
+                  <Trash2 className="mr-1.5 h-3 w-3" /> Delete
                 </button>
               </div>
             )}
