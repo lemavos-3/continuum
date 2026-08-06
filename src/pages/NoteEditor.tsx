@@ -396,17 +396,38 @@ export default function NoteEditor() {
     scheduleAutoSave(title, json, type);
   }, [title, type, scheduleAutoSave, isOptimistic]);
 
-  const handleManualSave = async () => {
-    if (isOptimistic) {
-      toast({ title: t("ed_waiting_creation"), description: t("ed_waiting_creation_desc"), variant: "default" });
-      return;
-    }
+  // ── Guaranteed save on exit ────────────────────────────────────────────
+  const latestRef = useRef({ title, type, isOptimistic });
+  latestRef.current = { title, type, isOptimistic };
 
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    const json = editorRef.current?.getJSON() || currentJSON.current;
-    await doSave(title, json, type);
-    toast({ title: t("ed_note_saved") });
-  };
+  const flushSave = useCallback(() => {
+    const { title: t0, type: ty, isOptimistic: opt } = latestRef.current;
+    if (opt || !id) return;
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current);
+      autoSaveTimer.current = null;
+    }
+    const json = editorRef.current?.getJSON() ?? currentJSON.current;
+    if (!json) return;
+    void doSave(t0, json, ty);
+  }, [doSave, id]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flushSave();
+    };
+    const onPageHide = () => flushSave();
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("beforeunload", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("beforeunload", onPageHide);
+      flushSave();
+    };
+  }, [flushSave]);
+
 
   if (loading) {
     return (
