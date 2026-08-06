@@ -16,7 +16,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
@@ -669,7 +668,7 @@ export default function NoteEditor() {
         </div>
 
         {/* Combined Context Sidebar */}
-        <aside className={`shrink-0 border-l border-white/5 backdrop-blur-md transition-all duration-300 ease-in-out overflow-hidden flex flex-col
+        <aside className={`shrink-0 border-l border-white/5 bg-black/45 backdrop-blur-2xl transition-all duration-300 ease-in-out overflow-hidden flex flex-col
           ${showBacklinks ? "w-80 opacity-100" : "w-0 opacity-0 border-none"}`}>
           
           <div className="flex items-center justify-between border-b border-white/5 px-5 py-4 shrink-0">
@@ -689,19 +688,19 @@ export default function NoteEditor() {
                 <span>{t("ed_note_metadata")}</span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Card variant="subtle" className="p-3">
+                <Card variant="subtle" className="border border-white/5 bg-black/40 p-3 backdrop-blur-xl">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_score")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{noteScore.toFixed(1)}</p>
                 </Card>
-                <Card variant="subtle" className="p-3">
+                <Card variant="subtle" className="border border-white/5 bg-black/40 p-3 backdrop-blur-xl">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_mentions")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{mentionCounts.total}</p>
                 </Card>
-                <Card variant="subtle" className="p-3">
+                <Card variant="subtle" className="border border-white/5 bg-black/40 p-3 backdrop-blur-xl">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_entities")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{note?.entityIds?.length ?? 0}</p>
                 </Card>
-                <Card variant="subtle" className="p-3">
+                <Card variant="subtle" className="border border-white/5 bg-black/40 p-3 backdrop-blur-xl">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_characters")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{characterCount}</p>
                 </Card>
@@ -725,9 +724,9 @@ export default function NoteEditor() {
                       <Button
                         variant="ghost"
                         onClick={() => navigate(`/entities/${entity.id}`)}
-                        className="w-full h-auto flex flex-col items-start gap-1 rounded-sm border border-white/5 bg-white/[0.02] p-2 text-left normal-case tracking-normal hover:bg-white/[0.06] hover:border-white/10"
+                        className="w-full h-auto flex flex-col items-start gap-1 rounded-md border border-white/5 bg-black/40 p-2.5 text-left normal-case tracking-normal backdrop-blur-xl hover:bg-black/60 hover:border-white/10"
                       >
-                        <span className="text-xs font-medium text-white/90 line-clamp-1">
+                        <span className="w-full break-words text-xs font-medium leading-snug text-white/90 line-clamp-2">
                           {entity.title || t("ed_untitled_entity")}
                         </span>
                         {entity.type && (
