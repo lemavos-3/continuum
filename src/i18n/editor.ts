@@ -124,6 +124,8 @@ export const dict: Module = {
     ed_slash_table_desc: "3x3 table",
     ed_slash_image_title: "Image",
     ed_slash_image_desc: "Embed by URL",
+    ed_slash_upload_title: "Upload file",
+    ed_slash_upload_desc: "Image, PDF or audio from your device",
 
     ed_searching_query: 'Searching "{query}"',
     ed_link_a_note: "Link a note",
@@ -314,6 +316,8 @@ export const dict: Module = {
     ed_slash_table_desc: "Tabla 3x3",
     ed_slash_image_title: "Imagen",
     ed_slash_image_desc: "Insertar por URL",
+    ed_slash_upload_title: "Subir archivo",
+    ed_slash_upload_desc: "Imagen, PDF o audio desde tu dispositivo",
 
     ed_searching_query: 'Buscando "{query}"',
     ed_link_a_note: "Vincular una nota",
@@ -504,6 +508,8 @@ export const dict: Module = {
     ed_slash_table_desc: "Tabela 3x3",
     ed_slash_image_title: "Imagem",
     ed_slash_image_desc: "Incorporar por URL",
+    ed_slash_upload_title: "Enviar arquivo",
+    ed_slash_upload_desc: "Imagem, PDF ou áudio do seu dispositivo",
 
     ed_searching_query: 'Buscando "{query}"',
     ed_link_a_note: "Vincular uma nota",
@@ -694,6 +700,8 @@ export const dict: Module = {
     ed_slash_table_desc: "Tableau 3x3",
     ed_slash_image_title: "Image",
     ed_slash_image_desc: "Intégrer via une URL",
+    ed_slash_upload_title: "Téléverser un fichier",
+    ed_slash_upload_desc: "Image, PDF ou audio depuis votre appareil",
 
     ed_searching_query: 'Recherche de "{query}"',
     ed_link_a_note: "Lier une note",
