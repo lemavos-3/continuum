@@ -359,10 +359,9 @@ export default function NoteEditor() {
 
   const scheduleAutoSave = useCallback((t: string, json: any, newType: string) => {
     if (isOptimistic) return;
-    if (!autoSaveEnabled) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => doSave(t, json, newType), 1500);
-  }, [doSave, autoSaveEnabled, isOptimistic]);
+    autoSaveTimer.current = setTimeout(() => doSave(t, json, newType), 900);
+  }, [doSave, isOptimistic]);
 
   const handleTitleChange = (val: string) => {
     setTitle(val);
@@ -541,9 +540,10 @@ export default function NoteEditor() {
                       </div>
 
                       <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                        <Label htmlFor="auto-save" className="text-xs text-foreground cursor-pointer">{t("ed_auto_save")}</Label>
-                        <Switch id="auto-save" checked={autoSaveEnabled} onCheckedChange={setAutoSaveEnabled} className="scale-75 origin-right" />
+                        <Label className="text-xs text-foreground">{t("ed_auto_save")}</Label>
+                        <span className="text-[10px] uppercase tracking-wider text-emerald-400/80">{t("ed_always_on")}</span>
                       </div>
+
 
                       {/* Wallpaper Settings */}
                       <div className="pt-3 border-t border-white/5 space-y-3">
