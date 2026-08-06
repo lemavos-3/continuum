@@ -479,21 +479,21 @@ export default function NoteEditor() {
             </div>
 
             <div className="flex items-center gap-1.5">
-              {/* Botão Premium de Salvar */}
-              <Button 
-                onClick={handleManualSave}
-                disabled={saveStatus === "saving" || saveStatus === "creating"}
-                className="gap-2 h-9 px-4 rounded-sm text-sm"
+              {/* Read / write mode */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 transition-colors ${readOnly ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => {
+                  if (!readOnly) flushSave();
+                  setReadOnly((v) => !v);
+                }}
+                title={readOnly ? t("ed_edit_mode") : t("ed_view_mode")}
+                aria-pressed={readOnly}
               >
-                <Save className="w-3.5 h-3.5" />
-                {t("ed_save")}
+                {readOnly ? <Eye className="h-4 w-4" /> : <PenLine className="h-4 w-4" />}
               </Button>
 
-              <div className="h-4 w-[1px] bg-white/10 mx-1" />
-
-              <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground" onClick={() => editorRef.current?.triggerUpload()} title={t("ed_attach_media")}>
-                <ImageIcon className="w-4 h-4" />
-              </Button>
 
               {/* Note Settings Popover */}
               <Popover>
