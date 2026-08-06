@@ -16,15 +16,14 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { 
-  ArrowLeft, Save, Loader2, Check, PanelRight, 
+  ArrowLeft, Loader2, Check, PanelRight, 
   Settings2, ImageIcon, FileText, X, Clock,
-  Link2, AtSign
+  Link2, AtSign, Eye, PenLine
 } from "@/lib/heroicons";
 import { useToast } from "@/hooks/use-toast";
 import { TiptapEditor, type TiptapEditorHandle } from "@/components/TiptapEditor";
@@ -80,7 +79,7 @@ export default function NoteEditor() {
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "creating">("idle");
   const [showBacklinks, setShowBacklinks] = useState(false);
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
+  const [readOnly, setReadOnly] = useState(false);
 
   // ── Wallpaper (global to all notes, persisted in localStorage) ──────────
   const [wallpaper, setWallpaper] = useState<NoteWallpaperSettings>(() => loadWallpaperSettings());
@@ -359,10 +358,9 @@ export default function NoteEditor() {
 
   const scheduleAutoSave = useCallback((t: string, json: any, newType: string) => {
     if (isOptimistic) return;
-    if (!autoSaveEnabled) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => doSave(t, json, newType), 1500);
-  }, [doSave, autoSaveEnabled, isOptimistic]);
+    autoSaveTimer.current = setTimeout(() => doSave(t, json, newType), 900);
+  }, [doSave, isOptimistic]);
 
   const handleTitleChange = (val: string) => {
     setTitle(val);
@@ -396,17 +394,38 @@ export default function NoteEditor() {
     scheduleAutoSave(title, json, type);
   }, [title, type, scheduleAutoSave, isOptimistic]);
 
-  const handleManualSave = async () => {
-    if (isOptimistic) {
-      toast({ title: t("ed_waiting_creation"), description: t("ed_waiting_creation_desc"), variant: "default" });
-      return;
-    }
+  // ── Guaranteed save on exit ────────────────────────────────────────────
+  const latestRef = useRef({ title, type, isOptimistic });
+  latestRef.current = { title, type, isOptimistic };
 
-    if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    const json = editorRef.current?.getJSON() || currentJSON.current;
-    await doSave(title, json, type);
-    toast({ title: t("ed_note_saved") });
-  };
+  const flushSave = useCallback(() => {
+    const { title: t0, type: ty, isOptimistic: opt } = latestRef.current;
+    if (opt || !id) return;
+    if (autoSaveTimer.current) {
+      clearTimeout(autoSaveTimer.current);
+      autoSaveTimer.current = null;
+    }
+    const json = editorRef.current?.getJSON() ?? currentJSON.current;
+    if (!json) return;
+    void doSave(t0, json, ty);
+  }, [doSave, id]);
+
+  useEffect(() => {
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") flushSave();
+    };
+    const onPageHide = () => flushSave();
+    document.addEventListener("visibilitychange", onVisibility);
+    window.addEventListener("pagehide", onPageHide);
+    window.addEventListener("beforeunload", onPageHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.removeEventListener("pagehide", onPageHide);
+      window.removeEventListener("beforeunload", onPageHide);
+      flushSave();
+    };
+  }, [flushSave]);
+
 
   if (loading) {
     return (
@@ -458,21 +477,21 @@ export default function NoteEditor() {
             </div>
 
             <div className="flex items-center gap-1.5">
-              {/* Botão Premium de Salvar */}
-              <Button 
-                onClick={handleManualSave}
-                disabled={saveStatus === "saving" || saveStatus === "creating"}
-                className="gap-2 h-9 px-4 rounded-sm text-sm"
+              {/* Read / write mode */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className={`h-8 w-8 transition-colors ${readOnly ? "bg-primary/20 text-primary" : "text-muted-foreground hover:text-foreground"}`}
+                onClick={() => {
+                  if (!readOnly) flushSave();
+                  setReadOnly((v) => !v);
+                }}
+                title={readOnly ? t("ed_edit_mode") : t("ed_view_mode")}
+                aria-pressed={readOnly}
               >
-                <Save className="w-3.5 h-3.5" />
-                {t("ed_save")}
+                {readOnly ? <Eye className="h-4 w-4" /> : <PenLine className="h-4 w-4" />}
               </Button>
 
-              <div className="h-4 w-[1px] bg-white/10 mx-1" />
-
-              <Button variant="ghost" size="icon" className="w-8 h-8 text-muted-foreground hover:text-foreground" onClick={() => editorRef.current?.triggerUpload()} title={t("ed_attach_media")}>
-                <ImageIcon className="w-4 h-4" />
-              </Button>
 
               {/* Note Settings Popover */}
               <Popover>
@@ -520,9 +539,10 @@ export default function NoteEditor() {
                       </div>
 
                       <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                        <Label htmlFor="auto-save" className="text-xs text-foreground cursor-pointer">{t("ed_auto_save")}</Label>
-                        <Switch id="auto-save" checked={autoSaveEnabled} onCheckedChange={setAutoSaveEnabled} className="scale-75 origin-right" />
+                        <Label className="text-xs text-foreground">{t("ed_auto_save")}</Label>
+                        <span className="text-[10px] uppercase tracking-wider text-emerald-400/80">{t("ed_always_on")}</span>
                       </div>
+
 
                       {/* Wallpaper Settings */}
                       <div className="pt-3 border-t border-white/5 space-y-3">
@@ -616,6 +636,7 @@ export default function NoteEditor() {
               <Input
                 value={title}
                 onChange={(e) => handleTitleChange(e.target.value)}
+                readOnly={readOnly}
                 placeholder={t("ed_untitled_note")}
                 className="text-5xl lg:text-6xl font-display font-bold border-0 px-0 focus-visible:ring-0 bg-transparent text-foreground mb-8 h-auto placeholder:text-muted-foreground/30 tracking-tight"
               />
@@ -626,12 +647,11 @@ export default function NoteEditor() {
                     ref={editorRef}
                     content={currentJSON.current}
                     onChange={handleEditorChange}
+                    editable={!readOnly}
                     currentNoteId={note?.id}
-                    onSave={() => {
-                      if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-                      void doSave(title, currentJSON.current, type);
-                    }}
+                    onSave={flushSave}
                   />
+
 
                 </div>
               )}
@@ -648,7 +668,7 @@ export default function NoteEditor() {
         </div>
 
         {/* Combined Context Sidebar */}
-        <aside className={`shrink-0 border-l border-white/5 backdrop-blur-md transition-all duration-300 ease-in-out overflow-hidden flex flex-col
+        <aside className={`shrink-0 border-l border-white/5 bg-black/45 backdrop-blur-2xl transition-all duration-300 ease-in-out overflow-hidden flex flex-col
           ${showBacklinks ? "w-80 opacity-100" : "w-0 opacity-0 border-none"}`}>
           
           <div className="flex items-center justify-between border-b border-white/5 px-5 py-4 shrink-0">
@@ -668,19 +688,19 @@ export default function NoteEditor() {
                 <span>{t("ed_note_metadata")}</span>
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Card variant="subtle" className="p-3">
+                <Card variant="subtle" className="border border-white/5 bg-black/40 p-3 backdrop-blur-xl">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_score")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{noteScore.toFixed(1)}</p>
                 </Card>
-                <Card variant="subtle" className="p-3">
+                <Card variant="subtle" className="border border-white/5 bg-black/40 p-3 backdrop-blur-xl">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_mentions")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{mentionCounts.total}</p>
                 </Card>
-                <Card variant="subtle" className="p-3">
+                <Card variant="subtle" className="border border-white/5 bg-black/40 p-3 backdrop-blur-xl">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_entities")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{note?.entityIds?.length ?? 0}</p>
                 </Card>
-                <Card variant="subtle" className="p-3">
+                <Card variant="subtle" className="border border-white/5 bg-black/40 p-3 backdrop-blur-xl">
                   <p className="text-[10px] uppercase tracking-[0.22em] text-white/40">{t("ed_characters")}</p>
                   <p className="mt-2 text-sm font-medium text-white">{characterCount}</p>
                 </Card>
@@ -704,9 +724,9 @@ export default function NoteEditor() {
                       <Button
                         variant="ghost"
                         onClick={() => navigate(`/entities/${entity.id}`)}
-                        className="w-full h-auto flex flex-col items-start gap-1 rounded-sm border border-white/5 bg-white/[0.02] p-2 text-left normal-case tracking-normal hover:bg-white/[0.06] hover:border-white/10"
+                        className="w-full h-auto flex flex-col items-start gap-1 rounded-md border border-white/5 bg-black/40 p-2.5 text-left normal-case tracking-normal backdrop-blur-xl hover:bg-black/60 hover:border-white/10"
                       >
-                        <span className="text-xs font-medium text-white/90 line-clamp-1">
+                        <span className="w-full break-words text-xs font-medium leading-snug text-white/90 line-clamp-2">
                           {entity.title || t("ed_untitled_entity")}
                         </span>
                         {entity.type && (
