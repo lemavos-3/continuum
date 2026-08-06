@@ -312,7 +312,8 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         VaultAudio,
         TaskList,
         TaskItem.configure({ nested: true }),
-        Table.configure({ resizable: true }),
+        HeadingFold,
+        Table.configure({ resizable: true, allowTableNodeSelection: true, lastColumnResizable: true }),
         TableRow,
         TableCell,
         TableHeader,
@@ -351,7 +352,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
       editable,
       editorProps: {
         attributes: {
-          class: `continuum-editor prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[60vh] ${className || ""}`,
+          class: `continuum-editor prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[60vh] ${editable ? "" : "is-readonly"} ${className || ""}`,
         },
         handleClickOn: (_view, _pos, node, _nodePos, event) => {
           const name = node.type.name;
@@ -380,7 +381,12 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         },
       },
       onUpdate: ({ editor }) => {
-        onChangeRef.current?.(editor.getJSON());
+        // Throttled: avoids re-rendering the whole note page on every keystroke.
+        if (updateTimerRef.current) window.clearTimeout(updateTimerRef.current);
+        updateTimerRef.current = window.setTimeout(() => {
+          if (editor.isDestroyed) return;
+          onChangeRef.current?.(editor.getJSON());
+        }, 300);
       },
     });
 
