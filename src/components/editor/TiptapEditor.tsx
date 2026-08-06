@@ -264,6 +264,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
     const [isDragging, setIsDragging] = useState(false);
     const [findOpen, setFindOpen] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const updateTimerRef = useRef<number | null>(null);
     const { toast } = useToast();
 
     const uploadFileRef = useRef<(file: File) => Promise<void>>();
