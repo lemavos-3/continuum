@@ -317,7 +317,10 @@ public class MarkdownImportOrchestrator {
                 if (f.candidateKeys() != null) {
                     for (String k : f.candidateKeys()) {
                         if (k == null) continue;
-                        Entity e = acceptedByKey.get(normalizeEntityKey(k));
+                        String key = normalizeEntityKey(k);
+                        // Aceitas nesta importação OU entidades que já existem no vault.
+                        Entity e = acceptedByKey.get(key);
+                        if (e == null) e = entityByKey.get(key);
                         if (e != null) {
                             if (!entityIds.contains(e.getId())) entityIds.add(e.getId());
                             mentionByName.putIfAbsent(normalizeEntityKey(e.getTitle()), e);
@@ -325,14 +328,28 @@ public class MarkdownImportOrchestrator {
                     }
                 }
 
+                String plainText = normalizeSearchText(extractPlainFromTiptap(content));
+
                 if (!customByKey.isEmpty()) {
-                    String plain = normalizeSearchText(extractPlainFromTiptap(content));
                     for (Map.Entry<String, Entity> ce : customByKey.entrySet()) {
-                        if (findWordBoundary(plain, ce.getKey()) >= 0) {
+                        if (findWordBoundary(plainText, ce.getKey()) >= 0) {
                             Entity e = ce.getValue();
                             if (!entityIds.contains(e.getId())) entityIds.add(e.getId());
                             mentionByName.putIfAbsent(normalizeEntityKey(e.getTitle()), e);
                         }
+                    }
+                }
+
+                // Varre o texto da nota contra TODAS as entidades do vault, para que
+                // menções a entidades já existentes também gerem conexões no grafo.
+                for (Map.Entry<String, Entity> ee : entityByKey.entrySet()) {
+                    String key = ee.getKey();
+                    if (key == null || key.length() < 2) continue;
+                    Entity e = ee.getValue();
+                    if (entityIds.contains(e.getId())) continue;
+                    if (findWordBoundary(plainText, key) >= 0) {
+                        entityIds.add(e.getId());
+                        mentionByName.putIfAbsent(normalizeEntityKey(e.getTitle()), e);
                     }
                 }
 
