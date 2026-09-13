@@ -567,6 +567,7 @@ export const importApi = {
   },
   commitMarkdown: (payload: unknown) =>
     api.post("/api/import/markdown/commit", payload, { timeout: 120000 }),
+  relinkEntities: () => api.post("/api/import/entities/relink", {}, { timeout: 180000 }),
 };
 
 export default api;

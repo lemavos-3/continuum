@@ -152,7 +152,7 @@ export default function MarkdownImportDialog({ open, onOpenChange, onImported }:
           initial[c.key] = {
             // Auto-accept anything the AI or wiki-links/frontmatter surfaced.
             // LOW = pure capitalisation heuristic → user opts in manually.
-            accept: (c.confidence === "HIGH" || c.confidence === "MEDIUM") && !c.existing,
+            accept: c.existing || c.confidence === "HIGH" || c.confidence === "MEDIUM",
             type: c.suggestedType,
             name: c.name,
           };
