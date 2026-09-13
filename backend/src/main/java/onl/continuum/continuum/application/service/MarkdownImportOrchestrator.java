@@ -317,7 +317,10 @@ public class MarkdownImportOrchestrator {
                 if (f.candidateKeys() != null) {
                     for (String k : f.candidateKeys()) {
                         if (k == null) continue;
-                        Entity e = acceptedByKey.get(normalizeEntityKey(k));
+                        String key = normalizeEntityKey(k);
+                        // Aceitas nesta importação OU entidades que já existem no vault.
+                        Entity e = acceptedByKey.get(key);
+                        if (e == null) e = entityByKey.get(key);
                         if (e != null) {
                             if (!entityIds.contains(e.getId())) entityIds.add(e.getId());
                             mentionByName.putIfAbsent(normalizeEntityKey(e.getTitle()), e);
@@ -325,14 +328,28 @@ public class MarkdownImportOrchestrator {
                     }
                 }
 
+                String plainText = normalizeSearchText(extractPlainFromTiptap(content));
+
                 if (!customByKey.isEmpty()) {
-                    String plain = normalizeSearchText(extractPlainFromTiptap(content));
                     for (Map.Entry<String, Entity> ce : customByKey.entrySet()) {
-                        if (findWordBoundary(plain, ce.getKey()) >= 0) {
+                        if (findWordBoundary(plainText, ce.getKey()) >= 0) {
                             Entity e = ce.getValue();
                             if (!entityIds.contains(e.getId())) entityIds.add(e.getId());
                             mentionByName.putIfAbsent(normalizeEntityKey(e.getTitle()), e);
                         }
+                    }
+                }
+
+                // Varre o texto da nota contra TODAS as entidades do vault, para que
+                // menções a entidades já existentes também gerem conexões no grafo.
+                for (Map.Entry<String, Entity> ee : entityByKey.entrySet()) {
+                    String key = ee.getKey();
+                    if (key == null || key.length() < 2) continue;
+                    Entity e = ee.getValue();
+                    if (entityIds.contains(e.getId())) continue;
+                    if (findWordBoundary(plainText, key) >= 0) {
+                        entityIds.add(e.getId());
+                        mentionByName.putIfAbsent(normalizeEntityKey(e.getTitle()), e);
                     }
                 }
 
@@ -392,6 +409,88 @@ public class MarkdownImportOrchestrator {
         }
 
         return new ImportCommitResponse(notesCreated, entitiesCreated, entitiesReused, linksCreated, errors);
+    }
+
+    public record RelinkResponse(int notesScanned, int notesUpdated, int connectionsCreated, List<String> errors) {}
+
+    /**
+     * Reconstrói as conexões nota → entidade varrendo o texto de todas as notas
+     * do usuário contra os títulos das entidades do vault.
+     * Corrige notas importadas antes da correção do vínculo de entidades.
+     */
+    public RelinkResponse relinkEntities() {
+        String userId = currentUserId();
+        String vaultId = currentVaultId();
+        List<String> errors = new ArrayList<>();
+
+        Map<String, Entity> entityByKey = new LinkedHashMap<>();
+        for (Entity e : entityRepo.findByUserIdAndArchivedAtIsNull(userId)) {
+            if (e.getTitle() != null && e.getTitle().trim().length() >= 2) {
+                entityByKey.put(normalizeEntityKey(e.getTitle()), e);
+            }
+        }
+
+        List<Note> notes = noteRepo.findByUserId(userId);
+        int scanned = 0;
+        int updated = 0;
+        int connections = 0;
+
+        for (Note note : notes) {
+            scanned++;
+            try {
+                String raw = note.getContent();
+                if (raw == null || raw.isBlank()) {
+                    raw = storageService.loadNoteContent(vaultId, note.getId()).orElse(null);
+                }
+                if (raw == null || raw.isBlank()) continue;
+
+                JsonNode doc;
+                try {
+                    doc = jsonMapper.readTree(raw);
+                } catch (Exception parseEx) {
+                    continue;
+                }
+
+                String plain = normalizeSearchText(extractPlainFromTiptap(doc));
+                List<String> entityIds = new ArrayList<>(
+                        note.getEntityIds() == null ? List.of() : note.getEntityIds());
+                Map<String, Entity> mentionByName = new LinkedHashMap<>();
+                int before = entityIds.size();
+
+                for (Map.Entry<String, Entity> ee : entityByKey.entrySet()) {
+                    Entity e = ee.getValue();
+                    if (entityIds.contains(e.getId())) continue;
+                    if (findWordBoundary(plain, ee.getKey()) >= 0) {
+                        entityIds.add(e.getId());
+                        mentionByName.putIfAbsent(normalizeEntityKey(e.getTitle()), e);
+                    }
+                }
+
+                if (entityIds.size() == before) continue;
+
+                JsonNode rewritten = mentionByName.isEmpty() ? doc : applyMentions(doc, mentionByName);
+                String contentStr = rewritten.toString();
+
+                note.setEntityIds(entityIds);
+                note.setContent(contentStr);
+                note.setUpdatedAt(Instant.now());
+                try {
+                    String fileKey = storageService.saveNoteContent(vaultId, note.getId(), contentStr);
+                    if (fileKey != null) note.setFileKey(fileKey);
+                } catch (Exception storeEx) {
+                    log.warn("Vault save failed during relink for {}: {}", note.getId(), storeEx.getMessage());
+                }
+                noteRepo.save(note);
+
+                connections += entityIds.size() - before;
+                updated++;
+            } catch (Exception ex) {
+                log.warn("Relink failed for note {}: {}", note.getId(), ex.getMessage());
+                errors.add(note.getId() + ": " + ex.getMessage());
+            }
+        }
+
+        return new RelinkResponse(scanned, updated, connections, errors);
     }
 
     private String safeTitle(String title, String filename) {

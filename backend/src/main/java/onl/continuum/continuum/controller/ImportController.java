@@ -93,6 +93,12 @@ public class ImportController {
         }
     }
 
+    @PostMapping("/entities/relink")
+    @Operation(summary = "Rebuild note↔entity connections", description = "Scans every note of the user and links entities mentioned in the text (fixes older imports).")
+    public ResponseEntity<MarkdownImportOrchestrator.RelinkResponse> relink() {
+        return ResponseEntity.ok(orchestrator.relinkEntities());
+    }
+
     @PostMapping(value = "/markdown/commit", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Commit a Markdown import", description = "Persists notes, creates accepted entities, and links them based on user-approved decisions.")
     public ResponseEntity<ImportCommitResponse> commit(@RequestBody ImportCommitRequest req) {

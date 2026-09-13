@@ -152,7 +152,7 @@ export default function MarkdownImportDialog({ open, onOpenChange, onImported }:
           initial[c.key] = {
             // Auto-accept anything the AI or wiki-links/frontmatter surfaced.
             // LOW = pure capitalisation heuristic → user opts in manually.
-            accept: (c.confidence === "HIGH" || c.confidence === "MEDIUM") && !c.existing,
+            accept: c.existing || c.confidence === "HIGH" || c.confidence === "MEDIUM",
             type: c.suggestedType,
             name: c.name,
           };
@@ -212,6 +212,30 @@ export default function MarkdownImportDialog({ open, onOpenChange, onImported }:
       setBusy(false);
     }
   }, [preview, decisions, customEntities, onImported, toast, t]);
+
+  const handleRelink = useCallback(async () => {
+    setBusy(true);
+    try {
+      const res = await importApi.relinkEntities();
+      const data = res.data as { notesUpdated: number; connectionsCreated: number };
+      toast({
+        title: t("import_relinkDoneTitle"),
+        description: t("import_relinkDoneDesc", {
+          n: data.connectionsCreated,
+          notes: data.notesUpdated,
+        }),
+      });
+      onImported?.();
+    } catch (e: any) {
+      toast({
+        title: t("import_failedTitle"),
+        description: e?.response?.data?.message || e?.message || t("import_commitFailedDesc"),
+        variant: "destructive",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }, [onImported, toast, t]);
 
   const addCustomEntity = useCallback(() => {
     const name = customDraftName.trim();
@@ -553,7 +577,17 @@ export default function MarkdownImportDialog({ open, onOpenChange, onImported }:
                   ))}
                 </div>
               )}
-              <div className="flex justify-end">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRelink}
+                  disabled={busy}
+                  className="w-full sm:w-auto"
+                >
+                  {busy && <ArrowPathIcon className="w-3.5 h-3.5 mr-2 animate-spin" />}
+                  {t("import_relinkBtn")}
+                </Button>
                 <Button
                   variant="white"
                   size="sm"
