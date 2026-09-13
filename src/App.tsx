@@ -1,6 +1,7 @@
 import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { HashRouter, Route, Routes, Navigate } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,46 +10,63 @@ import { UsageProvider } from "@/contexts/UsageContext";
 import { EntityProvider } from "@/contexts/EntityContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
-import { Loader2 } from "@/lib/heroicons";
+import { SkeletonPage } from "@/components/ui/skeleton";
+import { PageTransition } from "@/components/motion/PageTransition";
+import { GlobalProgress } from "@/components/motion/GlobalProgress";
 import { extractAuthTokensFromLocation, sanitizeAuthRedirectUrl } from "@/lib/auth-redirect";
 import { EMAIL_AUTH_ENABLED } from "@/lib/dev-mode";
+import UpdateDialog from "@/components/updater/UpdateDialog";
 
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import GoogleCallback from "./pages/GoogleCallback";
-import LoginSuccess from "./pages/LoginSuccess";
-import Dashboard from "./pages/Dashboard";
-import LandingPage from "./pages/LandingPage";
-import Notes from "./pages/Notes";
-import NoteEditor from "./pages/NoteEditor";
-import Entities from "./pages/Entities";
-import EntityDetail from "./pages/EntityDetail";
-import KnowledgeGraph from "./pages/KnowledgeGraph";
-import Vault from "./pages/Vault";
-import VaultDownload from "./pages/VaultDownload";
-import Activities from "./pages/Activities";
-import Projects from "./pages/Projects";
-import Terms from "./pages/Terms";
-import Privacy from "./pages/Privacy";
-import Support from "./pages/Support";
-import About from "./pages/About";
-import Pricing from "./pages/Pricing";
-import Subscription from "./pages/Subscription";
-import Profile from "./pages/Profile";
-import NotFound from "./pages/NotFound";
-import Insights from "./pages/Insights";
+// Capacitor: aplica cor da status bar só quando rodando dentro do APK nativo
+import { Capacitor } from "@capacitor/core";
+import { StatusBar, Style } from "@capacitor/status-bar";
 
+// Auth-critical screens stay eager (they gate the first paint); everything else
+// is code-split and streamed in behind a skeleton.
+import LoginSuccess from "./pages/LoginSuccess";
+import LandingPage from "./pages/LandingPage";
+
+const Login = React.lazy(() => import("./pages/Login"));
+const Register = React.lazy(() => import("./pages/Register"));
+const ForgotPassword = React.lazy(() => import("./pages/ForgotPassword"));
+const GoogleCallback = React.lazy(() => import("./pages/GoogleCallback"));
+const Notes = React.lazy(() => import("./pages/Notes"));
+const NoteEditor = React.lazy(() => import("./pages/NoteEditor"));
+const Entities = React.lazy(() => import("./pages/Entities"));
+const EntityDetail = React.lazy(() => import("./pages/EntityDetail"));
+const KnowledgeGraph = React.lazy(() => import("./pages/KnowledgeGraph"));
+const Vault = React.lazy(() => import("./pages/Vault"));
+const VaultDownload = React.lazy(() => import("./pages/VaultDownload"));
+const Activities = React.lazy(() => import("./pages/Activities"));
+const Projects = React.lazy(() => import("./pages/Projects"));
+const Terms = React.lazy(() => import("./pages/Terms"));
+const Privacy = React.lazy(() => import("./pages/Privacy"));
+const Support = React.lazy(() => import("./pages/Support"));
+const About = React.lazy(() => import("./pages/About"));
+const Pricing = React.lazy(() => import("./pages/Pricing"));
+const Versions = React.lazy(() => import("./pages/Versions"));
+const Subscription = React.lazy(() => import("./pages/Subscription"));
+const Profile = React.lazy(() => import("./pages/Profile"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+const Insights = React.lazy(() => import("./pages/Insights"));
 
 const queryClient = new QueryClient();
+
+function RouteFallback() {
+  return (
+    <div className="min-h-screen bg-background">
+      <SkeletonPage />
+    </div>
+  );
+}
 
 function HomeRoute() {
   const { user, loading } = useAuth();
   // Read tokens once per mount so we don't recompute on every render.
-  const [hasIncomingToken] = React.useState(() => {
+  const [hasIncomingToken, setHasIncomingToken] = React.useState(() => {
     const t = extractAuthTokensFromLocation();
     return !!t?.accessToken;
   });
@@ -57,50 +75,37 @@ function HomeRoute() {
     if (!hasIncomingToken) sanitizeAuthRedirectUrl();
   }, [hasIncomingToken]);
 
-  if (hasIncomingToken) return <LoginSuccess />;
+  if (hasIncomingToken) return <LoginSuccess onDone={() => setHasIncomingToken(false)} />;
 
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-  if (user) return <Dashboard />;
+  if (loading) return <RouteFallback />;
+  if (user) return <Notes />;
   return <LandingPage />;
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (loading) return <RouteFallback />;
   if (!user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
+  if (loading) return <RouteFallback />;
   if (user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
-const AppRoutes = () => (
-  <Routes>
+const AppRoutes = () => {
+  const location = useLocation();
+  return (
+    <React.Suspense fallback={<RouteFallback />}>
+      <AnimatePresence mode="wait" initial={false}>
+        <PageTransition key={location.pathname}>
+          <Routes location={location}>
     <Route path="/" element={<HomeRoute />} />
     <Route path="/index" element={<HomeRoute />} />
-    <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+    <Route path="/dashboard" element={<Navigate to="/notes" replace />} />
     <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
     <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
     <Route
@@ -116,6 +121,7 @@ const AppRoutes = () => (
     <Route path="/support" element={<Support />} />
     <Route path="/about" element={<About />} />
     <Route path="/pricing" element={<Pricing />} />
+    <Route path="/versions" element={<Versions />} />
     <Route path="/notes" element={<ProtectedRoute><Notes /></ProtectedRoute>} />
     <Route path="/notes/:id" element={<ProtectedRoute><NoteEditor /></ProtectedRoute>} />
     <Route path="/entities" element={<ProtectedRoute><Entities /></ProtectedRoute>} />
@@ -135,31 +141,46 @@ const AppRoutes = () => (
     <Route path="/subscription" element={<ProtectedRoute><Subscription /></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
-  </Routes>
-);
+          </Routes>
+        </PageTransition>
+      </AnimatePresence>
+    </React.Suspense>
+  );
+};
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <HashRouter>
-          <LanguageProvider>
-            <AuthProvider>
-              <UsageProvider>
-                <EntityProvider>
-                  <AppRoutes />
-                </EntityProvider>
-              </UsageProvider>
-            </AuthProvider>
-          </LanguageProvider>
-        </HashRouter>
-      </TooltipProvider>
-    </ThemeProvider>
-    <Analytics />
-    <SpeedInsights />
-  </QueryClientProvider>
-);
+const App = () => {
+  React.useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      StatusBar.setBackgroundColor({ color: "#000000" });
+      StatusBar.setStyle({ style: Style.Dark });
+    }
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <TooltipProvider>
+          <GlobalProgress />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <LanguageProvider>
+              <AuthProvider>
+                <UsageProvider>
+                  <EntityProvider>
+                    <AppRoutes />
+                    <UpdateDialog />
+                  </EntityProvider>
+                </UsageProvider>
+              </AuthProvider>
+            </LanguageProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </ThemeProvider>
+      <Analytics />
+      <SpeedInsights />
+    </QueryClientProvider>
+  );
+};
 
 export default App;

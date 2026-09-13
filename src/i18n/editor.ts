@@ -93,6 +93,8 @@ export const dict: Module = {
     ed_cmd_link: "Link",
     ed_cmd_image: "Image",
     ed_cmd_table: "Table",
+    ed_cmd_file: "File",
+    ed_cmd_upload: "Upload file",
     ed_prompt_url: "URL",
     ed_prompt_image_url: "Image URL",
 
@@ -288,6 +290,8 @@ export const dict: Module = {
     ed_cmd_link: "Enlace",
     ed_cmd_image: "Imagen",
     ed_cmd_table: "Tabla",
+    ed_cmd_file: "Archivo",
+    ed_cmd_upload: "Subir archivo",
     ed_prompt_url: "URL",
     ed_prompt_image_url: "URL de la imagen",
 
@@ -483,6 +487,8 @@ export const dict: Module = {
     ed_cmd_link: "Link",
     ed_cmd_image: "Imagem",
     ed_cmd_table: "Tabela",
+    ed_cmd_file: "Arquivo",
+    ed_cmd_upload: "Enviar arquivo",
     ed_prompt_url: "URL",
     ed_prompt_image_url: "URL da imagem",
 
@@ -678,6 +684,8 @@ export const dict: Module = {
     ed_cmd_link: "Lien",
     ed_cmd_image: "Image",
     ed_cmd_table: "Tableau",
+    ed_cmd_file: "Fichier",
+    ed_cmd_upload: "Téléverser un fichier",
     ed_prompt_url: "URL",
     ed_prompt_image_url: "URL de l'image",
 

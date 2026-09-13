@@ -1,5 +1,8 @@
 import axios from "axios";
 import { parseTiptapContent } from "@/lib/tiptap-content";
+import { getClientPlatform, getClientVersion } from "@/lib/updater/client-version";
+
+export const UPGRADE_REQUIRED_EVENT = "app:upgrade-required";
 
 // Lê em tempo de execução, não de build
 const getAPIBaseURL = () => {
@@ -55,9 +58,7 @@ export const parseTokensFromUrl = () => {
   if (typeof window === "undefined") return null;
 
   const searchParams = new URLSearchParams(window.location.search);
-  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
-
-  const getValue = (key: string) => searchParams.get(key) ?? hashParams.get(key);
+  const getValue = (key: string) => searchParams.get(key);
   const accessToken = getValue("access_token") ?? getValue("token") ?? getValue("jwt");
   const refreshToken = getValue("refresh_token");
 
@@ -109,6 +110,19 @@ const normalizeSearchResults = (payload: unknown) => {
 // Interceptor: attach JWT (skip only login and registration endpoints)
 api.interceptors.request.use((config) => {
   const url = config.url ?? "";
+  // Always tell the backend which timezone the user is in, so "today"
+  // (activities, tracking, heatmaps) is computed in the user's local day.
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz) config.headers["X-Timezone"] = tz;
+    config.headers["X-TZ-Offset"] = String(-new Date().getTimezoneOffset());
+  } catch { /* ignore */ }
+  // Version policy: the server decides what is current and what is blocked.
+  try {
+    const appVersion = getClientVersion();
+    if (appVersion) config.headers["X-App-Version"] = appVersion;
+    config.headers["X-App-Platform"] = getClientPlatform();
+  } catch { /* ignore */ }
   const skipAuth =
     url === "/api/auth/login" ||
     url === "/api/auth/register" ||
@@ -285,6 +299,14 @@ api.interceptors.response.use(
       url.startsWith("/api/auth/refresh") ||
       url.startsWith("/api/auth/google");
 
+    // 426 Upgrade Required — the client is below the server's minimum version.
+    if (status === 426) {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent(UPGRADE_REQUIRED_EVENT, { detail: error.response?.data }));
+      }
+      return Promise.reject(error);
+    }
+
     if (status === 401 && !original?._retry && !isAuthEndpoint) {
       original._retry = true;
 
@@ -404,7 +426,9 @@ export const foldersApi = {
 
 export const entitiesApi = {
   list: (params?: { page?: number; size?: number }) =>
-    api.get("/api/entities", { params }).then((response) => {
+    // The backend pages at 20 by default, which silently hid most entities in
+    // the list pages — ask for a large page unless the caller says otherwise.
+    api.get("/api/entities", { params: { page: 0, size: 500, ...(params || {}) } }).then((response) => {
       if (Array.isArray(response.data)) return response;
       const pageData = response.data as Record<string, unknown> | null;
       if (pageData && Array.isArray(pageData.content)) {
@@ -435,6 +459,9 @@ export const metricsApi = {
   dashboard: () => api.get("/api/metrics/dashboard"),
   timeline: (entityId: string) => api.get(`/api/metrics/entities/${entityId}/timeline`),
   scoreTimeline: () => api.get("/api/metrics/score/timeline", { timeout: 15000 }),
+  scoreInsights: () => api.get("/api/metrics/score/insights", { timeout: 20000 }),
+  scoreBreakdown: (date: string) =>
+    api.get("/api/metrics/score/breakdown", { params: { date }, timeout: 15000 }),
   usage: (month: number, year: number) => api.get("/api/metrics/usage", { params: { month, year } }),
 };
 
@@ -460,6 +487,8 @@ export const trackingApi = {
 
 export const subscriptionApi = {
   me: () => api.get("/api/subscriptions/me"),
+  // Pulls truth from Stripe (used right after returning from Checkout).
+  sync: () => api.post("/api/subscriptions/sync"),
   // Accepts either a Stripe price id (price_xxx) or a plan code ("VISION").
   checkout: (priceOrPlan: string) =>
     api.post("/api/subscriptions/checkout", { priceId: priceOrPlan, planId: priceOrPlan }),

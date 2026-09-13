@@ -24,6 +24,7 @@ import { Mathematics } from "@tiptap/extension-mathematics";
 import "katex/dist/katex.min.css";
 import { common, createLowlight } from "lowlight";
 import tippy, { type Instance as TippyInstance } from "tippy.js";
+import "tippy.js/dist/tippy.css";
 import { forwardRef, useEffect, useImperativeHandle, useRef, useState, useCallback } from "react";
 import type { ChangeEvent } from "react";
 import type { SuggestionProps, SuggestionKeyDownProps } from "@tiptap/suggestion";
@@ -103,10 +104,24 @@ const getToken = () => {
   return window.sessionStorage.getItem("access_token") ?? window.localStorage.getItem("access_token");
 };
 
+/** Tracks every open mention popup so we can always clean up stragglers. */
+const activeMentionPopups = new Set<TippyInstance>();
+
+/** True while a mention suggestion session is open (prevents blur from killing it). */
+let mentionSuggestionActive = false;
+
+export const destroyAllMentionPopups = () => {
+  activeMentionPopups.forEach((instance) => {
+    try { instance.destroy(); } catch { /* already destroyed */ }
+  });
+  activeMentionPopups.clear();
+};
+
 export const resetEditorCaches = () => {
   Object.assign(entityCache, { token: null, at: 0, data: [], pending: null });
   Object.assign(noteCache, { token: null, at: 0, data: [], pending: null });
 };
+
 
 const loadEntities = async (): Promise<Entity[]> => {
   const token = getToken();
@@ -203,14 +218,35 @@ const buildSuggestion = (variant: "entity" | "note", currentNoteId?: string) => 
   },
   render: () => {
     let component: ReactRenderer<MentionListRef> | null = null;
-    let popup: TippyInstance[] | null = null;
+    let popup: TippyInstance | null = null;
+
+    const teardown = () => {
+      mentionSuggestionActive = false;
+      if (popup) {
+        activeMentionPopups.delete(popup);
+        try { popup.destroy(); } catch { /* already destroyed */ }
+        popup = null;
+      }
+      if (component) {
+        try { component.destroy(); } catch { /* noop */ }
+        component = null;
+      }
+    };
+
     return {
       onStart: (props: SuggestionProps<MentionItem>) => {
+        // Any leftover popup (from an interrupted session) must go first.
+        destroyAllMentionPopups();
+        teardown();
+        mentionSuggestionActive = true;
         component = new ReactRenderer(MentionList, {
           props: { ...props, query: props.query, variant },
           editor: props.editor,
         });
-        if (!props.clientRect) return;
+        if (!props.clientRect) {
+          teardown();
+          return;
+        }
         popup = tippy("body", {
           getReferenceClientRect: props.clientRect as () => DOMRect,
           appendTo: () => document.body,
@@ -219,20 +255,23 @@ const buildSuggestion = (variant: "entity" | "note", currentNoteId?: string) => 
           interactive: true,
           trigger: "manual",
           placement: "bottom-start",
-        });
+          onHidden: () => teardown(),
+        })[0] ?? null;
+        if (popup) activeMentionPopups.add(popup);
       },
       onUpdate(props: SuggestionProps<MentionItem>) {
         component?.updateProps({ ...props, query: props.query, variant });
-        if (props.clientRect) popup?.[0]?.setProps({ getReferenceClientRect: props.clientRect as () => DOMRect });
+        if (props.clientRect) popup?.setProps({ getReferenceClientRect: props.clientRect as () => DOMRect });
       },
       onKeyDown(props: SuggestionKeyDownProps) {
-        if (props.event.key === "Escape") { popup?.[0]?.hide(); return true; }
+        if (props.event.key === "Escape") { teardown(); return true; }
         return component?.ref?.onKeyDown(props) ?? false;
       },
-      onExit() { popup?.[0]?.destroy(); component?.destroy(); },
+      onExit() { teardown(); },
     };
   },
 });
+
 
 /* ── Component API ── */
 export interface TiptapEditorHandle {
@@ -250,10 +289,14 @@ interface Props {
   className?: string;
   currentNoteId?: string;
   onSave?: () => void;
+  foldedHeadings?: number[];
+  onFoldedHeadingsChange?: (indices: number[]) => void;
 }
 
 export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
-  ({ content, onChange, editable = true, className, currentNoteId, onSave }, ref) => {
+  ({ content, onChange, editable = true, className, currentNoteId, onSave, foldedHeadings, onFoldedHeadingsChange }, ref) => {
+    const onFoldChangeRef = useRef(onFoldedHeadingsChange);
+    onFoldChangeRef.current = onFoldedHeadingsChange;
     const onChangeRef = useRef(onChange);
     onChangeRef.current = onChange;
     const onSaveRef = useRef(onSave);
@@ -263,6 +306,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
     const [isUploading, setIsUploading] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
     const [findOpen, setFindOpen] = useState(false);
+    const [inTable, setInTable] = useState(false);
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const updateTimerRef = useRef<number | null>(null);
     const { toast } = useToast();
@@ -312,8 +356,16 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         VaultPdf,
         VaultAudio,
         TaskList,
-        TaskItem.configure({ nested: true }),
-        HeadingFold,
+        TaskItem.configure({
+          nested: true,
+          // The current document position is resolved by the change listener
+          // below. Returning true prevents Tiptap from reverting the native
+          // checkbox while the editor is read-only.
+          onReadOnlyChecked: () => true,
+        }),
+        HeadingFold.configure({
+          onFoldChange: (indices) => onFoldChangeRef.current?.(indices),
+        }),
         Table.configure({ resizable: true, allowTableNodeSelection: true, lastColumnResizable: true }),
         TableRow,
         TableCell,
@@ -353,7 +405,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
       editable,
       editorProps: {
         attributes: {
-          class: `continuum-editor prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[60vh] ${editable ? "" : "is-readonly"} ${className || ""}`,
+          class: `continuum-editor max-w-none focus:outline-none min-h-[60vh] ${editable ? "" : "is-readonly"} ${className || ""}`,
         },
         handleClickOn: (_view, _pos, node, _nodePos, event) => {
           const name = node.type.name;
@@ -381,6 +433,16 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
           return false;
         },
       },
+      onBlur: () => {
+        // Leaving the editor must never leave a mention dropdown floating around.
+        window.setTimeout(() => {
+          // Touch devices have no :hover, so rely on the session flag instead.
+          if (mentionSuggestionActive) return;
+          destroyAllMentionPopups();
+        }, 200);
+      },
+      onDestroy: () => destroyAllMentionPopups(),
+
       onUpdate: ({ editor }) => {
         // Throttled: avoids re-rendering the whole note page on every keystroke.
         if (updateTimerRef.current) window.clearTimeout(updateTimerRef.current);
@@ -503,6 +565,31 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
       if (a !== b && typeof content === "object") editor.commands.setContent(content, { emitUpdate: false });
     }, [content, editor]);
 
+    // Keep table toolbar visibility in sync with the caret (mouse, keyboard and touch).
+    useEffect(() => {
+      if (!editor) return;
+      const sync = () => setInTable(editor.isActive("table"));
+      editor.on("selectionUpdate", sync);
+      editor.on("transaction", sync);
+      editor.on("focus", sync);
+      sync();
+      return () => {
+        editor.off("selectionUpdate", sync);
+        editor.off("transaction", sync);
+        editor.off("focus", sync);
+      };
+    }, [editor]);
+
+    // Restore persisted heading fold state (server-side, per note).
+    const appliedFoldsRef = useRef<string | null>(null);
+    useEffect(() => {
+      if (!editor || !foldedHeadings) return;
+      const sig = `${currentNoteId ?? ""}:${foldedHeadings.join(",")}`;
+      if (appliedFoldsRef.current === sig) return;
+      appliedFoldsRef.current = sig;
+      editor.commands.setFoldedHeadings(foldedHeadings);
+    }, [editor, foldedHeadings, currentNoteId]);
+
     useEffect(() => {
       if (!editor) return;
       editor.setEditable(editable);
@@ -510,11 +597,47 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
       dom?.classList.toggle("is-readonly", !editable);
     }, [editor, editable]);
 
+    // Tiptap's read-only callback receives the node captured when its node view
+    // was created. After the first toggle that object is stale, so subsequent
+    // clicks can fail. Resolve the live task node from the clicked DOM element
+    // on every change instead.
+    useEffect(() => {
+      if (!editor || editable) return;
+      const dom = editor.view.dom;
+
+      const toggleReadOnlyTask = (event: Event) => {
+        const checkbox = event.target instanceof HTMLInputElement ? event.target : null;
+        if (!checkbox || checkbox.type !== "checkbox") return;
+        const taskItem = checkbox.closest<HTMLElement>('li[data-type="taskItem"]');
+        if (!taskItem || !dom.contains(taskItem)) return;
+
+        const position = editor.view.posAtDOM(taskItem, 0);
+        const node = editor.state.doc.nodeAt(position);
+        if (!node || node.type.name !== "taskItem") return;
+
+        editor.view.dispatch(
+          editor.state.tr.setNodeMarkup(position, undefined, {
+            ...node.attrs,
+            checked: checkbox.checked,
+          })
+        );
+      };
+
+      dom.addEventListener("change", toggleReadOnlyTask);
+      return () => dom.removeEventListener("change", toggleReadOnlyTask);
+    }, [editor, editable]);
+
     // "/" command + toolbar upload entry point
     useEffect(() => {
-      const open = () => fileInputRef.current?.click();
-      window.addEventListener(EDITOR_UPLOAD_EVENT, open);
-      return () => window.removeEventListener(EDITOR_UPLOAD_EVENT, open);
+      const open = (ev: Event) => {
+        const accept = (ev as CustomEvent)?.detail?.accept as string | undefined;
+        if (fileInputRef.current) {
+          fileInputRef.current.accept = accept || "image/*,application/pdf,audio/*";
+        }
+        fileInputRef.current?.click();
+      };
+      window.addEventListener(EDITOR_UPLOAD_EVENT, open as EventListener);
+      return () => window.removeEventListener(EDITOR_UPLOAD_EVENT, open as EventListener);
     }, []);
 
     // flush any pending throttled change so nothing is lost on unmount
@@ -605,8 +728,8 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               />
             </BubbleMenu>
 
-            {editor.isActive("table") && (
-              <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex max-w-[94vw] items-center gap-1 overflow-x-auto rounded-xl border border-white/10 bg-black/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2">
+            {inTable && editable && (
+              <div className="fixed bottom-28 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] flex max-w-[94vw] items-center gap-1 overflow-x-auto rounded-xl border border-white/10 bg-black/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2">
                 <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Table</span>
                 <TableBtn onClick={() => editor.chain().focus().addColumnBefore().run()}>← Col</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().addColumnAfter().run()}>Col →</TableBtn>
@@ -614,11 +737,13 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
                 <TableBtn onClick={() => editor.chain().focus().addRowAfter().run()}>Row ↓</TableBtn>
                 <div className="mx-1 h-4 w-[1px] bg-white/10" />
                 <TableBtn onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Header</TableBtn>
+                <TableBtn onClick={() => resizeCurrentColumn(editor, -40)}>Width −</TableBtn>
+                <TableBtn onClick={() => resizeCurrentColumn(editor, 40)}>Width +</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().mergeOrSplit().run()}>Merge</TableBtn>
                 <div className="mx-1 h-4 w-[1px] bg-white/10" />
                 <TableBtn onClick={() => editor.chain().focus().deleteColumn().run()}>− Col</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().deleteRow().run()}>− Row</TableBtn>
-                <button type="button" className="flex items-center rounded px-3 text-xs h-7 text-red-400 transition-colors hover:bg-red-500/20" onClick={() => editor.chain().focus().deleteTable().run()}>
+                <button type="button" className="flex items-center rounded px-3 text-xs h-7 text-red-400 transition-colors hover:bg-red-500/20" onPointerDown={(ev) => { ev.preventDefault(); editor.chain().focus().deleteTable().run(); }}>
                   <Trash2 className="mr-1.5 h-3 w-3" /> Delete
                 </button>
               </div>
@@ -702,11 +827,21 @@ function ToolbarBtn({
     </button>
   );
 }
+/** Touch-friendly column resize: nudges the current cell's colwidth. */
+function resizeCurrentColumn(editor: Editor, delta: number) {
+  const attrs = editor.getAttributes("tableCell");
+  const headerAttrs = editor.getAttributes("tableHeader");
+  const current = (attrs?.colwidth ?? headerAttrs?.colwidth) as number[] | null | undefined;
+  const base = Array.isArray(current) && current.length ? current[0] : 160;
+  const next = Math.max(60, Math.min(720, base + delta));
+  editor.chain().focus().setCellAttribute("colwidth", [next]).run();
+}
+
 function TableBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
-      onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+      onPointerDown={(e) => { e.preventDefault(); onClick(); }}
       className="h-7 shrink-0 whitespace-nowrap rounded px-2.5 text-xs text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
     >
       {children}

@@ -11,6 +11,8 @@ import { useCreateNote } from "@/hooks/useCreateNote";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import UpgradeModal from "@/components/UpgradeModal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import MarkdownImportDialog from "@/components/import/MarkdownImportDialog";
 import {
   Plus,
   Search,
@@ -188,6 +190,7 @@ export default function Notes() {
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [pendingDelete, setPendingDelete] = useState<NoteSummary | null>(null);
   const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
 
   // Multiselect
@@ -437,8 +440,14 @@ export default function Notes() {
   if (authLoading) {
     return (
       <AppLayout>
-        <div className="flex h-full items-center justify-center">
-          <Loader2 className="h-5 w-5 animate-spin text-white/40" />
+        <div className="mx-auto w-full max-w-5xl animate-fade-in px-4 py-8 sm:px-6">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="mt-4 h-9 w-56" />
+          <div className="mt-8 space-y-3">
+            {Array.from({ length: 7 }).map((_, index) => (
+              <Skeleton key={index} className="h-14 w-full" />
+            ))}
+          </div>
         </div>
       </AppLayout>
     );
@@ -535,7 +544,7 @@ export default function Notes() {
           <aside className="hidden lg:sticky lg:top-16 lg:block lg:w-52 lg:shrink-0 lg:self-start">
             {SidebarContent}
           </aside>
-
+  
           {/* ─── Main ────────────────────────────────────────────── */}
           <main className="min-w-0 flex-1">
             {/* Header (desktop) */}
@@ -703,8 +712,10 @@ export default function Notes() {
             {/* Content */}
 
             {loading ? (
-              <div className="flex justify-center py-24">
-                <Loader2 className="h-5 w-5 animate-spin text-white/30" />
+              <div className="space-y-3 py-6">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <Skeleton key={index} className="h-14 w-full" />
+                ))}
               </div>
             ) : grouped.length === 0 ? (
               <div className="py-24 text-center">
@@ -719,6 +730,30 @@ export default function Notes() {
                           ? t("notes_empty_archived")
                           : t("notes_empty_all")}
                 </p>
+                {!search && view === "all" && (
+                  <div className="mt-5 flex flex-wrap items-center justify-center gap-x-2 gap-y-2 text-sm">
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="gap-1.5 normal-case text-white/70 hover:text-white"
+                      onClick={handleCreate}
+                      disabled={creating}
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      {creating ? t("notes_creating") : t("notes_createFirst")}
+                    </Button>
+                    <span className="text-white/25">{t("notes_empty_or")}</span>
+                    <Button
+                      type="button"
+                      variant="link"
+                      className="gap-1.5 normal-case text-white/70 hover:text-white"
+                      onClick={() => setImportOpen(true)}
+                    >
+                      <Upload className="h-3.5 w-3.5" />
+                      {t("notes_importBtn")}
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-12">
@@ -785,55 +820,50 @@ export default function Notes() {
                                     }
                                   />
 
-
                                   {!selectMode && (
-                                  <div className="flex shrink-0 items-center gap-1 pt-1">
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className={cn(
-                                        "transition-colors p-1.5 opacity-70 hover:opacity-100",
-                                        note.favorite ? "text-white" : "text-white"
-                                      )} 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleFavorite(note.id, e);
-                                      }}
-                                      aria-label={note.favorite ? t("notes_unfavorite") : t("notes_favorite")}
-                                    >
-                                      {note.favorite ? (
-                                        <BookmarkCheck className="h-3 w-3 fill-current" />
-                                      ) : (
-                                        <Bookmark className="h-3 w-3" />
-                                      )}
-                                    </Button>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="icon"
-                                      className="text-white transition p-1.5 opacity-70 hover:opacity-100"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        e.preventDefault();
-                                        setPendingDelete(note);
-                                      }}
-                                      aria-label={t("common_delete")}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                    <InsightSignalBadge kind="note" id={note.id} />
-                                  </div>
-                                  )}
-                                  {selectMode && (
-                                    <span
-                                      className={cn(
-                                        "mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-sm border transition-colors",
-                                        selected ? "border-white bg-white text-black" : "border-white/30 text-transparent"
-                                      )}
-                                    >
-                                      <Check className="h-3.5 w-3.5" />
-                                    </span>
+                                    <div className="flex shrink-0 items-center gap-2 pt-1">
+                                      <span className="flex h-5 w-5 items-center justify-center">
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="iconSm"
+                                          className={cn(
+                                            "h-5 w-5 rounded-full p-0 opacity-70 transition-colors hover:opacity-100",
+                                            note.favorite ? "text-white" : "text-white"
+                                          )}
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleFavorite(note.id, e);
+                                          }}
+                                          aria-label={note.favorite ? t("notes_unfavorite") : t("notes_favorite")}
+                                        >
+                                          {note.favorite ? (
+                                            <BookmarkCheck className="h-3 w-3 fill-current" />
+                                          ) : (
+                                            <Bookmark className="h-3 w-3" />
+                                          )}
+                                        </Button>
+                                      </span>
+                                      <span className="flex h-5 w-5 items-center justify-center">
+                                        <Button
+                                          type="button"
+                                          variant="ghost"
+                                          size="iconSm"
+                                          className="h-5 w-5 rounded-full p-0 text-white opacity-70 transition hover:opacity-100"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            setPendingDelete(note);
+                                          }}
+                                          aria-label={t("common_delete")}
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </span>
+                                      <span className="flex h-5 w-5 items-center justify-center">
+                                        <InsightSignalBadge kind="note" id={note.id} className="h-5 w-5" />
+                                      </span>
+                                    </div>
                                   )}
                               </NoteRow>
                             );
@@ -857,6 +887,12 @@ export default function Notes() {
       />
 
       <UpgradeModal open={upgradeOpen} onOpenChange={setUpgradeOpen} reason={t("notes_limit")} />
+
+      <MarkdownImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        onImported={() => { void fetchData(); }}
+      />
 
       <ConfirmDialog
         open={!!pendingDelete}

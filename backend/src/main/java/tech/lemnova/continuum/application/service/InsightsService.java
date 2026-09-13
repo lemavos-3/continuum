@@ -8,8 +8,10 @@ import tech.lemnova.continuum.controller.dto.insights.EntityInsightDTO;
 import tech.lemnova.continuum.controller.dto.insights.NoteInsightDTO;
 import tech.lemnova.continuum.controller.dto.note.NoteSummaryDTO;
 import tech.lemnova.continuum.domain.entity.Entity;
+import tech.lemnova.continuum.domain.entity.EntityType;
 import tech.lemnova.continuum.domain.note.Note;
 import tech.lemnova.continuum.domain.note.NoteLink;
+import tech.lemnova.continuum.domain.tracking.TrackingEvent;
 import tech.lemnova.continuum.domain.timetracking.TimeEntry;
 import tech.lemnova.continuum.infra.persistence.EntityLinkRepository;
 import tech.lemnova.continuum.infra.persistence.EntityRepository;
@@ -79,6 +81,8 @@ public class InsightsService {
     private static final double W_ENT_HOURS = 3.8;
     private static final double W_ENT_RELATIONS = 2.8;
     private static final double W_ENT_DAYS = 1.0;
+        private static final double W_ENT_COMPLETIONS = 2.0;
+        private static final double W_ENT_RECENT_COMPLETIONS = 4.0;
 
     // Softer decay (v2)
     private static final double NOTE_DECAY_PER_DAY = 0.012;
@@ -245,12 +249,16 @@ public class InsightsService {
             relationsByEntity.put(e.getId(), from + to);
         }
 
+        Map<String, List<TrackingEvent>> trackingByEntity = trackingRepo.findByUserIdAndArchivedAtIsNull(userId).stream()
+                .collect(Collectors.groupingBy(TrackingEvent::getEntityId));
+
         return entities.stream()
                 .map(e -> buildEntityInsight(
                         e,
                         notesByEntity.getOrDefault(e.getId(), Collections.emptyList()),
                         hoursByEntity.getOrDefault(e.getId(), 0.0),
                         relationsByEntity.getOrDefault(e.getId(), 0L),
+                        trackingByEntity.getOrDefault(e.getId(), Collections.emptyList()),
                         now, today))
                 .collect(Collectors.toList());
     }
@@ -329,13 +337,30 @@ public class InsightsService {
 
     private EntityInsightDTO buildEntityInsight(Entity entity, List<Note> mentioningNotes,
                                                 double hoursTracked, long relationLinks,
+                                                List<TrackingEvent> trackingEvents,
                                                 LocalDateTime now, LocalDate today) {
         long mentionCount = mentioningNotes.size();
+
+        boolean activity = entity.getType() == EntityType.ACTIVITY;
+        Set<LocalDate> completionDates = new HashSet<>();
+        if (activity && entity.getTrackingDates() != null) completionDates.addAll(entity.getTrackingDates());
+        if (activity) {
+            trackingEvents.stream()
+                    .filter(e -> e.getDate() != null && e.getNumericValue().doubleValue() > 0)
+                    .map(TrackingEvent::getDate)
+                    .forEach(completionDates::add);
+        }
+        long completions = completionDates.size();
 
         Instant cutoff30 = now.minusDays(30).atZone(ZoneId.systemDefault()).toInstant();
         long recentMentions = mentioningNotes.stream()
                 .filter(n -> n.getUpdatedAt() != null && n.getUpdatedAt().isAfter(cutoff30))
                 .count();
+        long recentCompletions = activity
+                ? completionDates.stream()
+                        .filter(date -> !date.atStartOfDay(ZoneId.systemDefault()).toInstant().isBefore(cutoff30))
+                        .count()
+                : 0;
 
         // Only true entity↔entity links. mentionCount is already weighted via W_ENT_MENTIONS;
         // adding it here used to double-count and inflate noisy entities.
@@ -355,6 +380,14 @@ public class InsightsService {
                 .max(Instant::compareTo)
                 .orElse(entity.getCreatedAt() != null ? entity.getCreatedAt() : Instant.now());
 
+        Instant lastCompletion = activity
+                ? completionDates.stream()
+                        .map(date -> date.atStartOfDay(ZoneId.systemDefault()).toInstant())
+                        .max(Instant::compareTo)
+                        .orElse(null)
+                : null;
+        if (lastCompletion != null && lastCompletion.isAfter(lastMention)) lastMention = lastCompletion;
+
         long daysSinceLast = ChronoUnit.DAYS.between(
                 lastMention.atZone(ZoneId.systemDefault()).toLocalDate(), today);
 
@@ -362,7 +395,9 @@ public class InsightsService {
                 + (recentMentions * W_ENT_RECENT)
                 + (hoursTracked * W_ENT_HOURS)
                 + (relationsCount * W_ENT_RELATIONS)
-                + (uniqueDaysMentioned * W_ENT_DAYS);
+                + (uniqueDaysMentioned * W_ENT_DAYS)
+                + (completions * W_ENT_COMPLETIONS)
+                + (recentCompletions * W_ENT_RECENT_COMPLETIONS);
 
         double decay = Math.max(ENT_DECAY_FLOOR, 1.0 - (daysSinceLast * ENT_DECAY_PER_DAY));
         double score = base * decay;
