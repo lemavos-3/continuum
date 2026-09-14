@@ -395,7 +395,7 @@ export default function Insights() {
   return (
     <AppLayout>
       <div
-        className="relative min-h-full"
+        className="relative min-h-full lg:h-[calc(100dvh-5rem)] lg:overflow-hidden"
       >
         {/* Edge swipe hint (mobile only) */}
         <div
@@ -411,14 +411,14 @@ export default function Insights() {
           </SheetContent>
         </Sheet>
 
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 px-6 py-5 lg:flex-row lg:gap-16 lg:px-12 lg:py-16">
+        <div className="mx-auto flex h-full max-w-6xl flex-col gap-10 px-6 py-5 lg:flex-row lg:gap-16 lg:px-12 lg:py-16 lg:overflow-hidden">
           {/* Sidebar Desktop */}
           <aside className="hidden lg:sticky lg:top-16 lg:block lg:w-52 lg:shrink-0 lg:self-start">
             {SidebarContent}
           </aside>
 
           {/* Conteúdo Principal */}
-          <main className="min-w-0 flex-1">
+          <main className="min-w-0 flex-1 lg:max-h-full lg:overflow-y-auto">
             {/* Evolução do score */}
             <div className="-mx-6 mb-6 sm:-mx-2 lg:-mx-4 lg:mb-8">
               <ScoreEvolutionSection />
