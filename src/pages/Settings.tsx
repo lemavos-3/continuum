@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type ComponentType, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
-import InstallAppButton from "@/components/pwa/InstallAppButton";
 import SubscriptionModal from "@/components/subscription/SubscriptionModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { authApi, importApi } from "@/lib/api";
@@ -131,7 +130,7 @@ function OfflineSyncRow() {
 
 /* ── Page ────────────────────────────────────────────────────────────*/
 
-export default function Profile() {
+export default function SettingsPage() {
   const { user, refreshUser, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -285,129 +284,61 @@ export default function Profile() {
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="truncate font-serif text-2xl text-foreground sm:text-3xl">
-              {user?.username || t("profile_title")}
+              {t("profile_settings")}
             </h1>
-            <p className="mt-1 truncate text-xs text-muted-foreground">{user?.email}</p>
+            <p className="mt-1 truncate text-xs text-muted-foreground">{t("profile_subtitle")}</p>
+            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{user?.email}</p>
           </div>
           <Badge variant="meta" className="shrink-0">{currentPlan}</Badge>
         </header>
 
-        <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
-          {/* ACCOUNT */}
-          <section className="space-y-4">
-            <SectionTitle eyebrow={t("profile_eyebrowAccount")} title={t("profile_accountDetails")} />
-            <Card variant="faint">
-            <CardContent className="space-y-5 p-4 sm:p-6">
-              <div className="space-y-2">
-                <Label htmlFor="profile-username" className="text-xs text-muted-foreground">{t("profile_username")}</Label>
-                <div className="relative">
-                  <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="profile-username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder={t("profile_usernamePlaceholder")}
-                    className="pl-9"
-                  />
+        <section className="space-y-4">
+          <SectionTitle eyebrow={currentPlan} title={t("profile_planUsage")} />
+          <Card variant="faint">
+            <CardContent className="divide-y divide-border p-0">
+              {usageLoading && !usage ? (
+                <div className="flex justify-center py-10">
+                  <ArrowPathIcon className="h-5 w-5 animate-spin text-muted-foreground" />
                 </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="profile-email" className="text-xs text-muted-foreground">{t("profile_emailAddress")}</Label>
-                <div className="relative">
-                  <EnvelopeIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    id="profile-email"
-                    type="email"
-                    value={email}
-                    readOnly
-                    className="cursor-not-allowed pl-9 pr-20 text-muted-foreground"
-                  />
-                  <Badge variant="meta" className="absolute right-2 top-1/2 -translate-y-1/2">Google</Badge>
-                </div>
-              </div>
-
-              <div className="pt-1">
-                <p className="text-xs text-muted-foreground">{t("profile_memberSince")}</p>
-                <p className="mt-1 text-sm font-medium text-foreground/80">
-                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—"}
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button
-                  onClick={() => setSaveConfirmOpen(true)}
-                  disabled={saving || !username.trim() || username.trim() === (user?.username ?? "").trim()}
-                  className="w-full gap-2 normal-case sm:flex-1"
-                >
-                  {saving && <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />}
-                  {t("profile_saveChanges")}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setSubscriptionOpen(true)}
-                  className="w-full normal-case sm:w-auto"
-                >
-                  {t("nav_subscription")}
-                </Button>
-              </div>
-
-              <SubscriptionModal open={subscriptionOpen} onOpenChange={setSubscriptionOpen} />
-
-
-              <ConfirmDialog
-                open={saveConfirmOpen}
-                onOpenChange={setSaveConfirmOpen}
-                title={t("profile_saveConfirmTitle")}
-                description={t("profile_saveConfirmDesc")}
-                confirmText={t("common_save")}
-                onConfirm={async () => {
-                  setSaveConfirmOpen(false);
-                  await handleSave();
-                }}
-              />
-            </CardContent>
-            </Card>
-          </section>
-
-          {/* PLAN & USAGE */}
-          <section className="space-y-4">
-            <SectionTitle eyebrow={currentPlan} title={t("profile_planUsage")} />
-            <Card variant="faint">
-              <CardContent className="divide-y divide-border p-0">
-                {usageLoading && !usage ? (
-                  <div className="flex justify-center py-10">
-                    <ArrowPathIcon className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                ) : usageResources.map((resource) => {
-                  const unlimited = resource.max === -1;
-                  const percent = unlimited ? 0 : Math.min((resource.current / resource.max) * 100, 100);
-                  return (
-                    <div key={resource.label} className="space-y-2.5 p-4">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-medium text-foreground/80">{resource.label}</span>
-                        <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                          {unlimited ? "∞" : `${resource.current.toFixed(resource.suffix ? 1 : 0)} / ${resource.max}${resource.suffix}`}
-                        </span>
-                      </div>
-                      <Progress value={percent} className="h-[2px] rounded-none bg-accent" />
+              ) : usageResources.map((resource) => {
+                const unlimited = resource.max === -1;
+                const percent = unlimited ? 0 : Math.min((resource.current / resource.max) * 100, 100);
+                return (
+                  <div key={resource.label} className="space-y-2.5 p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-medium text-foreground/80">{resource.label}</span>
+                      <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                        {unlimited ? "∞" : `${resource.current.toFixed(resource.suffix ? 1 : 0)} / ${resource.max}${resource.suffix}`}
+                      </span>
                     </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
-            <div className="grid grid-cols-3 gap-2">
-              {planDetails.map((detail) => (
-                <Card key={detail.label} variant="faint">
-                  <CardContent className="min-w-0 p-3">
-                    <p className="truncate text-[10px] text-muted-foreground">{detail.label}</p>
-                    <p className="mt-1 truncate font-mono text-[11px] text-foreground/80">{detail.value}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </section>
-        </div>
+                    <Progress value={percent} className="h-[2px] rounded-none bg-accent" />
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+          <div className="grid grid-cols-3 gap-2">
+            {planDetails.map((detail) => (
+              <Card key={detail.label} variant="faint">
+                <CardContent className="min-w-0 p-3">
+                  <p className="truncate text-[10px] text-muted-foreground">{detail.label}</p>
+                  <p className="mt-1 truncate font-mono text-[11px] text-foreground/80">{detail.value}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="pt-1">
+            <Button
+              variant="outline"
+              onClick={() => setSubscriptionOpen(true)}
+              className="w-full normal-case sm:w-auto"
+            >
+              {t("nav_subscription")}
+            </Button>
+          </div>
+        </section>
+
+        <SubscriptionModal open={subscriptionOpen} onOpenChange={setSubscriptionOpen} />
 
         {/* PREFERENCES */}
         <section className="space-y-4">
@@ -419,17 +350,6 @@ export default function Profile() {
               <div className="px-4">
                 <LanguageSelector />
               </div>
-              <SettingRow
-                icon={CalendarIcon}
-                title={t("profile_history")}
-                subtitle={limits.historyDays === -1 ? t("common_unlimited") : t("profile_historyDays", { n: limits.historyDays })}
-              />
-              <SettingRow
-                icon={LockClosedIcon}
-                title={t("profile_securityLayer")}
-                subtitle={t("profile_securityLayerDesc")}
-              />
-              <OfflineSyncRow />
               </CardContent>
             </Card>
             <Card variant="faint">
@@ -514,6 +434,12 @@ export default function Profile() {
             </Card>
 
             <Card variant="faint">
+              <CardContent className="p-0">
+                <OfflineSyncRow />
+              </CardContent>
+            </Card>
+
+            <Card variant="faint">
               <CardContent className="space-y-3 p-4 sm:p-5">
                 <div className="flex items-start gap-3">
                   <ArrowDownTrayIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
@@ -562,11 +488,6 @@ export default function Profile() {
             </Card>
           </div>
 
-          <Card variant="faint">
-            <CardContent className="p-4 sm:p-5">
-              <InstallAppButton />
-            </CardContent>
-          </Card>
         </section>
 
         {/* HELP & SUPPORT */}

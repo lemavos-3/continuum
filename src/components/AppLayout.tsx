@@ -142,8 +142,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground">{user?.email}</DropdownMenuLabel>
-                <DropdownMenuItem onSelect={() => navigate("/profile")}>
-                  <UserIcon className="mr-2 h-4 w-4" /> {t("nav_profile")}
+                <DropdownMenuItem onSelect={() => navigate("/settings")}>
+                  <UserIcon className="mr-2 h-4 w-4" /> {t("nav_settings")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
