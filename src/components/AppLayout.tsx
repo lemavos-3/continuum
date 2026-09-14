@@ -90,7 +90,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             left: "10%",
           }}
         >
-          <div className="flex items-center justify-around gap-0.5 rounded-2xl border border-white/10 bg-background/75 px-1 py-1 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-md supports-[backdrop-filter]:bg-background/65">
+          <div className="flex items-center justify-around gap-0.5 rounded-2xl border border-white/10 bg-background/85 px-1 py-1 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-sm supports-[backdrop-filter]:bg-background/75">
             {mobileTabs.map((it) => (
               <NavLink
                 key={it.to}
