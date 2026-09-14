@@ -9,7 +9,6 @@ import { usePlanGate } from "@/hooks/usePlanGate";
 import { getCurrentPlan, getPlanLimits, isUnlimited } from "@/lib/plan";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
@@ -271,26 +270,9 @@ export default function SettingsPage() {
     navigate("/");
   };
 
-  const initials = (user?.username || user?.email || "?").slice(0, 1).toUpperCase();
-
   return (
     <AppLayout>
       <div className="mx-auto max-w-5xl space-y-7 px-4 py-6 sm:px-6 lg:px-10 lg:py-12">
-
-        {/* IDENTITY HEADER */}
-        <header className="flex items-center gap-4 pb-2">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent font-serif text-lg text-foreground sm:h-14 sm:w-14 sm:text-xl">
-            {initials}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate font-serif text-2xl text-foreground sm:text-3xl">
-              {t("profile_settings")}
-            </h1>
-            <p className="mt-1 truncate text-xs text-muted-foreground">{t("profile_subtitle")}</p>
-            <p className="mt-0.5 truncate text-[11px] text-muted-foreground">{user?.email}</p>
-          </div>
-          <Badge variant="meta" className="shrink-0">{currentPlan}</Badge>
-        </header>
 
         <section className="space-y-4">
           <SectionTitle eyebrow={currentPlan} title={t("profile_planUsage")} />
