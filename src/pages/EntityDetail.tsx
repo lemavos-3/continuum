@@ -358,7 +358,7 @@ export default function EntityDetail() {
         {/* Accordion sections */}
         <Accordion
           type="multiple"
-          defaultValue={["metadata", "notes", "entities"]}
+          defaultValue={["metadata"]}
           className="border-t border-border"
         >
           <AccordionItem value="metadata" className="border-b border-border">
@@ -431,7 +431,10 @@ export default function EntityDetail() {
 
           <AccordionItem value="notes" className="border-b border-border">
             <AccordionTrigger className="label-caps text-muted-foreground hover:text-foreground hover:no-underline py-4">
-              {t("ent_connected_notes")} <span className="ml-2 text-muted-foreground/60 normal-case tracking-normal">({relatedNotes.length})</span>
+              <span className="flex w-full items-center justify-between gap-3">
+                <span>{t("ent_connected_notes")}</span>
+                <span className="text-muted-foreground/60 normal-case tracking-normal">({relatedNotes.length})</span>
+              </span>
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-1 pb-4">
@@ -461,7 +464,10 @@ export default function EntityDetail() {
 
           <AccordionItem value="entities" className="border-b border-border">
             <AccordionTrigger className="label-caps text-muted-foreground hover:text-foreground hover:no-underline py-4">
-              {t("ent_connected_entities")} <span className="ml-2 text-muted-foreground/60 normal-case tracking-normal">({relatedEntities.length})</span>
+              <span className="flex w-full items-center justify-between gap-3">
+                <span>{t("ent_connected_entities")}</span>
+                <span className="text-muted-foreground/60 normal-case tracking-normal">({relatedEntities.length})</span>
+              </span>
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-1 pb-4">
