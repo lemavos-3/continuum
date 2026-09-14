@@ -411,14 +411,14 @@ export default function Insights() {
           </SheetContent>
         </Sheet>
 
-        <div className="mx-auto flex h-full max-w-6xl flex-col gap-10 px-6 py-5 lg:flex-row lg:gap-16 lg:px-12 lg:py-16 lg:overflow-hidden">
+        <div className="mx-auto flex h-full max-w-6xl flex-col gap-10 px-6 py-5 lg:flex-row lg:gap-16 lg:px-12 lg:py-16 lg:overflow-hidden lg:items-start">
           {/* Sidebar Desktop */}
           <aside className="hidden lg:sticky lg:top-16 lg:block lg:w-52 lg:shrink-0 lg:self-start">
             {SidebarContent}
           </aside>
 
           {/* Conteúdo Principal */}
-          <main className="min-w-0 flex-1 lg:max-h-full lg:overflow-y-auto">
+          <main className="min-w-0 flex-1 lg:flex lg:h-full lg:flex-col">
             {/* Evolução do score */}
             <div className="-mx-6 mb-6 sm:-mx-2 lg:-mx-4 lg:mb-8">
               <ScoreEvolutionSection />
@@ -460,8 +460,8 @@ export default function Insights() {
               />
             </div>
 
-            {/* Input de Busca Sticky (desktop) */}
-            <div className="sticky top-14 z-10 -mx-4 hidden border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl lg:block">
+            {/* Input de Busca (desktop, fora da área rolável) */}
+            <div className="-mx-4 hidden border-b border-white/10 bg-black/70 px-4 py-3 backdrop-blur-xl lg:block">
               <div className="relative">
                 <MagnifyingGlassIcon className="pointer-events-none absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-white/30" />
                 <Input
@@ -473,38 +473,39 @@ export default function Insights() {
               </div>
             </div>
 
-
-            <div className="flex items-center justify-between border-b border-white/5 pb-3 pt-4 mb-4 text-[11px] text-white/40">
-              <div>
-                {filteredInsights.length === 1
-                  ? t("ins_showing_signal", { count: filteredInsights.length })
-                  : t("ins_showing_signals", { count: filteredInsights.length })}
-              </div>
-              <div className="font-mono text-[10px] uppercase tracking-wider text-white/30">
-                {t("ins_sorted_by_score")}
-              </div>
-            </div>
-
-            <div className="mt-2">
-              {loading ? (
-                <div className="space-y-3 py-6">
-                  {Array.from({ length: 7 }).map((_, index) => (
-                    <Skeleton key={index} className="h-14 w-full" />
-                  ))}
+            <div className="lg:flex-1 lg:overflow-y-auto">
+              <div className="flex items-center justify-between border-b border-white/5 pb-3 pt-4 mb-4 text-[11px] text-white/40">
+                <div>
+                  {filteredInsights.length === 1
+                    ? t("ins_showing_signal", { count: filteredInsights.length })
+                    : t("ins_showing_signals", { count: filteredInsights.length })}
                 </div>
-              ) : filteredInsights.length === 0 ? (
-                <div className="py-24 text-center">
-                  <p className="font-serif text-2xl italic text-white/40">
-                    {t("ins_no_matching")}
-                  </p>
+                <div className="font-mono text-[10px] uppercase tracking-wider text-white/30">
+                  {t("ins_sorted_by_score")}
                 </div>
-              ) : (
-                <ul className="divide-y divide-white/[0.06]">
-                  {filteredInsights.map((item) => (
-                    <InsightRow key={`${item.kind}-${item.id}-${item.category}`} item={item} />
-                  ))}
-                </ul>
-              )}
+              </div>
+
+              <div className="mt-2">
+                {loading ? (
+                  <div className="space-y-3 py-6">
+                    {Array.from({ length: 7 }).map((_, index) => (
+                      <Skeleton key={index} className="h-14 w-full" />
+                    ))}
+                  </div>
+                ) : filteredInsights.length === 0 ? (
+                  <div className="py-24 text-center">
+                    <p className="font-serif text-2xl italic text-white/40">
+                      {t("ins_no_matching")}
+                    </p>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-white/[0.06]">
+                    {filteredInsights.map((item) => (
+                      <InsightRow key={`${item.kind}-${item.id}-${item.category}`} item={item} />
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </main>
         </div>
