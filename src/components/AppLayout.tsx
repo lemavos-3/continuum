@@ -84,16 +84,20 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       {!isGraphPage && !isNoteEditor && (
         <nav
           className="fixed inset-x-3 z-40 lg:hidden"
-          style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
+          style={{
+            bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)",
+            width: "calc(100% - 20%)",
+            left: "10%",
+          }}
         >
-          <div className="flex items-center justify-around gap-0.5 rounded-xl border border-white/10 bg-background/75 px-0.5 py-0.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-md supports-[backdrop-filter]:bg-background/65">
+          <div className="flex items-center justify-around gap-0.5 rounded-2xl border border-white/10 bg-background/75 px-1 py-1 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-md supports-[backdrop-filter]:bg-background/65">
             {mobileTabs.map((it) => (
               <NavLink
                 key={it.to}
                 to={it.to}
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-1 items-center justify-center rounded-lg px-0 py-0.5 transition-all active:scale-95",
+                    "flex flex-1 items-center justify-center rounded-xl px-1 py-1.5 transition-all active:scale-95",
                     isActive ? "bg-white/8 text-foreground" : "text-muted-foreground",
                   )
                 }
@@ -115,7 +119,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex flex-1 items-center justify-center rounded-lg px-0 py-0.5 text-muted-foreground transition-all active:scale-95 data-[state=open]:bg-white/8 data-[state=open]:text-foreground"
+                  className="flex flex-1 items-center justify-center rounded-xl px-1 py-1.5 text-muted-foreground transition-all active:scale-95 data-[state=open]:bg-white/8 data-[state=open]:text-foreground"
                   aria-label={t("nav_more")}
                 >
                   <span className="grid h-7 w-7 place-items-center rounded-lg">
