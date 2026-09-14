@@ -429,26 +429,6 @@ export default function EntityDetail() {
             </AccordionContent>
           </AccordionItem>
 
-          {entity?.type === "PROJECT" && timeSummary && (
-            <AccordionItem value="time" className="border-b border-border">
-              <AccordionTrigger className="label-caps text-muted-foreground hover:text-foreground hover:no-underline py-4">
-                <span className="inline-flex items-center gap-2"><Clock className="w-3.5 h-3.5" /> {t("ent_time_tracking_summary")}</span>
-              </AccordionTrigger>
-              <AccordionContent>
-                <div className="grid grid-cols-2 gap-3 pb-4 max-w-md">
-                  <Card variant="faint" className="p-3">
-                    <p className="label-caps text-muted-foreground">{t("ent_total_time")}</p>
-                    <p className="mt-1.5 font-mono text-foreground">{timeSummary.formattedTotal}</p>
-                  </Card>
-                  <Card variant="faint" className="p-3">
-                    <p className="label-caps text-muted-foreground">{t("ent_sessions")}</p>
-                    <p className="mt-1.5 text-foreground">{timeSummary.entriesCount}</p>
-                  </Card>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-          )}
-
           <AccordionItem value="notes" className="border-b border-border">
             <AccordionTrigger className="label-caps text-muted-foreground hover:text-foreground hover:no-underline py-4">
               {t("ent_connected_notes")} <span className="ml-2 text-muted-foreground/60 normal-case tracking-normal">({relatedNotes.length})</span>
