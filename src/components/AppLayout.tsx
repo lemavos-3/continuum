@@ -86,16 +86,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           className="fixed inset-x-3 z-40 lg:hidden"
           style={{ bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
         >
-          <div className="flex items-stretch justify-around gap-1 rounded-xl border border-white/5 bg-background/75 px-2 py-1.5 shadow-[0_8px_28px_rgba(0,0,0,0.45)] backdrop-blur-sm supports-[backdrop-filter]:bg-background/65">
+          <div className="flex items-center justify-around gap-1.5 rounded-2xl border border-white/10 bg-background/75 px-1.5 py-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.45)] backdrop-blur-md supports-[backdrop-filter]:bg-background/65">
             {mobileTabs.map((it) => (
               <NavLink
                 key={it.to}
                 to={it.to}
-                
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium transition-colors active:scale-95",
-                    isActive ? "text-primary" : "text-muted-foreground",
+                    "flex flex-1 items-center justify-center rounded-xl px-1 py-1.5 transition-all active:scale-95",
+                    isActive ? "bg-white/8 text-foreground" : "text-muted-foreground",
                   )
                 }
               >
@@ -103,10 +102,10 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   const IconEl = isActive && it.iconSolid ? it.iconSolid : it.icon;
                   return (
                     <>
-                      <span className="grid h-7 w-10 place-items-center rounded-lg">
+                      <span className="sr-only">{t(it.key)}</span>
+                      <span className="grid h-8 w-8 place-items-center rounded-lg">
                         <IconEl className="h-5 w-5" />
                       </span>
-                      <span className="leading-none">{t(it.key)}</span>
                     </>
                   );
                 }}
@@ -116,12 +115,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex flex-1 flex-col items-center gap-0.5 rounded-xl px-1 py-1.5 text-[10px] font-medium text-muted-foreground transition-colors active:scale-95 data-[state=open]:text-primary"
+                  className="flex flex-1 items-center justify-center rounded-xl px-1 py-1.5 text-muted-foreground transition-all active:scale-95 data-[state=open]:bg-white/8 data-[state=open]:text-foreground"
+                  aria-label={t("nav_more")}
                 >
-                  <span className="grid h-7 w-10 place-items-center rounded-lg">
+                  <span className="grid h-8 w-8 place-items-center rounded-lg">
                     <Menu className="h-5 w-5" />
                   </span>
-                  <span className="leading-none">{t("nav_more")}</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" align="end" className="mb-2 w-56">
