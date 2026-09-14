@@ -367,19 +367,19 @@ export default function EntityDetail() {
             </AccordionTrigger>
             <AccordionContent>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pb-4">
-                <Card variant="subtle" className="p-3">
+                <Card variant="faint" className="p-3">
                   <div className="label-caps text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
                     <Calendar className="h-3 w-3" /> {t("ent_created")}
                   </div>
                   <div className="text-sm text-foreground">{new Date(entity.createdAt).toLocaleDateString("en-US")}</div>
                 </Card>
-                <Card variant="subtle" className="p-3">
+                <Card variant="faint" className="p-3">
                   <div className="label-caps text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
                     <Network className="h-3 w-3" /> {t("ent_connections")}
                   </div>
                   <div className="text-sm text-foreground">{relatedEntities.length}</div>
                 </Card>
-                <Card variant="subtle" className="p-3">
+                <Card variant="faint" className="p-3">
                   <div className="label-caps text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
                     <Tag className="h-3 w-3" /> {t("ent_type")}
                   </div>
@@ -436,11 +436,11 @@ export default function EntityDetail() {
               </AccordionTrigger>
               <AccordionContent>
                 <div className="grid grid-cols-2 gap-3 pb-4 max-w-md">
-                  <Card variant="subtle" className="p-3">
+                  <Card variant="faint" className="p-3">
                     <p className="label-caps text-muted-foreground">{t("ent_total_time")}</p>
                     <p className="mt-1.5 font-mono text-foreground">{timeSummary.formattedTotal}</p>
                   </Card>
-                  <Card variant="subtle" className="p-3">
+                  <Card variant="faint" className="p-3">
                     <p className="label-caps text-muted-foreground">{t("ent_sessions")}</p>
                     <p className="mt-1.5 text-foreground">{timeSummary.entriesCount}</p>
                   </Card>
