@@ -90,7 +90,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             left: "10%",
           }}
         >
-          <div className="flex items-center justify-around gap-0.5 rounded-2xl border border-white/10 bg-secondary/85 px-1 py-1 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-xs supports-[backdrop-filter]:bg-secondary/85">
+          <div className="flex items-center justify-around gap-0.5 rounded-2xl border border-white/10 bg-secondary px-1 py-1 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-[6px] supports-[backdrop-filter]:bg-secondary">
             {mobileTabs.map((it) => (
               <NavLink
                 key={it.to}
@@ -127,7 +127,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   </span>
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" align="end" className="mb-2 w-56 bg-secondary/85 backdrop-blur-xs">
+              <DropdownMenuContent side="top" align="end" className="mb-2 w-56 backdrop-blur-[6px]">
                 <DropdownMenuItem onSelect={() => navigate("/projects")}>
                   <FolderOpen className="mr-2 h-4 w-4" /> {t("nav_projects")}
                 </DropdownMenuItem>
