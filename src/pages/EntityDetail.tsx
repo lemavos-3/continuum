@@ -43,6 +43,8 @@ export default function EntityDetail() {
   const [newTitle, setNewTitle] = useState("");
   const [editingDescription, setEditingDescription] = useState(false);
   const [newDescription, setNewDescription] = useState("");
+  const [editingType, setEditingType] = useState(false);
+  const [newType, setNewType] = useState("");
   const [relatedNotes, setRelatedNotes] = useState<RelatedNote[]>([]);
   const [relatedEntities, setRelatedEntities] = useState<EntityData[]>([]);
 
@@ -218,6 +220,16 @@ export default function EntityDetail() {
     } catch { toast({ title: t("ent_error_updating_description"), variant: "destructive" }); }
   };
 
+  const handleSaveType = async () => {
+    if (!id || !newType) return;
+    try {
+      const { data } = await entitiesApi.update(id, { type: newType });
+      setEntity(data);
+      setEditingType(false);
+      toast({ title: t("ent_type_updated") ?? "Entity type updated" });
+    } catch { toast({ title: t("ent_error_updating"), variant: "destructive" }); }
+  };
+
   if (loading)
     return (
       <AppLayout>
@@ -242,6 +254,13 @@ export default function EntityDetail() {
 
   const typeLabelKey = `ent_type_${entity.type.toLowerCase()}`;
   const typeLabel = t(typeLabelKey) === typeLabelKey ? entity.type.charAt(0) + entity.type.slice(1).toLowerCase() : t(typeLabelKey);
+  const entityTypeOptions = [
+    { value: "TOPIC", label: t("ent_type_topic") },
+    { value: "PERSON", label: t("ent_type_person") },
+    { value: "ORGANIZATION", label: t("ent_type_organization") },
+    { value: "PROJECT", label: t("ent_type_project") },
+    { value: "ACTIVITY", label: t("ent_type_activity") },
+  ];
 
   return (
     <AppLayout>
@@ -364,7 +383,47 @@ export default function EntityDetail() {
                   <div className="label-caps text-muted-foreground mb-1.5 inline-flex items-center gap-1.5">
                     <Tag className="h-3 w-3" /> {t("ent_type")}
                   </div>
-                  <div className="text-sm text-foreground">{typeLabel}</div>
+                  {editingType ? (
+                    <div className="flex flex-col gap-2">
+                      <select
+                        value={newType}
+                        onChange={(e) => setNewType(e.target.value)}
+                        className="h-9 rounded-md border border-border bg-background px-2 text-sm text-foreground"
+                      >
+                        {entityTypeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>{option.label}</option>
+                        ))}
+                      </select>
+                      <div className="flex gap-2">
+                        <Button size="sm" onClick={handleSaveType}>{t("ent_save")}</Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            setEditingType(false);
+                            setNewType(entity.type);
+                          }}
+                        >
+                          {t("ent_cancel")}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-sm text-foreground">{typeLabel}</div>
+                      <Button
+                        variant="ghost"
+                        size="iconSm"
+                        onClick={() => {
+                          setEditingType(true);
+                          setNewType(entity.type);
+                        }}
+                        aria-label={t("ent_edit_type") ?? "Edit type"}
+                      >
+                        <Edit className="h-3.5 w-3.5 text-muted-foreground" />
+                      </Button>
+                    </div>
+                  )}
                 </Card>
               </div>
             </AccordionContent>
