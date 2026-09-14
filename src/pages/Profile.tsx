@@ -4,7 +4,7 @@ import AppLayout from "@/components/AppLayout";
 import InstallAppButton from "@/components/pwa/InstallAppButton";
 import SubscriptionModal from "@/components/subscription/SubscriptionModal";
 import { useAuth } from "@/contexts/AuthContext";
-import { authApi } from "@/lib/api";
+import { authApi, importApi } from "@/lib/api";
 import { version } from "@/lib/version";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { getCurrentPlan, getPlanLimits, isUnlimited } from "@/lib/plan";
@@ -29,6 +29,7 @@ import {
   ChatBubbleLeftEllipsisIcon,
   BugAntIcon,
   ChevronRightIcon,
+  LinkIcon,
 } from "@heroicons/react/24/outline";
 import MarkdownImportDialog from "@/components/import/MarkdownImportDialog";
 import { useOfflineStatus } from "@/hooks/use-offline-status";
@@ -75,6 +76,7 @@ function SettingRow({
 
 function OfflineSyncRow() {
   const { status, pending, syncing } = useOfflineStatus();
+  const { t } = useLanguage();
   const [busy, setBusy] = useState(false);
   const [lastSync, setLastSync] = useState<number | undefined>(undefined);
   useEffect(() => {
@@ -85,33 +87,33 @@ function OfflineSyncRow() {
 
   const onSync = async () => {
     if (!navigator.onLine) {
-      sonnerToast.error("You're offline. Changes will sync when you're back online.");
+      sonnerToast.error(t("profile_offlineToast"));
       return;
     }
     setBusy(true);
     try {
       const r = await flushQueue();
-      if (r.sent === 0 && r.failed === 0) sonnerToast.success("Everything is up to date.");
-      else if (r.failed === 0) sonnerToast.success(`${r.sent} change${r.sent === 1 ? "" : "s"} synced.`);
-      else sonnerToast.warning(`${r.sent} synced, ${r.failed} failed — will retry.`);
+      if (r.sent === 0 && r.failed === 0) sonnerToast.success(t("profile_upToDate"));
+      else if (r.failed === 0) sonnerToast.success(t("profile_syncComplete", { n: r.sent }));
+      else sonnerToast.warning(t("profile_syncPartial", { sent: r.sent, failed: r.failed }));
     } finally {
       setBusy(false);
     }
   };
 
   const subtitle = status === "offline"
-    ? `Working offline${pending > 0 ? ` · ${pending} pending` : ""}`
+    ? `${t("profile_workingOffline")}${pending > 0 ? ` · ${t("profile_pending", { n: pending })}` : ""}`
     : pending > 0
-      ? `${pending} pending change${pending === 1 ? "" : "s"}`
+      ? t("profile_pending", { n: pending })
       : lastSync
-        ? `Last sync: ${new Date(lastSync).toLocaleString()}`
-        : "Up to date";
+        ? t("profile_lastSync", { time: new Date(lastSync).toLocaleString() })
+        : t("profile_upToDate");
 
   return (
     <div className="flex items-center gap-4 px-4 py-3.5">
       <ArrowPathIcon className={`h-4 w-4 shrink-0 text-muted-foreground ${syncing || busy ? "animate-spin" : ""}`} />
       <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-foreground/80">Offline & Sync</p>
+        <p className="text-xs font-medium text-foreground/80">{t("profile_offlineSync")}</p>
         <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
       </div>
       <Button
@@ -122,7 +124,7 @@ function OfflineSyncRow() {
         disabled={busy || syncing}
         className="normal-case"
       >
-        {busy || syncing ? "Syncing…" : "Sync now"}
+        {busy || syncing ? t("profile_syncing") : t("profile_syncNow")}
       </Button>
     </div>
   );
@@ -141,6 +143,7 @@ export default function Profile() {
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [relinking, setRelinking] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
   const [subscriptionOpen, setSubscriptionOpen] = useState(false);
 
@@ -198,6 +201,30 @@ export default function Profile() {
     }
   };
 
+  const handleRelinkEntities = async () => {
+    if (relinking) return;
+    setRelinking(true);
+    try {
+      const res = await importApi.relinkEntities();
+      const data = res.data as { notesUpdated?: number; connectionsCreated?: number };
+      toast({
+        title: t("import_relinkDoneTitle"),
+        description: t("import_relinkDoneDesc", {
+          n: data.connectionsCreated ?? 0,
+          notes: data.notesUpdated ?? 0,
+        }),
+      });
+    } catch (e: any) {
+      toast({
+        title: t("profile_relinkFailed"),
+        description: e?.response?.data?.message || e?.message || t("profile_relinkFailedDesc"),
+        variant: "destructive",
+      });
+    } finally {
+      setRelinking(false);
+    }
+  };
+
   useEffect(() => {
     setUsername(user?.username ?? "");
     setEmail(user?.email ?? "");
@@ -250,15 +277,15 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-4xl space-y-8 px-4 py-6 sm:px-6 lg:px-12 lg:py-14">
+      <div className="mx-auto max-w-5xl space-y-7 px-4 py-6 sm:px-6 lg:px-10 lg:py-12">
 
         {/* IDENTITY HEADER */}
-        <header className="flex items-center gap-4 border-b border-border pb-6">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent font-serif text-xl text-foreground">
+        <header className="flex items-center gap-4 pb-2">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-accent font-serif text-lg text-foreground sm:h-14 sm:w-14 sm:text-xl">
             {initials}
           </div>
           <div className="min-w-0 flex-1">
-            <h1 className="truncate font-serif text-3xl tracking-tight text-foreground sm:text-4xl">
+            <h1 className="truncate font-serif text-2xl text-foreground sm:text-3xl">
               {user?.username || t("profile_title")}
             </h1>
             <p className="mt-1 truncate text-xs text-muted-foreground">{user?.email}</p>
@@ -266,11 +293,11 @@ export default function Profile() {
           <Badge variant="meta" className="shrink-0">{currentPlan}</Badge>
         </header>
 
-        {/* ACCOUNT */}
-        <section className="space-y-4">
-          <SectionTitle eyebrow={t("profile_settings")} title={t("profile_accountDetails")} />
-
-          <Card variant="faint">
+        <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
+          {/* ACCOUNT */}
+          <section className="space-y-4">
+            <SectionTitle eyebrow={t("profile_settings")} title={t("profile_accountDetails")} />
+            <Card variant="faint">
             <CardContent className="space-y-5 p-4 sm:p-6">
               <div className="space-y-2">
                 <Label htmlFor="profile-username" className="text-xs text-muted-foreground">{t("profile_username")}</Label>
@@ -301,7 +328,7 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
+              <div className="grid grid-cols-2 gap-4 pt-1">
                 <div>
                   <p className="text-xs text-muted-foreground">{t("profile_currentPlan")}</p>
                   <p className="mt-1 text-sm font-medium text-foreground/80">{currentPlan}</p>
@@ -314,22 +341,23 @@ export default function Profile() {
                 </div>
               </div>
 
-              <Button
-                onClick={() => setSaveConfirmOpen(true)}
-                disabled={saving || !username.trim()}
-                className="w-full gap-2 normal-case"
-              >
-                {saving && <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />}
-                {t("profile_saveChanges")}
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={() => setSubscriptionOpen(true)}
-                className="w-full gap-2 normal-case"
-              >
-                {t("nav_subscription")}
-              </Button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Button
+                  onClick={() => setSaveConfirmOpen(true)}
+                  disabled={saving || !username.trim()}
+                  className="w-full gap-2 normal-case sm:flex-1"
+                >
+                  {saving && <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />}
+                  {t("profile_saveChanges")}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setSubscriptionOpen(true)}
+                  className="w-full normal-case sm:w-auto"
+                >
+                  {t("nav_subscription")}
+                </Button>
+              </div>
 
               <SubscriptionModal open={subscriptionOpen} onOpenChange={setSubscriptionOpen} />
 
@@ -346,15 +374,55 @@ export default function Profile() {
                 }}
               />
             </CardContent>
-          </Card>
-        </section>
+            </Card>
+          </section>
+
+          {/* PLAN & USAGE */}
+          <section className="space-y-4">
+            <SectionTitle eyebrow={currentPlan} title={t("profile_planUsage")} />
+            <Card variant="faint">
+              <CardContent className="divide-y divide-border p-0">
+                {usageLoading && !usage ? (
+                  <div className="flex justify-center py-10">
+                    <ArrowPathIcon className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : usageResources.map((resource) => {
+                  const unlimited = resource.max === -1;
+                  const percent = unlimited ? 0 : Math.min((resource.current / resource.max) * 100, 100);
+                  return (
+                    <div key={resource.label} className="space-y-2.5 p-4">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-medium text-foreground/80">{resource.label}</span>
+                        <span className="font-mono text-xs tabular-nums text-muted-foreground">
+                          {unlimited ? "∞" : `${resource.current.toFixed(resource.suffix ? 1 : 0)} / ${resource.max}${resource.suffix}`}
+                        </span>
+                      </div>
+                      <Progress value={percent} className="h-[2px] rounded-none bg-accent" />
+                    </div>
+                  );
+                })}
+              </CardContent>
+            </Card>
+            <div className="grid grid-cols-3 gap-2">
+              {planDetails.map((detail) => (
+                <Card key={detail.label} variant="faint">
+                  <CardContent className="min-w-0 p-3">
+                    <p className="truncate text-[10px] text-muted-foreground">{detail.label}</p>
+                    <p className="mt-1 truncate font-mono text-[11px] text-foreground/80">{detail.value}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        </div>
 
         {/* PREFERENCES */}
         <section className="space-y-4">
           <SectionTitle eyebrow={t("profile_settings")} title={t("profile_prefsAppearance")} />
 
-          <Card variant="faint">
-            <CardContent className="divide-y divide-border p-0">
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card variant="faint">
+              <CardContent className="divide-y divide-border p-0">
               <div className="px-4">
                 <LanguageSelector />
               </div>
@@ -374,7 +442,10 @@ export default function Profile() {
                 subtitle={t("profile_secureAuthDesc")}
               />
               <OfflineSyncRow />
-              <div className="space-y-4 p-4 sm:p-5">
+              </CardContent>
+            </Card>
+            <Card variant="faint">
+              <CardContent className="space-y-4 p-4 sm:p-5">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
@@ -428,17 +499,17 @@ export default function Profile() {
                   </div>
                 </div>
                 <WallpaperSettings />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
 
         </section>
 
         {/* DATA */}
         <section className="space-y-4">
-          <SectionTitle eyebrow={t("profile_settings")} title={t("profile_exportData")} />
+          <SectionTitle eyebrow={t("profile_settings")} title={t("profile_dataSync")} />
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <Card variant="faint">
               <CardContent className="space-y-3 p-4 sm:p-5">
                 <div className="flex items-start gap-3">
@@ -479,6 +550,28 @@ export default function Profile() {
                 )}
               </CardContent>
             </Card>
+
+            <Card variant="faint">
+              <CardContent className="flex h-full flex-col gap-3 p-4 sm:p-5">
+                <div className="flex items-start gap-3">
+                  <LinkIcon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium text-foreground/80">{t("import_relinkBtn")}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{t("profile_relinkDesc")}</p>
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleRelinkEntities}
+                  disabled={relinking}
+                  className="mt-auto w-full gap-2 normal-case"
+                >
+                  <ArrowPathIcon className={relinking ? "animate-spin" : ""} />
+                  {relinking ? t("profile_relinking") : t("import_relinkBtn")}
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
           <Card variant="faint">
@@ -486,48 +579,6 @@ export default function Profile() {
               <InstallAppButton />
             </CardContent>
           </Card>
-        </section>
-
-        {/* PLAN & USAGE */}
-        <section className="space-y-4">
-          <SectionTitle eyebrow={currentPlan} title={t("profile_planUsage")} />
-
-          {usageLoading && !usage ? (
-            <div className="flex justify-center py-12">
-              <ArrowPathIcon className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-3">
-              {usageResources.map((resource) => {
-                const unlimited = resource.max === -1;
-                const percent = unlimited ? 100 : Math.min((resource.current / resource.max) * 100, 100);
-                return (
-                  <Card key={resource.label} variant="faint">
-                    <CardContent className="space-y-3 p-4 sm:p-5">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-medium text-foreground/80">{resource.label}</span>
-                        <span className="font-mono text-xs tabular-nums text-muted-foreground">
-                          {unlimited ? "∞" : `${resource.current.toFixed(resource.suffix ? 1 : 0)} / ${resource.max}${resource.suffix}`}
-                        </span>
-                      </div>
-                      <Progress value={unlimited ? 0 : percent} className="h-[2px] rounded-none bg-accent" />
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            {planDetails.map((detail) => (
-              <Card key={detail.label} variant="faint">
-                <CardContent className="flex items-center justify-between gap-3 p-4">
-                  <span className="text-xs text-muted-foreground">{detail.label}</span>
-                  <span className="font-mono text-xs tabular-nums text-foreground/80">{detail.value}</span>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </section>
 
         {/* HELP & SUPPORT */}
