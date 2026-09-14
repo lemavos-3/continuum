@@ -19,7 +19,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   UserIcon,
   EnvelopeIcon,
-  ShieldCheckIcon,
   CalendarIcon,
   LockClosedIcon,
   ArrowPathIcon,
@@ -193,9 +192,9 @@ export default function Profile() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-      toast({ title: "Backup downloaded successfully" });
+      toast({ title: t("profile_backupOk") });
     } catch (e: any) {
-      toast({ title: "Export failed", description: e?.message ?? "Please try again", variant: "destructive" });
+      toast({ title: t("profile_backupFailed"), description: e?.message ?? t("common_tryAgain"), variant: "destructive" });
     } finally {
       setExporting(false);
     }
@@ -235,20 +234,20 @@ export default function Profile() {
 
   const usageResources = useMemo(
     () => [
-      { label: "Notes", current: usage?.notesCount ?? 0, max: limits.maxNotes, suffix: "" },
-      { label: "Entities", current: usage?.entitiesCount ?? 0, max: limits.maxEntities, suffix: "" },
-      { label: "Vault Storage", current: usage?.vaultSizeMB ?? 0, max: limits.maxVaultSizeMB, suffix: " MB" },
+      { label: t("bill_notes"), current: usage?.notesCount ?? 0, max: limits.maxNotes, suffix: "" },
+      { label: t("bill_entities"), current: usage?.entitiesCount ?? 0, max: limits.maxEntities, suffix: "" },
+      { label: t("bill_vault"), current: usage?.vaultSizeMB ?? 0, max: limits.maxVaultSizeMB, suffix: " MB" },
     ],
-    [usage, limits],
+    [usage, limits, t],
   );
 
   const planDetails = useMemo(
     () => [
-      { label: "Vault Limit", value: isUnlimited(limits.maxVaultSizeMB) ? "Unlimited" : `${limits.maxVaultSizeMB} MB` },
-      { label: "Upload Metadata", value: isUnlimited(limits.maxMetadataSizeKb ?? -1) ? "Unlimited" : `${limits.maxMetadataSizeKb} KB` },
-      { label: "History", value: isUnlimited(limits.historyDays) ? "Unlimited" : `${limits.historyDays} days` },
+      { label: t("profile_vaultLimit"), value: isUnlimited(limits.maxVaultSizeMB) ? t("common_unlimited") : `${limits.maxVaultSizeMB} MB` },
+      { label: t("profile_uploadMetadata"), value: isUnlimited(limits.maxMetadataSizeKb ?? -1) ? t("common_unlimited") : `${limits.maxMetadataSizeKb} KB` },
+      { label: t("bill_history"), value: isUnlimited(limits.historyDays) ? t("common_unlimited") : t("profile_historyDays", { n: limits.historyDays }) },
     ],
-    [limits],
+    [limits, t],
   );
 
   const handleSave = async () => {
@@ -256,11 +255,11 @@ export default function Profile() {
     try {
       await authApi.updateMe({ username, name: username });
       await refreshUser();
-      toast({ title: "Profile updated" });
+      toast({ title: t("profile_updated") });
     } catch (err: any) {
       toast({
-        title: "Error saving profile",
-        description: err.response?.data?.message || "Please try again",
+        title: t("profile_updateFailed"),
+        description: err.response?.data?.message || t("common_tryAgain"),
         variant: "destructive",
       });
     } finally {
@@ -296,7 +295,7 @@ export default function Profile() {
         <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.65fr)]">
           {/* ACCOUNT */}
           <section className="space-y-4">
-            <SectionTitle eyebrow={t("profile_settings")} title={t("profile_accountDetails")} />
+            <SectionTitle eyebrow={t("profile_eyebrowAccount")} title={t("profile_accountDetails")} />
             <Card variant="faint">
             <CardContent className="space-y-5 p-4 sm:p-6">
               <div className="space-y-2">
@@ -328,23 +327,17 @@ export default function Profile() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 pt-1">
-                <div>
-                  <p className="text-xs text-muted-foreground">{t("profile_currentPlan")}</p>
-                  <p className="mt-1 text-sm font-medium text-foreground/80">{currentPlan}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{t("profile_memberSince")}</p>
-                  <p className="mt-1 text-sm font-medium text-foreground/80">
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—"}
-                  </p>
-                </div>
+              <div className="pt-1">
+                <p className="text-xs text-muted-foreground">{t("profile_memberSince")}</p>
+                <p className="mt-1 text-sm font-medium text-foreground/80">
+                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" }) : "—"}
+                </p>
               </div>
 
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button
                   onClick={() => setSaveConfirmOpen(true)}
-                  disabled={saving || !username.trim()}
+                  disabled={saving || !username.trim() || username.trim() === (user?.username ?? "").trim()}
                   className="w-full gap-2 normal-case sm:flex-1"
                 >
                   {saving && <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />}
@@ -418,7 +411,7 @@ export default function Profile() {
 
         {/* PREFERENCES */}
         <section className="space-y-4">
-          <SectionTitle eyebrow={t("profile_settings")} title={t("profile_prefsAppearance")} />
+          <SectionTitle eyebrow={t("profile_eyebrowPreferences")} title={t("profile_prefsAppearance")} />
 
           <div className="grid gap-4 lg:grid-cols-2">
             <Card variant="faint">
@@ -436,11 +429,6 @@ export default function Profile() {
                 title={t("profile_securityLayer")}
                 subtitle={t("profile_securityLayerDesc")}
               />
-              <SettingRow
-                icon={ShieldCheckIcon}
-                title={t("profile_secureAuth")}
-                subtitle={t("profile_secureAuthDesc")}
-              />
               <OfflineSyncRow />
               </CardContent>
             </Card>
@@ -449,8 +437,8 @@ export default function Profile() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="text-xs font-medium text-foreground/80">Note font size</p>
-                      <p className="mt-0.5 text-xs text-muted-foreground">Adjust title and body text in every note.</p>
+                      <p className="text-xs font-medium text-foreground/80">{t("profile_noteFontSize")}</p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{t("profile_noteFontSizeDesc")}</p>
                     </div>
                     <Button
                       type="button"
@@ -460,13 +448,13 @@ export default function Profile() {
                       disabled={noteTitleScale === DEFAULT_NOTE_FONT_SIZE.titleScale && noteBodyScale === DEFAULT_NOTE_FONT_SIZE.bodyScale}
                       className="h-7 px-2 text-[10px] normal-case"
                     >
-                      Reset
+                      {t("common_reset")}
                     </Button>
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Title</Label>
+                      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("profile_fontTitle")}</Label>
                       <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{noteTitleScale}%</span>
                     </div>
                     <input
@@ -477,13 +465,13 @@ export default function Profile() {
                       value={noteTitleScale}
                       onChange={(e) => updateNoteTitleScale(Number(e.target.value))}
                       className="w-full accent-primary"
-                      aria-label="Note title font size"
+                      aria-label={t("profile_ariaNoteTitleSize")}
                     />
                   </div>
 
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Body</Label>
+                      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("profile_fontBody")}</Label>
                       <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{noteBodyScale}%</span>
                     </div>
                     <input
@@ -494,7 +482,7 @@ export default function Profile() {
                       value={noteBodyScale}
                       onChange={(e) => updateNoteBodyScale(Number(e.target.value))}
                       className="w-full accent-primary"
-                      aria-label="Note body font size"
+                      aria-label={t("profile_ariaNoteBodySize")}
                     />
                   </div>
                 </div>
@@ -507,7 +495,7 @@ export default function Profile() {
 
         {/* DATA */}
         <section className="space-y-4">
-          <SectionTitle eyebrow={t("profile_settings")} title={t("profile_dataSync")} />
+          <SectionTitle eyebrow={t("profile_eyebrowData")} title={t("profile_dataSync")} />
 
           <div className="grid gap-4 sm:grid-cols-3">
             <Card variant="faint">
@@ -583,7 +571,7 @@ export default function Profile() {
 
         {/* HELP & SUPPORT */}
         <section className="space-y-4">
-          <SectionTitle eyebrow={t("profile_settings")} title={t("profile_supportCenter")} />
+          <SectionTitle eyebrow={t("profile_eyebrowSupport")} title={t("profile_supportCenter")} />
 
           <Card variant="faint" className="w-full">
             <CardContent className="divide-y divide-border p-0">
