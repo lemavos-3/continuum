@@ -1,6 +1,8 @@
 package onl.continuum.continuum.application.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import onl.continuum.continuum.controller.dto.timetracking.*;
@@ -70,6 +72,10 @@ public class TimeTrackingService {
      * Stop an active timer and create a time entry
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "insights:notes", allEntries = true),
+            @CacheEvict(value = "insights:entities", allEntries = true)
+    })
     public TimeEntryResponse stopTimer(String userId, StopTimerRequest request) {
         TimerSession session = timerSessionRepository.findById(request.getSessionId())
                 .orElseThrow(() -> new IllegalArgumentException("Timer session not found"));
@@ -162,6 +168,10 @@ public class TimeTrackingService {
     /**
      * Manually add time to an entity
      */
+    @Caching(evict = {
+            @CacheEvict(value = "insights:notes", allEntries = true),
+            @CacheEvict(value = "insights:entities", allEntries = true)
+    })
     public TimeEntryResponse addTime(String userId, String vaultId, AddTimeRequest request) {
         if (request == null) {
             throw new onl.continuum.continuum.application.exception.BadRequestException("Request body is required");
@@ -307,6 +317,10 @@ public class TimeTrackingService {
      * Delete a time entry
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "insights:notes", allEntries = true),
+            @CacheEvict(value = "insights:entities", allEntries = true)
+    })
     public void deleteTimeEntry(String userId, String entryId) {
         TimeEntry entry = timeEntryRepository.findById(entryId)
                 .orElseThrow(() -> new IllegalArgumentException("Time entry not found"));
@@ -376,6 +390,10 @@ public class TimeTrackingService {
      * Cleanup: Delete all time entries for an entity when it's deleted
      */
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "insights:notes", allEntries = true),
+            @CacheEvict(value = "insights:entities", allEntries = true)
+    })
     public void deleteEntityTimeData(String entityId) {
         timeEntryRepository.deleteByEntityId(entityId);
         timerSessionRepository.deleteByEntityId(entityId);

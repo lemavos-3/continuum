@@ -1,5 +1,7 @@
 package onl.continuum.continuum.application.service;
 
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import onl.continuum.continuum.application.exception.BadRequestException;
 import onl.continuum.continuum.application.exception.PlanLimitException;
@@ -45,6 +47,10 @@ public class TrackingService {
         return onl.continuum.continuum.infra.web.RequestZone.today().minusDays(days);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "insights:notes", allEntries = true),
+            @CacheEvict(value = "insights:entities", allEntries = true)
+    })
     public TrackingEvent track(String userId, String entityId, TrackEventRequest req) {
         User user = getUser(userId);
         Entity entity = entityService.get(userId, entityId);
@@ -74,6 +80,10 @@ public class TrackingService {
         return trackingRepo.save(event);
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = "insights:notes", allEntries = true),
+            @CacheEvict(value = "insights:entities", allEntries = true)
+    })
     public void untrack(String userId, String entityId, LocalDate date) {
         Instant now = Instant.now();
         trackingRepo.findByUserIdAndEntityIdAndDate(userId, entityId, date)
