@@ -293,6 +293,7 @@ public class InsightsService {
                 hoursTracked += hoursByEntity.getOrDefault(eid, 0.0);
             }
         }
+        hoursTracked = Math.min(hoursTracked, NOTE_INHERITED_HOURS_CAP);
         int entityConnections = note.getEntityIds() != null ? note.getEntityIds().size() : 0;
 
         int uniqueDaysReferenced = (int) backlinks.stream()
@@ -333,7 +334,7 @@ public class InsightsService {
                 + (entityConnections * W_NOTE_ENTITIES)
                 + (uniqueDaysReferenced * W_NOTE_DAYS);
 
-        double decay = Math.max(NOTE_DECAY_FLOOR, 1.0 - (daysSinceLastInteraction * NOTE_DECAY_PER_DAY));
+        double decay = Math.exp(-daysSinceLastInteraction / NOTE_DECAY_HALFLIFE_DAYS);
         double score = base * decay;
 
         String badge = pickNoteBadge(score, daysSinceLastInteraction, recentMentions);
@@ -408,7 +409,7 @@ public class InsightsService {
                 + (completions * W_ENT_COMPLETIONS)
                 + (recentCompletions * W_ENT_RECENT_COMPLETIONS);
 
-        double decay = Math.max(ENT_DECAY_FLOOR, 1.0 - (daysSinceLast * ENT_DECAY_PER_DAY));
+        double decay = Math.exp(-daysSinceLast / ENT_DECAY_HALFLIFE_DAYS);
         double score = base * decay;
 
         String badge = pickEntityBadge(score, daysSinceLast, recentMentions);
