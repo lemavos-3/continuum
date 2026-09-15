@@ -326,15 +326,15 @@ export default function SettingsPage() {
         <section className="space-y-4">
           <SectionTitle eyebrow={t("profile_eyebrowPreferences")} title={t("profile_prefsAppearance")} />
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="space-y-4">
             <Card variant="faint">
               <CardContent className="divide-y divide-border p-0">
-              <div className="px-4">
-                <LanguageSelector />
-              </div>
+                <div className="px-4">
+                  <LanguageSelector />
+                </div>
               </CardContent>
             </Card>
-            <Card variant="faint">
+            <Card variant="faint" className="w-full">
               <CardContent className="space-y-4 p-4 sm:p-5">
                 <div className="space-y-4">
                   <div className="flex items-center justify-between gap-3">

@@ -32,6 +32,9 @@ public class MarkdownImportService {
     private static final Pattern PROPER_NOUN = Pattern.compile(
             "\\b([A-ZÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ][a-záàâãäéèêëíìîïóòôõöúùûüçñ]{2,})(?:\\s([A-ZÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ][a-záàâãäéèêëíìîïóòôõöúùûüçñ]{1,}))?(?:\\s([A-ZÁÀÂÃÄÉÈÊËÍÌÎÏÓÒÔÕÖÚÙÛÜÇÑ][a-záàâãäéèêëíìîïóòôõöúùûüçñ]{1,}))?\\b"
     );
+    private static final Pattern MULTI_WORD_NAME = Pattern.compile(
+            "\\b([\\p{L}][\\p{L}\\p{M}'-]{2,})[ \\t]+([\\p{L}][\\p{L}\\p{M}'-]{1,})(?:[ \\t]+([\\p{L}][\\p{L}\\p{M}'-]{1,}))?\\b"
+    );
 
     private static final Set<String> STOPLIST = Set.of(
             "monday","tuesday","wednesday","thursday","friday","saturday","sunday",
@@ -119,7 +122,7 @@ public class MarkdownImportService {
         detectFromFrontmatter(frontmatter, candidates);
         detectFromPlain(plain, candidates);
 
-        candidates.values().removeIf(c -> !"HIGH".equals(c.confidence()) && c.occurrences() < 2);
+        candidates.values().removeIf(c -> "LOW".equals(c.confidence()) && c.occurrences() < 2);
         candidates.values().removeIf(c -> isNoise(c.name()));
 
         int wordCount = plain.isBlank() ? 0 : plain.trim().split("\\s+").length;
@@ -506,6 +509,29 @@ public class MarkdownImportService {
             String type = words == 1 ? "PERSON" : "PROJECT";
             bump(out, full, type, "LOW");
         }
+
+        m = MULTI_WORD_NAME.matcher(text);
+        while (m.find()) {
+            String first = m.group(1);
+            String second = m.group(2);
+            String third = m.group(3);
+            if (!startsWithUppercase(first) && !startsWithUppercase(second)) continue;
+
+            StringBuilder name = new StringBuilder(first).append(' ').append(second);
+            if (third != null) name.append(' ').append(third);
+            if (isNoisePhrase(name.toString())) continue;
+            bump(out, name.toString(), "PERSON", "MEDIUM");
+        }
+    }
+
+    private boolean startsWithUppercase(String value) {
+        return value != null && !value.isBlank() && Character.isUpperCase(value.codePointAt(0));
+    }
+
+    private boolean isNoisePhrase(String name) {
+        return Arrays.stream(name.split("\\s+"))
+                .map(word -> stripAccents(word).toLowerCase(Locale.ROOT))
+                .anyMatch(word -> STOPLIST.contains(word) || NOISE.contains(word));
     }
 
     private boolean isSentenceStart(String text, int pos) {
@@ -524,9 +550,15 @@ public class MarkdownImportService {
         if (existing == null) {
             out.put(key, new Candidate(key, name, type, 1, confidence));
         } else {
-            String conf = ("HIGH".equals(existing.confidence()) || "HIGH".equals(confidence)) ? "HIGH" : "LOW";
+            String conf = mergeConfidence(existing.confidence(), confidence);
             out.put(key, new Candidate(key, existing.name(), existing.suggestedType(), existing.occurrences() + 1, conf));
         }
+    }
+
+    private String mergeConfidence(String first, String second) {
+        if ("HIGH".equals(first) || "HIGH".equals(second)) return "HIGH";
+        if ("MEDIUM".equals(first) || "MEDIUM".equals(second)) return "MEDIUM";
+        return "LOW";
     }
 
     private String capitalize(String s) {

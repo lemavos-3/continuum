@@ -203,22 +203,6 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
 
               <div className="h-px bg-white/10" />
 
-              {/* Graph Score Card - appears when score is available */}
-              {(displayEntity as any)?.graphScore !== undefined && (
-                <div className="border border-white/5 bg-white/[0.01] rounded-sm p-4">
-                  <div className="grid grid-cols-2 gap-4 text-center">
-                    <div>
-                      <div className="font-mono text-xl font-semibold text-white">{(displayEntity as any).graphScore}</div>
-                      <p className="mt-1.5 text-[9px] font-mono uppercase tracking-widest text-white/40">{t("ent_graph_score")}</p>
-                    </div>
-                    <div>
-                      <div className="font-mono text-xl font-semibold text-white">{(displayEntity as any).graphDegree ?? 0}</div>
-                      <p className="mt-1.5 text-[9px] font-mono uppercase tracking-widest text-white/40">{t("ent_connections")}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               {loading ? (
                 <div className="space-y-3">
                   {[...Array(3)].map((_, index) => (

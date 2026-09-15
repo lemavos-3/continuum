@@ -711,29 +711,21 @@ export default function KnowledgeGraph() {
     setSelectedNode(node);
     const entity = allEntities.find(e => e.id === node.id);
     
-    // Calcular score baseado em degree e recência
-    const baseScore = Math.min(100, node.degree * 5 + 20);
-    const recencyBonus = node.recent ? 15 : 0;
-    const score = Math.round(baseScore + recencyBonus);
-    
-    // Se encontrar a entidade, abre o inspector com os dados completos + score
+    // Use the same entity data as the entity detail page; graph-only metadata
+    // is kept separate so the inspector can refresh the canonical entity.
     if (entity) {
       openInspector({
         ...entity,
-        graphScore: score,
-        graphDegree: node.degree,
       } as any);
     } else {
-      // Criar uma entidade com informações adicionais do grafo
+      // Nodes can briefly exist before the entity list finishes resolving.
       openInspector({
         id: node.id,
         title: node.label,
         type: (node.type as EntityType) || "TOPIC",
-        createdAt: node.createdAt || new Date().toISOString(),
+        createdAt: node.createdAt || "",
         ownerId: "",
-        description: t("gr_node_desc", { count: node.degree, plural: node.degree === 1 ? "" : "s", type: typeLabel(node.type) }),
-        graphScore: score,
-        graphDegree: node.degree,
+        description: "",
       } as any);
     }
     
