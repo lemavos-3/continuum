@@ -399,7 +399,7 @@ export default function SettingsPage() {
         <section className="space-y-4">
           <SectionTitle eyebrow={t("profile_eyebrowData")} title={t("profile_dataSync")} />
 
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card variant="faint">
               <CardContent className="space-y-3 p-4 sm:p-5">
                 <div className="flex items-start gap-3">
