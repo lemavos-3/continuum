@@ -399,6 +399,12 @@ export default function SettingsPage() {
         <section className="space-y-4">
           <SectionTitle eyebrow={t("profile_eyebrowData")} title={t("profile_dataSync")} />
 
+          <Card variant="faint">
+            <CardContent className="p-0">
+              <OfflineSyncRow />
+            </CardContent>
+          </Card>
+
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card variant="faint">
               <CardContent className="space-y-3 p-4 sm:p-5">
@@ -412,12 +418,6 @@ export default function SettingsPage() {
                 <Button variant="outline" onClick={() => setImportOpen(true)} className="w-full normal-case">
                   {t("profile_importMdBtn")}
                 </Button>
-              </CardContent>
-            </Card>
-
-            <Card variant="faint">
-              <CardContent className="p-0">
-                <OfflineSyncRow />
               </CardContent>
             </Card>
 
