@@ -108,7 +108,7 @@ export function CreateEntityDialog({ open, onOpenChange, defaultType = "TOPIC", 
               <Label className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">{t("ent_type")}</Label>
               <Select value={type} onValueChange={setType}>
                 <SelectTrigger className="h-11 bg-white/[0.03] border-white/[0.06]">
-                  <SelectValue />
+                  <SelectValue className="flex-1 text-left" />
                 </SelectTrigger>
                 <SelectContent>
                   {TYPE_OPTIONS.map((opt) => (
