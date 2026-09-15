@@ -71,7 +71,7 @@ function SettingRow({
   );
 }
 
-function OfflineSyncRow() {
+function OfflineSyncCard() {
   const { status, pending, syncing } = useOfflineStatus();
   const { t } = useLanguage();
   const [busy, setBusy] = useState(false);
@@ -98,6 +98,8 @@ function OfflineSyncRow() {
     }
   };
 
+  const active = busy || syncing;
+
   const subtitle = status === "offline"
     ? `${t("profile_workingOffline")}${pending > 0 ? ` · ${t("profile_pending", { n: pending })}` : ""}`
     : pending > 0
@@ -107,23 +109,26 @@ function OfflineSyncRow() {
         : t("profile_upToDate");
 
   return (
-    <div className="flex items-center gap-4 px-4 py-3.5">
-      <ArrowPathIcon className={`h-4 w-4 shrink-0 text-muted-foreground ${syncing || busy ? "animate-spin" : ""}`} />
-      <div className="min-w-0 flex-1">
-        <p className="text-xs font-medium text-foreground/80">{t("profile_offlineSync")}</p>
-        <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
-      </div>
-      <Button
-        type="button"
-        variant="quiet"
-        size="xs"
-        onClick={onSync}
-        disabled={busy || syncing}
-        className="normal-case"
-      >
-        {busy || syncing ? t("profile_syncing") : t("profile_syncNow")}
-      </Button>
-    </div>
+    <Card variant="faint">
+      <CardContent className="flex h-full flex-col gap-3 p-4 sm:p-5">
+        <div className="flex items-start gap-3">
+          <ArrowPathIcon className={`mt-0.5 h-4 w-4 shrink-0 text-muted-foreground ${active ? "animate-spin" : ""}`} />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium text-foreground/80">{t("profile_offlineSync")}</p>
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">{subtitle}</p>
+          </div>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onSync}
+          disabled={active}
+          className="mt-auto w-full normal-case"
+        >
+          {active ? t("profile_syncing") : t("profile_syncNow")}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -312,8 +317,9 @@ export default function SettingsPage() {
           <div className="pt-1">
             <Button
               variant="outline"
+              size="lg"
               onClick={() => setSubscriptionOpen(true)}
-              className="w-full normal-case sm:w-auto"
+              className="w-full normal-case"
             >
               {t("nav_subscription")}
             </Button>
@@ -399,13 +405,9 @@ export default function SettingsPage() {
         <section className="space-y-4">
           <SectionTitle eyebrow={t("profile_eyebrowData")} title={t("profile_dataSync")} />
 
-          <Card variant="faint">
-            <CardContent className="p-0">
-              <OfflineSyncRow />
-            </CardContent>
-          </Card>
-
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <OfflineSyncCard />
+
             <Card variant="faint">
               <CardContent className="space-y-3 p-4 sm:p-5">
                 <div className="flex items-start gap-3">
