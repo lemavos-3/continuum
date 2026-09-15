@@ -84,11 +84,13 @@ public class InsightsService {
         private static final double W_ENT_COMPLETIONS = 2.0;
         private static final double W_ENT_RECENT_COMPLETIONS = 4.0;
 
-    // Softer decay (v2)
-    private static final double NOTE_DECAY_PER_DAY = 0.012;
-    private static final double NOTE_DECAY_FLOOR = 0.20;
-    private static final double ENT_DECAY_PER_DAY = 0.010;
-    private static final double ENT_DECAY_FLOOR = 0.25;
+    // Exponential decay (v3) — replaces linear decay with floor, which used to
+    // plateau around day 67/75 and stopped differentiating recency.
+    private static final double NOTE_DECAY_HALFLIFE_DAYS = 21.0;
+    private static final double ENT_DECAY_HALFLIFE_DAYS = 28.0;
+
+    // Cap on recent hours a note can inherit from all connected entities.
+    private static final double NOTE_INHERITED_HOURS_CAP = 40.0;
 
     public InsightsService(NoteRepository noteRepo,
                            NoteLinkRepository noteLinkRepo,
@@ -110,7 +112,9 @@ public class InsightsService {
 
     public List<NoteInsightDTO> hotNotes(int limit) {
         return computeAllNoteInsights().stream()
-                .sorted(Comparator.comparingDouble(NoteInsightDTO::score).reversed())
+                .sorted(Comparator
+                        .comparingInt((NoteInsightDTO n) -> "Hot Right Now".equals(n.badge()) ? 0 : 1)
+                        .thenComparing(Comparator.comparingDouble(NoteInsightDTO::score).reversed()))
                 .limit(limit > 0 ? limit : DEFAULT_LIMIT)
                 .collect(Collectors.toList());
     }
@@ -131,7 +135,9 @@ public class InsightsService {
 
     public List<EntityInsightDTO> hotEntities(int limit) {
         return computeAllEntityInsights().stream()
-                .sorted(Comparator.comparingDouble(EntityInsightDTO::score).reversed())
+                .sorted(Comparator
+                        .comparingInt((EntityInsightDTO e) -> "Hot Right Now".equals(e.badge()) ? 0 : 1)
+                        .thenComparing(Comparator.comparingDouble(EntityInsightDTO::score).reversed()))
                 .limit(limit > 0 ? limit : DEFAULT_LIMIT)
                 .collect(Collectors.toList());
     }
@@ -195,8 +201,11 @@ public class InsightsService {
         Map<String, List<NoteLink>> linksByTarget = allLinks.stream()
                 .collect(Collectors.groupingBy(NoteLink::getTargetNoteId));
 
-        // Pre-load hours-per-entity so Notes can inherit hours from connected entities
-        Map<String, Double> hoursByEntity = timeEntryRepo.findByUserIdAndArchivedAtIsNull(userId).stream()
+        // Pre-load hours-per-entity so Notes can inherit hours from connected entities.
+        // Only *recent* hours (last 30 days) count here.
+        LocalDate hoursCutoff30 = today.minusDays(30);
+        Map<String, Double> recentHoursByEntity = timeEntryRepo.findByUserIdAndArchivedAtIsNull(userId).stream()
+                .filter(te -> te.getDate() != null && !te.getDate().isBefore(hoursCutoff30))
                 .collect(Collectors.groupingBy(
                         TimeEntry::getEntityId,
                         Collectors.summingDouble(TimeEntry::getDurationHours)));
@@ -205,7 +214,7 @@ public class InsightsService {
                 .map(note -> buildNoteInsight(
                         note,
                         linksByTarget.getOrDefault(note.getId(), Collections.emptyList()),
-                        hoursByEntity,
+                        recentHoursByEntity,
                         now, today))
                 .collect(Collectors.toList());
     }
@@ -284,6 +293,7 @@ public class InsightsService {
                 hoursTracked += hoursByEntity.getOrDefault(eid, 0.0);
             }
         }
+        hoursTracked = Math.min(hoursTracked, NOTE_INHERITED_HOURS_CAP);
         int entityConnections = note.getEntityIds() != null ? note.getEntityIds().size() : 0;
 
         int uniqueDaysReferenced = (int) backlinks.stream()
@@ -324,7 +334,7 @@ public class InsightsService {
                 + (entityConnections * W_NOTE_ENTITIES)
                 + (uniqueDaysReferenced * W_NOTE_DAYS);
 
-        double decay = Math.max(NOTE_DECAY_FLOOR, 1.0 - (daysSinceLastInteraction * NOTE_DECAY_PER_DAY));
+        double decay = Math.exp(-daysSinceLastInteraction / NOTE_DECAY_HALFLIFE_DAYS);
         double score = base * decay;
 
         String badge = pickNoteBadge(score, daysSinceLastInteraction, recentMentions);
@@ -399,7 +409,7 @@ public class InsightsService {
                 + (completions * W_ENT_COMPLETIONS)
                 + (recentCompletions * W_ENT_RECENT_COMPLETIONS);
 
-        double decay = Math.max(ENT_DECAY_FLOOR, 1.0 - (daysSinceLast * ENT_DECAY_PER_DAY));
+        double decay = Math.exp(-daysSinceLast / ENT_DECAY_HALFLIFE_DAYS);
         double score = base * decay;
 
         String badge = pickEntityBadge(score, daysSinceLast, recentMentions);
