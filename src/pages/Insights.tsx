@@ -57,6 +57,7 @@ interface InsightItem {
   kind: "note" | "entity";
   category: InsightCategory;
   score: number;
+  normalizedScore: number;
   badge: string;
   title: string;
   subtitle: string;
@@ -299,6 +300,7 @@ export default function Insights() {
         kind: "note",
         category: "hotNotes",
         score: item.score,
+        normalizedScore: item.score,
         badge: item.badge,
         title: item.note.title || t("ins_untitled"),
         subtitle: t("ins_note"),
@@ -313,6 +315,7 @@ export default function Insights() {
         kind: "entity",
         category: "hotEntities",
         score: item.score,
+        normalizedScore: item.score,
         badge: item.badge,
         title: item.entity.title || t("ins_untitled"),
         subtitle: item.entity.type || t("ins_atom"),
@@ -327,6 +330,7 @@ export default function Insights() {
         kind: "note",
         category: "worthRevisiting",
         score: item.score,
+        normalizedScore: item.score,
         badge: item.badge,
         title: item.note.title || t("ins_untitled"),
         subtitle: t("ins_note"),
@@ -341,6 +345,7 @@ export default function Insights() {
         kind: "entity",
         category: "forgottenGems",
         score: item.score,
+        normalizedScore: item.score,
         badge: item.badge,
         title: item.entity.title || t("ins_untitled"),
         subtitle: item.entity.type || t("ins_atom"),
@@ -349,7 +354,27 @@ export default function Insights() {
       });
     });
 
-    return items.sort((a, b) => b.score - a.score);
+    // Normalize within each category before mixing them in the "All" tab —
+    // notes and entities use different weight scales on the backend, so raw
+    // scores aren't comparable across categories. Min-max is monotonic inside
+    // each group, so individual tabs keep their existing order.
+    const byCategory = new Map<InsightCategory, InsightItem[]>();
+    items.forEach((item) => {
+      const arr = byCategory.get(item.category) ?? [];
+      arr.push(item);
+      byCategory.set(item.category, arr);
+    });
+    byCategory.forEach((group) => {
+      const scores = group.map((i) => i.score);
+      const min = Math.min(...scores);
+      const max = Math.max(...scores);
+      const range = max - min || 1;
+      group.forEach((item) => {
+        item.normalizedScore = (item.score - min) / range;
+      });
+    });
+
+    return items.sort((a, b) => b.normalizedScore - a.normalizedScore);
   }, [hotNotes, hotEntities, forgottenNotes, forgottenEntities, navigate]);
 
   const filteredInsights = useMemo(() => {
