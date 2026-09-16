@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/AppLayout";
 import { entitiesApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
+import { useCachedResource } from "@/hooks/useCachedResource";
+import { qk, STALE } from "@/lib/queries";
 import UpgradeModal from "@/components/UpgradeModal";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -148,7 +150,6 @@ export default function Entities() {
   const { refresh: refreshUsage, applyUsageDelta } = usePlanGate();
 
   const [entities, setEntities] = useState<Entity[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedType, setSelectedType] = useState<string | null>(null);
   
@@ -185,24 +186,20 @@ export default function Entities() {
   };
 
 
-  /* Carregar Dados */
+  /* Carregar Dados — cache primeiro, revalida em segundo plano */
+  const entitiesQuery = useCachedResource<Entity[]>(
+    qk.entities(),
+    async () => {
+      const res = await entitiesApi.list();
+      return Array.isArray(res.data) ? (res.data as Entity[]) : [];
+    },
+    { staleTime: STALE.list }
+  );
+  const loading = entitiesQuery.loading;
+
   useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const res = await entitiesApi.list();
-        if (!cancelled) setEntities(Array.isArray(res.data) ? (res.data as Entity[]) : []);
-      } catch {
-        if (!cancelled) toast({ title: t("ls_entities_error_loading"), variant: "destructive" });
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [toast]);
+    if (entitiesQuery.data) setEntities(entitiesQuery.data);
+  }, [entitiesQuery.data]);
 
   /* Deletar */
   const handleDelete = (e: React.MouseEvent, entity: Entity) => {

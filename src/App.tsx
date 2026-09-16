@@ -1,5 +1,7 @@
 import * as React from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createIdbPersister, QUERY_CACHE_BUSTER } from "@/lib/offline/query-persister";
+import { queryClient } from "@/lib/query-client";
 import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -53,7 +55,7 @@ const SettingsPage = React.lazy(() => import("./pages/Settings"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Insights = React.lazy(() => import("./pages/Insights"));
 
-const queryClient = new QueryClient();
+const queryPersister = createIdbPersister();
 
 function RouteFallback() {
   return (
@@ -158,7 +160,19 @@ const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister: queryPersister,
+        maxAge: 24 * 60 * 60 * 1000,
+        buster: QUERY_CACHE_BUSTER,
+        dehydrateOptions: {
+          // Never persist auth/session-scoped queries.
+          shouldDehydrateQuery: (query) =>
+            query.state.status === "success" && String(query.queryKey[0]) !== "auth",
+        },
+      }}
+    >
       <ThemeProvider>
         <TooltipProvider>
           <GlobalProgress />
@@ -180,7 +194,7 @@ const App = () => {
       </ThemeProvider>
       <Analytics />
       <SpeedInsights />
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 };
 

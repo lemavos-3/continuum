@@ -24,6 +24,8 @@ import { ScoreEvolutionSection } from "@/components/insights/ScoreEvolutionSecti
 
 import { cn } from "@/lib/utils";
 import { insightsApi } from "@/lib/api";
+import { useCachedResource } from "@/hooks/useCachedResource";
+import { qk, STALE } from "@/lib/queries";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -230,13 +232,36 @@ export default function Insights() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  
-  const [hotNotes, setHotNotes] = useState<NoteInsight[]>([]);
-  const [forgottenNotes, setForgottenNotes] = useState<NoteInsight[]>([]);
-  const [hotEntities, setHotEntities] = useState<EntityInsight[]>([]);
-  const [forgottenEntities, setForgottenEntities] = useState<EntityInsight[]>([]);
+  const insightsQuery = useCachedResource<{
+    hotNotes: NoteInsight[];
+    forgottenNotes: NoteInsight[];
+    hotEntities: EntityInsight[];
+    forgottenEntities: EntityInsight[];
+  }>(
+    qk.insights("all", 12),
+    async () => {
+      const [hn, fn, he, fe] = await Promise.all([
+        insightsApi.hotNotes(12),
+        insightsApi.forgottenNotes(12),
+        insightsApi.hotEntities(12),
+        insightsApi.forgottenEntities(12),
+      ]);
+      return {
+        hotNotes: hn.data || [],
+        forgottenNotes: fn.data || [],
+        hotEntities: he.data || [],
+        forgottenEntities: fe.data || [],
+      };
+    },
+    { staleTime: STALE.insights }
+  );
+
+  const loading = insightsQuery.loading;
+  const refreshing = insightsQuery.refreshing;
+  const hotNotes = insightsQuery.data?.hotNotes ?? [];
+  const forgottenNotes = insightsQuery.data?.forgottenNotes ?? [];
+  const hotEntities = insightsQuery.data?.hotEntities ?? [];
+  const forgottenEntities = insightsQuery.data?.forgottenEntities ?? [];
   
   const [view, setView] = useState<View>("all");
   const [search, setSearch] = useState("");
@@ -263,33 +288,9 @@ export default function Insights() {
   };
 
 
-  const load = async (silent = false) => {
-    if (!silent) setLoading(true);
-    else setRefreshing(true);
-
-    try {
-      const [hn, fn, he, fe] = await Promise.all([
-        insightsApi.hotNotes(12),
-        insightsApi.forgottenNotes(12),
-        insightsApi.hotEntities(12),
-        insightsApi.forgottenEntities(12),
-      ]);
-
-      setHotNotes(hn.data || []);
-      setForgottenNotes(fn.data || []);
-      setHotEntities(he.data || []);
-      setForgottenEntities(fe.data || []);
-    } catch {
-      toast({ title: t("ins_could_not_load"), variant: "destructive" });
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  const load = async (_silent = false) => {
+    await insightsQuery.refetch();
   };
-
-  useEffect(() => {
-    load();
-  }, []);
 
   const insights = useMemo(() => {
     const items: InsightItem[] = [];
