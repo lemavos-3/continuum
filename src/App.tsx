@@ -208,7 +208,7 @@ const App = () => {
       </ThemeProvider>
       <Analytics />
       <SpeedInsights />
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 };
 
