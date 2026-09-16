@@ -55,19 +55,6 @@ const SettingsPage = React.lazy(() => import("./pages/Settings"));
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Insights = React.lazy(() => import("./pages/Insights"));
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      // Cached data paints instantly and refreshes in the background.
-      staleTime: STALE.list,
-      gcTime: 24 * 60 * 60 * 1000,
-      refetchOnWindowFocus: false,
-      refetchOnReconnect: true,
-      retry: 1,
-    },
-  },
-});
-
 const queryPersister = createIdbPersister();
 
 function RouteFallback() {
