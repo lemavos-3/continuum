@@ -174,7 +174,19 @@ const App = () => {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister: queryPersister,
+        maxAge: 24 * 60 * 60 * 1000,
+        buster: QUERY_CACHE_BUSTER,
+        dehydrateOptions: {
+          // Never persist auth/session-scoped queries.
+          shouldDehydrateQuery: (query) =>
+            query.state.status === "success" && String(query.queryKey[0]) !== "auth",
+        },
+      }}
+    >
       <ThemeProvider>
         <TooltipProvider>
           <GlobalProgress />
