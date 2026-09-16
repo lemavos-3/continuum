@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { notesApi, vaultApi } from "@/lib/api";
 import { usePlanGate } from "@/hooks/usePlanGate";
+import { useCachedResource } from "@/hooks/useCachedResource";
+import { qk, STALE } from "@/lib/queries";
 import { useCreateNote } from "@/hooks/useCreateNote";
 import { useRequireAuth } from "@/hooks/useRequireAuth";
 import UpgradeModal from "@/components/UpgradeModal";
@@ -183,7 +185,6 @@ export default function Notes() {
 
   const [notes, setNotes] = useState<NoteSummary[]>([]);
   const [types, setTypes] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [view, setView] = useState<View>("all");
   const [selectedType, setSelectedType] = useState<string | null>(null);
@@ -230,22 +231,35 @@ export default function Notes() {
   };
 
 
-  /* Load */
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [notesRes, typesRes] = await Promise.all([notesApi.list(), notesApi.getTypes()]);
-      setNotes(Array.isArray(notesRes.data) ? notesRes.data : []);
-      setTypes(Array.isArray(typesRes.data) ? typesRes.data : []);
-    } catch {
-      toast({ title: t("ls_notes_error_loading_archive"), variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
+  /* Load — cached first, revalidated in background */
+  const notesQuery = useCachedResource<NoteSummary[]>(
+    qk.notes(),
+    async () => {
+      const res = await notesApi.list();
+      return Array.isArray(res.data) ? res.data : [];
+    },
+    { staleTime: STALE.list }
+  );
+  const typesQuery = useCachedResource<string[]>(
+    qk.noteTypes(),
+    async () => {
+      const res = await notesApi.getTypes();
+      return Array.isArray(res.data) ? res.data : [];
+    },
+    { staleTime: STALE.list }
+  );
+  const loading = notesQuery.loading;
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    if (notesQuery.data) setNotes(notesQuery.data);
+  }, [notesQuery.data]);
+  useEffect(() => {
+    if (typesQuery.data) setTypes(typesQuery.data);
+  }, [typesQuery.data]);
+
+  const fetchData = async () => {
+    await Promise.all([notesQuery.refetch(), typesQuery.refetch()]);
+  };
 
   /* Mutations */
   const toggleFavorite = async (noteId: string, e: React.MouseEvent) => {
