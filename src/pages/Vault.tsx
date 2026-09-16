@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import AppLayout from "@/components/AppLayout";
 import { vaultApi } from "@/lib/api";
+import { useCachedResource } from "@/hooks/useCachedResource";
+import { qk, STALE } from "@/lib/queries";
 import { usePlanGate } from "@/hooks/usePlanGate";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -206,7 +208,6 @@ function OtherFileRow({ file, name, onDelete, onRename }: {
 export default function Vault() {
   const { t } = useLanguage();
   const [files, setFiles] = useState<VaultFile[]>([]);
-  const [loading, setLoading] = useState(true);
   const [pendingDelete, setPendingDelete] = useState<VaultFile | null>(null);
   const [pdfPreview, setPdfPreview] = useState<VaultFile | null>(null);
   const [mediaPreview, setMediaPreview] = useState<VaultFile | null>(null);
@@ -253,21 +254,24 @@ export default function Vault() {
   const { applyUsageDelta } = usePlanGate();
   const limits = getPlanLimits(user);
 
-  const fetchFiles = async () => {
-    setLoading(true);
-    try {
+  const filesQuery = useCachedResource<VaultFile[]>(
+    qk.vaultFiles(),
+    async () => {
       const { data } = await vaultApi.list();
-      const all = Array.isArray(data) ? data : [];
-      // The editor wallpaper is a system file: never listed, never counted.
-      setFiles(all.filter((f: VaultFile) => f.id !== wallpaperFileId));
-    } catch {
-      toast({ title: t("gr_vault_error_loading"), variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return Array.isArray(data) ? (data as VaultFile[]) : [];
+    },
+    { staleTime: STALE.list }
+  );
+  const loading = filesQuery.loading;
 
-  useEffect(() => { fetchFiles(); }, [wallpaperFileId]);
+  useEffect(() => {
+    // The editor wallpaper is a system file: never listed, never counted.
+    if (filesQuery.data) setFiles(filesQuery.data.filter((f) => f.id !== wallpaperFileId));
+  }, [filesQuery.data, wallpaperFileId]);
+
+  const fetchFiles = async () => {
+    await filesQuery.refetch();
+  };
 
   const grouped = useMemo(() => {
     const q = search.trim().toLowerCase();
