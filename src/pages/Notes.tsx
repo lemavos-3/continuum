@@ -271,6 +271,7 @@ export default function Notes() {
       setNotes((prev) =>
         prev.map((n) => (n.id === noteId ? { ...n, favorite: !!data.favorite } : n))
       );
+      notesQuery.setData((prev) => (prev ?? []).map((n) => (n.id === noteId ? { ...n, favorite: !!data.favorite } : n)));
     } catch {
       setNotes((prev) => prev.map((n) => (n.id === noteId ? { ...n, favorite: !n.favorite } : n)));
       toast({ title: t("ls_notes_error_favorite"), variant: "destructive" });
@@ -287,6 +288,7 @@ export default function Notes() {
     try {
       await notesApi.delete(pendingDelete.id);
       setNotes((prev) => prev.filter((n) => n.id !== pendingDelete.id));
+      notesQuery.setData((prev) => (prev ?? []).filter((n) => n.id !== pendingDelete.id));
       applyUsageDelta({ notesCount: -1 });
       void refresh();
     } catch {
@@ -324,6 +326,7 @@ export default function Notes() {
     try {
       await Promise.all(ids.map((id) => notesApi.delete(id)));
       setNotes((prev) => prev.filter((n) => !selectedIds.has(n.id)));
+      notesQuery.setData((prev) => (prev ?? []).filter((n) => !selectedIds.has(n.id)));
       applyUsageDelta({ notesCount: -ids.length });
       void refresh();
       toast({ title: t(ids.length === 1 ? "notes_bulk_removed_one" : "notes_bulk_removed", { n: ids.length }) || `${ids.length} removed` });
@@ -347,6 +350,8 @@ export default function Notes() {
     setTypes((prev) => (prev.includes(clean) ? prev : [...prev, clean].sort((a, b) => a.localeCompare(b))));
     try {
       await notesApi.bulkUpdateType(ids, clean);
+      notesQuery.setData((prev) => (prev ?? []).map((n) => (idSet.has(n.id) ? { ...n, type: clean } : n)));
+      typesQuery.setData((prev) => (prev ?? []).includes(clean) ? (prev ?? []) : [...(prev ?? []), clean].sort((a, b) => a.localeCompare(b)));
       toast({ title: t("notes_bulk_type_applied", { n: ids.length }) || `${ids.length} updated` });
       exitSelectMode();
       void fetchData();

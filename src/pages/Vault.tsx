@@ -292,6 +292,7 @@ export default function Vault() {
       await vaultApi.delete(file.id);
       invalidateVaultBlob(file.id);
       setFiles((cur) => cur.filter((f) => f.id !== file.id));
+      filesQuery.setData((cur) => (cur ?? []).filter((f) => f.id !== file.id));
       applyUsageDelta({ vaultSizeMB: -Number((file.size / (1024 * 1024)).toFixed(2)) });
       toast({ title: t("gr_vault_delete_success") });
     } catch {
