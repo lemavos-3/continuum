@@ -21,6 +21,8 @@ import { SideInspector } from "@/components/SideInspector";
 import { useEntityStore } from "@/contexts/EntityContext";
 import type { Entity, EntityType } from "@/types";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { queryClient } from "@/lib/query-client";
+import { qk, STALE } from "@/lib/queries";
 
 interface GraphNode {
   id: string;
@@ -578,9 +580,16 @@ export default function KnowledgeGraph() {
   const loadGraph = useCallback(async () => {
     setLoading(true);
     try {
-      const [graphRes, entitiesRes] = await Promise.all([graphApi.data(), entitiesApi.list()]);
-      const data = graphRes.data;
-      const entities = Array.isArray(entitiesRes.data) ? entitiesRes.data : [];
+      const cached = await queryClient.fetchQuery({
+        queryKey: qk.graph(),
+        queryFn: async () => {
+          const [graphRes, entitiesRes] = await Promise.all([graphApi.data(), entitiesApi.list()]);
+          return { graph: graphRes.data, entities: Array.isArray(entitiesRes.data) ? entitiesRes.data : [] };
+        },
+        staleTime: STALE.list,
+      });
+      const data = cached.graph;
+      const entities = cached.entities as Entity[];
       setAllEntities(entities);
 
       const rawNodes = Array.isArray(data?.nodes) ? data.nodes : [];

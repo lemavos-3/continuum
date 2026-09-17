@@ -32,6 +32,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { getNoteFoldsSync, loadNoteFolds, saveNoteFolds } from "@/lib/note-folds";
 import { getEditorReadOnlySync, loadEditorReadOnly, saveEditorReadOnly } from "@/lib/editor-mode";
 import { loadNoteFontSize, subscribeNoteFontSize } from "@/lib/note-font-size";
+import { queryClient } from "@/lib/query-client";
+import { qk, STALE } from "@/lib/queries";
 
 interface NoteData {
   id: string;
@@ -241,30 +243,37 @@ export default function NoteEditor() {
       setSaveStatus("creating");
       setLoading(false);
 
-      Promise.allSettled([entitiesApi.list(), notesApi.getTypes()])
+      Promise.allSettled([
+        queryClient.fetchQuery({ queryKey: qk.entities(), queryFn: () => entitiesApi.list().then((response) => response.data), staleTime: STALE.list }),
+        queryClient.fetchQuery({ queryKey: qk.noteTypes(), queryFn: () => notesApi.getTypes().then((response) => response.data), staleTime: STALE.list }),
+      ])
         .then(([entitiesResult, typesResult]) => {
           if (cancelled) return;
-          if (entitiesResult.status === "fulfilled" && Array.isArray(entitiesResult.value.data)) {
-            setAllEntities(entitiesResult.value.data);
+          if (entitiesResult.status === "fulfilled" && Array.isArray(entitiesResult.value)) {
+            setAllEntities(entitiesResult.value);
           }
-          if (typesResult.status === "fulfilled" && Array.isArray(typesResult.value.data)) {
-            setAvailableTypes(typesResult.value.data);
+          if (typesResult.status === "fulfilled" && Array.isArray(typesResult.value)) {
+            setAvailableTypes(typesResult.value);
           }
         })
         .catch(() => {
           /* ignore fetch details for optimistic placeholder */
         });
     } else {
-      Promise.allSettled([notesApi.get(id), entitiesApi.list(), notesApi.getTypes()])
+      Promise.allSettled([
+        queryClient.fetchQuery({ queryKey: qk.note(id), queryFn: () => notesApi.get(id).then((response) => response.data as NoteData), staleTime: STALE.detail }),
+        queryClient.fetchQuery({ queryKey: qk.entities(), queryFn: () => entitiesApi.list().then((response) => response.data), staleTime: STALE.list }),
+        queryClient.fetchQuery({ queryKey: qk.noteTypes(), queryFn: () => notesApi.getTypes().then((response) => response.data), staleTime: STALE.list }),
+      ])
         .then(([noteResult, entitiesResult, typesResult]) => {
           if (noteResult.status !== "fulfilled") throw noteResult.reason;
           if (cancelled) return;
 
-          const data = noteResult.value.data as NoteData;
+          const data = noteResult.value as NoteData;
           const parsedContent = parseTiptapContent(data.content);
           const userEntities =
-            entitiesResult.status === "fulfilled" && Array.isArray(entitiesResult.value.data)
-              ? entitiesResult.value.data
+            entitiesResult.status === "fulfilled" && Array.isArray(entitiesResult.value)
+              ? entitiesResult.value
               : [];
           
           setAllEntities(userEntities);
@@ -275,8 +284,8 @@ export default function NoteEditor() {
           
           const normalizedContent = sanitized.doc;
 
-          if (typesResult.status === "fulfilled" && Array.isArray(typesResult.value.data)) {
-            setAvailableTypes(typesResult.value.data);
+          if (typesResult.status === "fulfilled" && Array.isArray(typesResult.value)) {
+            setAvailableTypes(typesResult.value);
           }
 
           const optimisticDraft = loadOptimisticDraft();
@@ -352,6 +361,9 @@ export default function NoteEditor() {
       });
 
       setNote((prev) => prev ? { ...prev, title: nextTitle, content: json, entityIds, type: newType } : null);
+      queryClient.setQueryData(qk.note(id), (previous: NoteData | undefined) => previous ? { ...previous, title: nextTitle, content: json, entityIds, type: newType } : previous);
+      void queryClient.invalidateQueries({ queryKey: qk.notes() });
+      void queryClient.invalidateQueries({ queryKey: qk.graph() });
 
       lastSavedTitle.current = nextTitle;
       lastSavedJSON.current = jsonStr;

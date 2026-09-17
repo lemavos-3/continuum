@@ -24,6 +24,8 @@ import { TimerWidget } from "@/components/TimerWidget";
 import { TimeHeatmap } from "@/components/TimeHeatmap";
 import type { HeatmapData, EntityStats } from "@/types";
 import { useTimeTracking } from "@/hooks/useTimeTracking";
+import { queryClient } from "@/lib/query-client";
+import { qk, STALE } from "@/lib/queries";
 
 
 interface EntityData { id: string; title: string; type: string; description?: string; trackingDates?: string[]; createdAt: string; }
@@ -35,10 +37,10 @@ export default function EntityDetail() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const [entity, setEntity] = useState<EntityData | null>(null);
+  const [entity, setEntity] = useState<EntityData | null>(() => id ? queryClient.getQueryData<EntityData>(qk.entity(id)) ?? null : null);
   const [heatmap, setHeatmap] = useState<HeatmapData>({});
   const [stats, setStats] = useState<EntityStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => !id || !queryClient.getQueryData(qk.entity(id)));
   const [editingTitle, setEditingTitle] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [editingDescription, setEditingDescription] = useState(false);
@@ -60,7 +62,11 @@ export default function EntityDetail() {
       setLoading(true);
 
       try {
-        const { data } = await entitiesApi.get(id);
+        const data = await queryClient.fetchQuery({
+          queryKey: qk.entity(id),
+          queryFn: () => entitiesApi.get(id).then((response) => response.data as EntityData),
+          staleTime: STALE.detail,
+        });
 
         if (cancelled) {
           return;
@@ -69,21 +75,24 @@ export default function EntityDetail() {
         setEntity(data);
 
         if (data?.type === "ACTIVITY") {
-          const [hRes, sRes] = await Promise.all([entitiesApi.heatmap(id), entitiesApi.stats(id)]);
+          const [heatmapData, statsData] = await Promise.all([
+            queryClient.fetchQuery({ queryKey: qk.entityHeatmap(id), queryFn: () => entitiesApi.heatmap(id).then((response) => response.data), staleTime: STALE.detail }),
+            queryClient.fetchQuery({ queryKey: qk.entityStats(id), queryFn: () => entitiesApi.stats(id).then((response) => response.data as EntityStats), staleTime: STALE.detail }),
+          ]);
 
           if (cancelled) {
             return;
           }
 
           // Try API heatmap first, fallback to trackingDates
-          const apiHeatmap = normalizeHeatmapData(hRes.data);
+          const apiHeatmap = normalizeHeatmapData(heatmapData);
           const trackingHeatmap = buildHeatmapFromTrackingDates(data.trackingDates || []);
           const finalHeatmap = Object.keys(apiHeatmap).length > 0 ? apiHeatmap : trackingHeatmap;
           
           setHeatmap(finalHeatmap);
           setStats({
-            ...sRes.data,
-            totalCompletions: Array.isArray(data.trackingDates) ? data.trackingDates.length : sRes.data?.totalCompletions,
+            ...statsData,
+            totalCompletions: Array.isArray(data.trackingDates) ? data.trackingDates.length : statsData?.totalCompletions,
           });
         } else {
           setHeatmap({});
@@ -91,18 +100,18 @@ export default function EntityDetail() {
         }
 
         // Load related notes and connections
-        const [notesRes, connectionsRes] = await Promise.all([
-          entitiesApi.getNotes(id),
-          entitiesApi.getConnections(id),
+        const [notesData, connectionsData] = await Promise.all([
+          queryClient.fetchQuery({ queryKey: qk.entityNotes(id), queryFn: () => entitiesApi.getNotes(id).then((response) => response.data), staleTime: STALE.detail }),
+          queryClient.fetchQuery({ queryKey: qk.entityConnections(id), queryFn: () => entitiesApi.getConnections(id).then((response) => response.data), staleTime: STALE.detail }),
         ]);
 
         if (cancelled) {
           return;
         }
 
-        setRelatedNotes(Array.isArray(notesRes.data) ? notesRes.data : []);
+        setRelatedNotes(Array.isArray(notesData) ? notesData : []);
         setRelatedEntities(
-          (Array.isArray(connectionsRes.data) ? connectionsRes.data : []).filter(
+          (Array.isArray(connectionsData) ? connectionsData : []).filter(
             (item: EntityData) => item.id !== id
           )
         );
@@ -205,6 +214,8 @@ export default function EntityDetail() {
     try {
       const { data } = await entitiesApi.update(id, { title: newTitle.trim() });
       setEntity(data);
+      queryClient.setQueryData(qk.entity(id), data);
+      void queryClient.invalidateQueries({ queryKey: ["entities", "list"] });
       setEditingTitle(false);
       toast({ title: t("ent_name_updated") });
     } catch { toast({ title: t("ent_error_updating"), variant: "destructive" }); }
@@ -215,6 +226,8 @@ export default function EntityDetail() {
     try {
       const { data } = await entitiesApi.update(id, { description: newDescription.trim() });
       setEntity(data);
+      queryClient.setQueryData(qk.entity(id), data);
+      void queryClient.invalidateQueries({ queryKey: ["entities", "list"] });
       setEditingDescription(false);
       toast({ title: t("ent_description_updated") });
     } catch { toast({ title: t("ent_error_updating_description"), variant: "destructive" }); }
@@ -225,6 +238,8 @@ export default function EntityDetail() {
     try {
       const { data } = await entitiesApi.update(id, { type: newType });
       setEntity(data);
+      queryClient.setQueryData(qk.entity(id), data);
+      void queryClient.invalidateQueries({ queryKey: ["entities", "list"] });
       setEditingType(false);
       toast({ title: t("ent_type_updated") ?? "Entity type updated" });
     } catch { toast({ title: t("ent_error_updating"), variant: "destructive" }); }
