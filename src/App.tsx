@@ -2,8 +2,7 @@ import * as React from "react";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createIdbPersister, QUERY_CACHE_BUSTER } from "@/lib/offline/query-persister";
 import { queryClient } from "@/lib/query-client";
-import { BrowserRouter, Route, Routes, Navigate, useLocation } from "react-router-dom";
-import { AnimatePresence } from "framer-motion";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,7 +12,6 @@ import { EntityProvider } from "@/contexts/EntityContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { SkeletonPage } from "@/components/ui/skeleton";
-import { PageTransition } from "@/components/motion/PageTransition";
 import { GlobalProgress } from "@/components/motion/GlobalProgress";
 import { extractAuthTokensFromLocation, sanitizeAuthRedirectUrl } from "@/lib/auth-redirect";
 import { EMAIL_AUTH_ENABLED } from "@/lib/dev-mode";
@@ -99,12 +97,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 }
 
 const AppRoutes = () => {
-  const location = useLocation();
   return (
     <React.Suspense fallback={<RouteFallback />}>
-      <AnimatePresence mode="wait" initial={false}>
-        <PageTransition key={location.pathname}>
-          <Routes location={location}>
+      <Routes>
     <Route path="/" element={<HomeRoute />} />
     <Route path="/index" element={<HomeRoute />} />
     <Route path="/dashboard" element={<Navigate to="/notes" replace />} />
@@ -144,9 +139,7 @@ const AppRoutes = () => {
     <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
     <Route path="/profile" element={<Navigate to="/settings" replace />} />
     <Route path="*" element={<NotFound />} />
-          </Routes>
-        </PageTransition>
-      </AnimatePresence>
+      </Routes>
     </React.Suspense>
   );
 };
