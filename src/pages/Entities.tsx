@@ -212,6 +212,7 @@ export default function Entities() {
     try {
       await entitiesApi.delete(pendingDeleteEntity.id);
       setEntities((prev) => prev.filter((x) => x.id !== pendingDeleteEntity.id));
+      entitiesQuery.setData((prev) => (prev ?? []).filter((x) => x.id !== pendingDeleteEntity.id));
       applyUsageDelta({ entitiesCount: -1, activitiesCount: pendingDeleteEntity.type === "ACTIVITY" ? -1 : 0 });
       void refreshUsage();
     } catch {
@@ -249,6 +250,7 @@ export default function Entities() {
     try {
       await Promise.all(targets.map((e) => entitiesApi.delete(e.id)));
       setEntities((prev) => prev.filter((x) => !selectedIds.has(x.id)));
+      entitiesQuery.setData((prev) => (prev ?? []).filter((x) => !selectedIds.has(x.id)));
       const activities = targets.filter((e) => e.type === "ACTIVITY").length;
       applyUsageDelta({ entitiesCount: -targets.length, activitiesCount: -activities });
       void refreshUsage();
@@ -581,7 +583,10 @@ export default function Entities() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         defaultType={(selectedType as EntityType) || "TOPIC"}
-        onCreated={(entity) => setEntities((prev) => [...prev, entity as Entity])}
+        onCreated={(entity) => {
+          setEntities((prev) => [...prev, entity as Entity]);
+          entitiesQuery.setData((prev) => [...(prev ?? []), entity as Entity]);
+        }}
       />
       <UpgradeModal
         open={upgradeOpen}

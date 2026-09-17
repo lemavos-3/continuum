@@ -12,6 +12,7 @@ import { EntityTypeIcon } from '@/components/ui/entity-type-icon';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ActivityCompletionCalendar } from '@/components/ActivityCompletionCalendar';
 import type { Entity } from '@/types';
+import { qk, STALE } from '@/lib/queries';
 
 const todayKey = () => {
   const d = new Date();
@@ -63,13 +64,14 @@ export function TimeTrackingList({
   const lower = hideInternalSearch ? (search ?? '').trim().toLowerCase() : query.trim().toLowerCase();
 
   const { data: trackableEntities, isLoading: entitiesLoading } = useQuery({
-    queryKey: ['entities', 'trackable', filterType],
+    queryKey: qk.entities(filterType),
     queryFn: async () => {
       const response = await entitiesApi.list();
       const entities = response.data as Entity[];
       if (filterType) return entities.filter((e) => e.type === filterType);
       return entities.filter((e) => e.type === 'PROJECT' || e.type === 'ACTIVITY');
     },
+    staleTime: STALE.list,
   });
 
   const { data: summaries, isLoading: summariesLoading } = getAllSummaries();
