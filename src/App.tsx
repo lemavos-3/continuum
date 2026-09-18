@@ -186,6 +186,7 @@ const App = () => {
               <AuthProvider>
                 <UsageProvider>
                   <EntityProvider>
+                    <PrefetchPrimaryData />
                     <AppRoutes />
                     <UpdateDialog />
                   </EntityProvider>
