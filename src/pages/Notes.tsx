@@ -797,7 +797,7 @@ export default function Notes() {
                       </Button>
 
                       {!collapsed && (
-                        <ul className="divide-y divide-white/[0.06]">
+                        <ul className="divide-y divide-border">
                           {items.map((note) => {
                             const preview = extractPreview(note.content);
                             const targetDate = sortBy === "createdAt" ? note.createdAt : note.updatedAt;

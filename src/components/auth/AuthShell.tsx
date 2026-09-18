@@ -17,7 +17,7 @@ interface AuthShellProps {
 export default function AuthShell({ eyebrow = "Continuum", title, subtitle, children, footer }: AuthShellProps) {
   const { t } = useLanguage();
   return (
-    <div className="min-h-screen bg-black text-foreground grid lg:grid-cols-2">
+    <div className="min-h-screen bg-background text-foreground grid lg:grid-cols-2">
       {/* Left — form */}
       <section className="flex flex-col px-6 sm:px-10 lg:px-16 py-10">
         <header className="flex items-center justify-between">
@@ -42,7 +42,7 @@ export default function AuthShell({ eyebrow = "Continuum", title, subtitle, chil
       </section>
 
       {/* Right — typographic side */}
-      <aside className="hidden lg:flex relative items-center justify-center border-l border-border/[0.06] bg-[#050505] overflow-hidden">
+      <aside className="hidden lg:flex relative items-center justify-center border-l border-border bg-[#050505] overflow-hidden">
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{

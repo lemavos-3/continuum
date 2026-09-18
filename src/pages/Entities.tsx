@@ -504,7 +504,7 @@ export default function Entities() {
                 </p>
               </div>
             ) : (
-              <ul className="divide-y divide-white/[0.06]">
+              <ul className="divide-y divide-border">
                 {filteredAndSorted.map((entity) => {
                   const targetDate = sortBy === "updatedAt" ? (entity.updatedAt || entity.createdAt) : entity.createdAt;
                   const selected = selectedIds.has(entity.id);

@@ -35,7 +35,7 @@ export default function Pricing() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-foreground px-4 py-16 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
         <Button asChild variant="link" className="mb-8 inline-flex text-sm font-semibold uppercase tracking-[0.28em] text-zinc-400 transition hover:text-foreground">
           <a href="/">{t("bill_back_to_home")}</a>
@@ -64,7 +64,7 @@ export default function Pricing() {
             </div>
           </div>
 
-          <dl className="divide-y divide-white/[0.06] px-6 py-5">
+          <dl className="divide-y divide-border px-6 py-5">
             {rows.map((r) => (
               <div key={r.label} className="grid grid-cols-[1.4fr_1fr_1fr] items-center gap-2 py-3.5">
                 <dt className="text-sm text-muted-foreground">{r.label}</dt>

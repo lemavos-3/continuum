@@ -93,7 +93,7 @@ export function ActivityAnalyticsCalendar({ trackingDates = [] }: ActivityAnalyt
                     date={date}
                     className={cn(
                       "relative mx-auto flex aspect-square w-full max-w-9 sm:max-w-10 md:max-w-11 items-center justify-center rounded-sm border text-xs outline-none transition-colors",
-                      "data-[outside-month]:opacity-30 data-[focus-visible]:ring-1 data-[focus-visible]:ring-white/40",
+                      "data-[outside-month]:opacity-30 data-[focus-visible]:ring-1 data-[focus-visible]:ring-ring",
                       isCompleted
                         ? "border-border/30 bg-foreground/15 text-foreground"
                         : "border-border/5 bg-transparent text-muted-foreground hover:bg-foreground/5 hover:text-foreground",

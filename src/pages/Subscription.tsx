@@ -200,7 +200,7 @@ export default function Subscription() {
           {/* subtle top gradient */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent"
+            className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-foreground/40 to-transparent"
           />
 
           <CardHeader className="pt-8 sm:pt-12">

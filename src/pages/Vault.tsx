@@ -188,7 +188,7 @@ function OtherFileRow({ file, name, onDelete, onRename }: {
   file: VaultFile; name: string; onDelete: (f: VaultFile) => void; onRename: (f: VaultFile) => void;
 }) {
   return (
-    <div className="group relative flex items-center justify-between py-4 border-b border-border/[0.06] hover:bg-foreground/[0.01] transition-colors">
+    <div className="group relative flex items-center justify-between py-4 border-b border-border hover:bg-foreground/[0.01] transition-colors">
       <div className="flex items-center gap-3 min-w-0">
         <FileGeneric className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
         <div className="min-w-0">
@@ -509,7 +509,7 @@ export default function Vault() {
 
       {/* RENAME DIALOG — extension is preserved silently */}
       <Dialog open={!!renameTarget} onOpenChange={(open) => !open && setRenameTarget(null)}>
-        <DialogContent className="max-w-sm rounded-sm border border-border/10 bg-black">
+        <DialogContent className="max-w-sm rounded-sm border border-border/10 bg-background">
           <p className="font-serif text-xl text-foreground">{t("gr_vault_rename_title")}</p>
           <p className="mt-1 text-[11px] text-muted-foreground">{t("gr_vault_rename_hint")}</p>
           <Input

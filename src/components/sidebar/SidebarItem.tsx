@@ -19,7 +19,7 @@ export function SidebarItem({ icon: Icon, label, to, badge, collapsed = false, o
       className={cn(
         "group flex items-center gap-3 rounded-2xl px-3 py-3 transition-all duration-250 ease-out",
         "bg-foreground/0 text-slate-100 hover:bg-foreground/5 hover:text-foreground",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
         "shadow-none hover:shadow-[0_10px_30px_rgba(255,255,255,0.06)]",
       )}
       onClick={onClick}
@@ -46,7 +46,7 @@ export function SidebarItem({ icon: Icon, label, to, badge, collapsed = false, o
           "group relative flex items-center gap-3 rounded-2xl px-3 py-3 transition-all duration-250 ease-out",
           "text-slate-200 hover:text-foreground hover:bg-foreground/5",
           // CORRIGIDO: bg-foreground/[0.07] com colchetes e um shadow com raio centralizado e maior opacidade para o glow
-          isActive && "bg-foreground/[0.07] text-foreground shadow-[0_0_20px_rgba(255,255,255,0.18)] before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-r before:from-transparent before:via-white/5 before:to-white/15 before:pointer-events-none",
+          isActive && "bg-foreground/[0.07] text-foreground shadow-[0_0_20px_rgba(255,255,255,0.18)] before:absolute before:inset-0 before:rounded-2xl before:bg-gradient-to-r before:from-transparent before:via-foreground/5 before:to-foreground/15 before:pointer-events-none",
         )
       }
       onClick={onClick}

@@ -339,7 +339,7 @@ export function TimeHeatmap({ entityId, weeks = 52 }: Props) {
                               isFuture ? 'bg-transparent' : LEVEL_BG[lvl]
                             } border ${
                               isToday ? 'border-border/60' : 'border-border/[0.04]'
-                            } ${isFuture ? '' : 'hover:ring-1 hover:ring-white/40 active:scale-110'} transition-transform`}
+                            } ${isFuture ? '' : 'hover:ring-1 hover:ring-ring active:scale-110'} transition-transform`}
                           />
                         );
                       })}

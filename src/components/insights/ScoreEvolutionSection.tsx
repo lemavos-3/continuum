@@ -112,7 +112,7 @@ export function ScoreEvolutionSection({
   };
 
   return (
-    <div className="flex flex-col justify-between bg-black">
+    <div className="flex flex-col justify-between bg-background">
       <div className="flex h-full flex-col justify-between p-4 sm:p-6">
         <div className="mb-3 flex items-baseline justify-between">
           <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{t("sc_current")}</p>
