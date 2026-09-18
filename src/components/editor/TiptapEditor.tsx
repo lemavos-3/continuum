@@ -676,31 +676,31 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
             <BubbleMenu
               editor={editor}
               options={{ placement: "top" }}
-              className="flex items-center gap-0.5 rounded-xl border border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl px-1.5 py-1.5"
+              className="flex items-center gap-0.5 rounded-xl border border-border/10 bg-background/90 backdrop-blur-xl shadow-2xl px-1.5 py-1.5"
             >
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleBold().run()} active={editor.isActive("bold")} icon={Bold} label="Bold" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} icon={Italic} label="Italic" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} icon={Strikethrough} label="Strike" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleCode().run()} active={editor.isActive("code")} icon={Code} label="Code" />
-              <div className="w-[1px] h-4 bg-white/10 mx-1" />
+              <div className="w-[1px] h-4 bg-foreground/10 mx-1" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} icon={Heading1} label="H1" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })} icon={Heading2} label="H2" />
               <button
                 type="button"
                 title="H3"
                 onMouseDown={(ev) => { ev.preventDefault(); editor.chain().focus().toggleHeading({ level: 3 }).run(); }}
-                className={`px-1.5 h-7 text-[11px] font-semibold rounded-lg transition-colors ${editor.isActive("heading", { level: 3 }) ? "bg-primary/20 text-primary" : "text-neutral-400 hover:bg-white/10 hover:text-white"}`}
+                className={`px-1.5 h-7 text-[11px] font-semibold rounded-lg transition-colors ${editor.isActive("heading", { level: 3 }) ? "bg-primary/20 text-primary" : "text-neutral-400 hover:bg-foreground/10 hover:text-foreground"}`}
               >H3</button>
               <button
                 type="button"
                 title="Highlight"
                 onMouseDown={(ev) => { ev.preventDefault(); editor.chain().focus().toggleHighlight().run(); }}
-                className={`px-1.5 h-7 text-[11px] rounded-lg transition-colors ${editor.isActive("highlight") ? "bg-yellow-300/30 text-yellow-200" : "text-neutral-400 hover:bg-white/10 hover:text-white"}`}
+                className={`px-1.5 h-7 text-[11px] rounded-lg transition-colors ${editor.isActive("highlight") ? "bg-yellow-300/30 text-yellow-200" : "text-neutral-400 hover:bg-foreground/10 hover:text-foreground"}`}
               >==</button>
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} icon={Quote} label="Quote" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} icon={List} label="Bullets" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} icon={ListOrdered} label="Numbered" />
-              <div className="w-[1px] h-4 bg-white/10 mx-1" />
+              <div className="w-[1px] h-4 bg-foreground/10 mx-1" />
               <ToolbarBtn
                 editor={editor}
                 action={(e) => {
@@ -729,18 +729,18 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
             </BubbleMenu>
 
             {inTable && editable && (
-              <div className="fixed bottom-28 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] flex max-w-[94vw] items-center gap-1 overflow-x-auto rounded-xl border border-white/10 bg-black/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2">
+              <div className="fixed bottom-28 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] flex max-w-[94vw] items-center gap-1 overflow-x-auto rounded-xl border border-border/10 bg-background/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2">
                 <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Table</span>
                 <TableBtn onClick={() => editor.chain().focus().addColumnBefore().run()}>← Col</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().addColumnAfter().run()}>Col →</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().addRowBefore().run()}>↑ Row</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().addRowAfter().run()}>Row ↓</TableBtn>
-                <div className="mx-1 h-4 w-[1px] bg-white/10" />
+                <div className="mx-1 h-4 w-[1px] bg-foreground/10" />
                 <TableBtn onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Header</TableBtn>
                 <TableBtn onClick={() => resizeCurrentColumn(editor, -40)}>Width −</TableBtn>
                 <TableBtn onClick={() => resizeCurrentColumn(editor, 40)}>Width +</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().mergeOrSplit().run()}>Merge</TableBtn>
-                <div className="mx-1 h-4 w-[1px] bg-white/10" />
+                <div className="mx-1 h-4 w-[1px] bg-foreground/10" />
                 <TableBtn onClick={() => editor.chain().focus().deleteColumn().run()}>− Col</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().deleteRow().run()}>− Row</TableBtn>
                 <button type="button" className="flex items-center rounded px-3 text-xs h-7 text-red-400 transition-colors hover:bg-red-500/20" onPointerDown={(ev) => { ev.preventDefault(); editor.chain().focus().deleteTable().run(); }}>
@@ -820,7 +820,7 @@ function ToolbarBtn({
           ? "cursor-not-allowed opacity-40" 
           : active 
             ? "bg-primary/20 text-primary" 
-            : "text-neutral-400 hover:bg-white/10 hover:text-white"
+            : "text-neutral-400 hover:bg-foreground/10 hover:text-foreground"
       }`}
     >
       <Icon className="w-3.5 h-3.5" />
@@ -842,7 +842,7 @@ function TableBtn({ onClick, children }: { onClick: () => void; children: React.
     <button
       type="button"
       onPointerDown={(e) => { e.preventDefault(); onClick(); }}
-      className="h-7 shrink-0 whitespace-nowrap rounded px-2.5 text-xs text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+      className="h-7 shrink-0 whitespace-nowrap rounded px-2.5 text-xs text-neutral-300 transition-colors hover:bg-foreground/10 hover:text-foreground"
     >
       {children}
     </button>
