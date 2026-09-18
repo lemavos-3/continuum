@@ -26,7 +26,7 @@ function Section({ label, items, kind }: { label: string; items: BacklinkItem[];
         <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">{label}</p>
         <p className="font-mono text-[10px] text-muted-foreground tabular-nums">{items.length}</p>
       </div>
-      <ul className="divide-y divide-white/[0.05]">
+      <ul className="divide-y divide-border">
         {items.map((item) => (
           <li key={item.id}>
             <Link
