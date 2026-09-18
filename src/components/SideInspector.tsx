@@ -180,7 +180,7 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
             <div className="space-y-4 p-6">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0 flex-1">
-                  <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground font-mono">
+                  <p className="label-caps text-muted-foreground">
                     {config.label}
                   </p>
                   <h2 className="mt-2 font-serif text-2xl tracking-tight text-foreground break-words">{displayEntity.title}</h2>
@@ -225,7 +225,7 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
                   {isNote ? (
                     <>
                       <div className="rounded-md bg-muted/60 p-4">
-                        <h3 className="mb-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground font-mono">{t("ent_summary")}</h3>
+                        <h3 className="mb-3 label-caps text-muted-foreground">{t("ent_summary")}</h3>
                         <div className="space-y-3">
                           <p className="text-xs leading-relaxed text-muted-foreground">{notePreview}</p>
                           <div className="space-y-2 border-t border-border pt-3">
@@ -294,7 +294,7 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
                   ) : (
                     <>
                       <div className="rounded-md bg-muted/60 p-4">
-                        <h3 className="mb-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground font-mono">{t("ent_metadata")}</h3>
+                        <h3 className="mb-3 label-caps text-muted-foreground">{t("ent_metadata")}</h3>
                         <div className="space-y-2 text-[10px] font-mono text-muted-foreground">
                           <div className="flex items-center justify-between">
                             <span className="inline-flex items-center gap-1.5">
@@ -321,7 +321,7 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
                       </div>
 
                       <div className="rounded-md bg-muted/60 p-4">
-                        <h3 className="mb-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground font-mono">{t("ent_details")}</h3>
+                        <h3 className="mb-3 label-caps text-muted-foreground">{t("ent_details")}</h3>
                         <div className="space-y-3">
                           {displayEntity.description ? (
                             <p className="text-xs leading-relaxed text-muted-foreground">{displayEntity.description}</p>
@@ -343,7 +343,7 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
 
                       {displayEntity.type === "ACTIVITY" && (
                         <div className="rounded-md bg-muted/60 p-4">
-                          <h3 className="mb-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground font-mono">{t("ent_activity_metrics")}</h3>
+                          <h3 className="mb-3 label-caps text-muted-foreground">{t("ent_activity_metrics")}</h3>
                           <div className="grid grid-cols-2 gap-3 text-center text-[10px] font-mono">
                             <div>
                               <div className="font-semibold text-foreground">{activityTotalCompletions}</div>
@@ -359,7 +359,7 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
 
 
                       <div className="rounded-md bg-muted/60 p-4">
-                        <h3 className="mb-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground font-mono">{t("ent_connected_notes")}</h3>
+                        <h3 className="mb-3 label-caps text-muted-foreground">{t("ent_connected_notes")}</h3>
                         <div className="space-y-2">
                           {relatedNotes.length > 0 ? (
                             relatedNotes.slice(0, 5).map((note) => (
@@ -385,7 +385,7 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
                       </div>
 
                       <div className="rounded-md bg-muted/60 p-4">
-                        <h3 className="mb-3 text-[10px] uppercase tracking-[0.28em] text-muted-foreground font-mono">{t("ent_related_entities")}</h3>
+                        <h3 className="mb-3 label-caps text-muted-foreground">{t("ent_related_entities")}</h3>
                         <div className="space-y-2">
                           {relatedEntities.length > 0 ? (
                             relatedEntities.slice(0, 5).map((relatedEntity) => (
