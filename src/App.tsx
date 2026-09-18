@@ -16,6 +16,7 @@ import { GlobalProgress } from "@/components/motion/GlobalProgress";
 import { extractAuthTokensFromLocation, sanitizeAuthRedirectUrl } from "@/lib/auth-redirect";
 import { EMAIL_AUTH_ENABLED } from "@/lib/dev-mode";
 import UpdateDialog from "@/components/updater/UpdateDialog";
+import { prefetchPrimaryLists } from "@/lib/prefetch";
 
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
@@ -54,6 +55,15 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 const Insights = React.lazy(() => import("./pages/Insights"));
 
 const queryPersister = createIdbPersister();
+
+/** Warms notes/entities/insights as soon as the user is authenticated. */
+function PrefetchPrimaryData() {
+  const { user } = useAuth();
+  React.useEffect(() => {
+    if (user) prefetchPrimaryLists();
+  }, [user]);
+  return null;
+}
 
 function RouteFallback() {
   return (
