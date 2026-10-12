@@ -44,10 +44,11 @@ export default function SubscriptionModal({ open, onOpenChange }: Props) {
   const { t } = useLanguage();
   const [sub, setSub] = useState<SubInfo | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [checkoutMode, setCheckoutMode] = useState(false);
   const currentPlan = ((sub?.effectivePlan || user?.plan) as Plan | string) || "FREE";
   const normalizedPlan = currentPlan === "PRO" ? ("VISION" as Plan) : (currentPlan as Plan);
   const isPro = normalizedPlan === "VISION";
-  const adaptiveCheckout = useAdaptiveCheckout(open && !isPro);
+  const adaptiveCheckout = useAdaptiveCheckout((open || checkoutMode) && !isPro);
 
   const VISION_BENEFITS = [
     t("bill_benefit_unlimited_notes_entities"),
@@ -62,7 +63,15 @@ export default function SubscriptionModal({ open, onOpenChange }: Props) {
     subscriptionApi.me().then(({ data }) => setSub(data)).catch(() => {});
   }, [open]);
 
-  const handleCheckout = () => adaptiveCheckout.openCheckout();
+  useEffect(() => {
+    if (open) setCheckoutMode(false);
+  }, [open]);
+
+  const handleCheckout = () => {
+    setCheckoutMode(true);
+    onOpenChange(false);
+    adaptiveCheckout.openCheckout();
+  };
 
   const handlePortal = async () => {
     setPortalLoading(true);

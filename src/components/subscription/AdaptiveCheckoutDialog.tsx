@@ -88,7 +88,8 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
   return (
     <Dialog open={state.open} onOpenChange={(open) => { if (!confirming) state.setOpen(open); }}>
       <DialogContent
-        className="max-h-[90dvh] max-w-lg overflow-y-auto"
+        className="z-[101] max-h-[90dvh] max-w-lg overflow-y-auto"
+        overlayClassName="z-[100]"
         onOpenAutoFocus={(event) => {
           event.preventDefault();
           titleRef.current?.focus();

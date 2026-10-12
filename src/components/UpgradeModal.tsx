@@ -2,12 +2,18 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAdaptiveCheckout } from "@/hooks/useAdaptiveCheckout";
 import { AdaptiveCheckoutDialog } from "@/components/subscription/AdaptiveCheckoutDialog";
+import { useEffect, useState } from "react";
 
 interface UpgradeModalProps { open: boolean; onOpenChange: (open: boolean) => void; reason?: string; }
 
 export default function UpgradeModal({ open, onOpenChange, reason }: UpgradeModalProps) {
   const { t } = useLanguage();
-  const adaptiveCheckout = useAdaptiveCheckout(open);
+  const [checkoutMode, setCheckoutMode] = useState(false);
+  const adaptiveCheckout = useAdaptiveCheckout(open || checkoutMode);
+
+  useEffect(() => {
+    if (open) setCheckoutMode(false);
+  }, [open]);
 
   const VISION_FEATURES = [
     t("bill_feature_unlimited_entities"),
@@ -18,7 +24,11 @@ export default function UpgradeModal({ open, onOpenChange, reason }: UpgradeModa
     t("bill_feature_export_calendar"),
   ];
 
-  const handleCheckout = () => adaptiveCheckout.openCheckout();
+  const handleCheckout = () => {
+    setCheckoutMode(true);
+    onOpenChange(false);
+    adaptiveCheckout.openCheckout();
+  };
 
   return (
     <>
