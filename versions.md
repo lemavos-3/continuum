@@ -9,7 +9,9 @@ v1.3.3 — Oct XX, 2026
 - Prefetch: Add prefetch progress line.
 - UI: Padronize /notes, /entities UI in desktop to look like mobile.
 - Notes: Filter by type now uses drawer.
-
+- Billing: Enabled Stripe Adaptive Pricing for embedded subscription checkout.
+- Billing: Added an in-app Stripe checkout experience.
+- UI: Updated the Charcoal theme background to #060d0c.
 ---
 
 v1.3.2 — Oct 11, 2026
