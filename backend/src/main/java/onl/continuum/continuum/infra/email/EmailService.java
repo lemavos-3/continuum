@@ -262,6 +262,7 @@ public class EmailService {
                     "If you didn’t request this, cancel it immediately.",
                     "Your account is scheduled for deletion",
                     "Your Continuum account",
+                    "Your account and all its data have been deleted.",
                     "Hi",
                     "Your account and all its data have been deleted.",
                     "Thank you for using Continuum.",
