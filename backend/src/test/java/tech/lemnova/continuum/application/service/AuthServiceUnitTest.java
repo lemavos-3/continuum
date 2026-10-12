@@ -12,6 +12,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronizationUtils;
 import onl.continuum.continuum.domain.token.TokenBlacklistRepository;
 import onl.continuum.continuum.domain.plan.PlanConfiguration;
 import onl.continuum.continuum.domain.plan.PlanType;
@@ -20,6 +22,8 @@ import onl.continuum.continuum.domain.user.User;
 import onl.continuum.continuum.domain.user.UserRepository;
 import onl.continuum.continuum.infra.email.EmailService;
 import onl.continuum.continuum.infra.security.JwtService;
+import onl.continuum.continuum.infra.security.RefreshTokenService;
+import onl.continuum.continuum.infra.notification.TelegramNotificationService;
 import onl.continuum.continuum.infra.vault.VaultStorageService;
 
 import java.util.Optional;
@@ -46,6 +50,12 @@ class AuthServiceUnitTest {
 
     @Mock
     JwtService jwtService;
+
+    @Mock
+    RefreshTokenService refreshTokenService;
+
+    @Mock
+    TelegramNotificationService telegramNotificationService;
 
     @Mock
     VaultStorageService vaultStorage;
@@ -87,5 +97,28 @@ class AuthServiceUnitTest {
         assertThat(result.getVaultId()).isNotBlank();
         assertThat(result.getActive()).isTrue();
         assertThat(result.isEmailVerified()).isTrue();
+    }
+
+    @Test
+    void register_sendsWelcomeAfterTransactionCommits() {
+        String email = "newuser@example.com";
+        when(users.save(any(User.class))).thenAnswer(invocation -> {
+            User user = invocation.getArgument(0);
+            user.setId("user-id");
+            return user;
+        });
+        when(jwtService.generateFromUser(any(User.class))).thenReturn("access-token");
+        when(refreshTokenService.generateRefreshToken("user-id", "login")).thenReturn("refresh-token");
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            authService.register("New User", email, "password");
+
+            verifyNoInteractions(emailService);
+            TransactionSynchronizationUtils.triggerAfterCommit();
+            verify(emailService).sendWelcome(email, "New User", null);
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 }

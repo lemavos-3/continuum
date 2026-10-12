@@ -6,6 +6,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import onl.continuum.continuum.application.exception.BadRequestException;
 import onl.continuum.continuum.application.exception.NotFoundException;
 import onl.continuum.continuum.controller.dto.auth.AuthResponse;
@@ -99,9 +101,7 @@ public class AuthService {
             createFreeSubscription(user.getId());
             initVaultAsync(vaultId);
             notifyTelegramNewUser(user);
-            if (emailService != null) {
-                emailService.sendWelcome(user.getEmail(), user.getUsername(), user.getLanguage());
-            }
+            sendWelcomeAfterCommit(user);
         } else {
             boolean changed = false;
             if (user.getGoogleId() == null) {
@@ -183,10 +183,24 @@ public class AuthService {
         createFreeSubscription(user.getId());
         initVaultAsync(vaultId);
         notifyTelegramNewUser(user);
-        if (emailService != null) {
-            emailService.sendWelcome(user.getEmail(), user.getUsername(), user.getLanguage());
-        }
+        sendWelcomeAfterCommit(user);
         return buildAuthResponseWithTokenPair(user).withNewUserFlag(true);
+    }
+
+    private void sendWelcomeAfterCommit(User user) {
+        if (emailService == null) return;
+
+        Runnable send = () -> emailService.sendWelcome(user.getEmail(), user.getUsername(), user.getLanguage());
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    send.run();
+                }
+            });
+        } else {
+            send.run();
+        }
     }
 
     @Transactional
