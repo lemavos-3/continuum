@@ -21,7 +21,6 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
   const [confirming, setConfirming] = useState(false);
   const [paymentReady, setPaymentReady] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [paymentMountAttempt, setPaymentMountAttempt] = useState(0);
   const [promoCode, setPromoCode] = useState("");
   const [applyingPromoCode, setApplyingPromoCode] = useState(false);
 
@@ -67,10 +66,10 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
       active = false;
       window.clearTimeout(mountTimer);
       window.clearTimeout(readinessTimeout);
-      paymentElement?.unmount();
-      currencySelectorElement?.unmount();
+      paymentElement?.destroy();
+      currencySelectorElement?.destroy();
     };
-  }, [checkout, isOpen, paymentMountAttempt]);
+  }, [checkout, isOpen]);
 
   const confirmPayment = async () => {
     if (!state.actions) return;
@@ -178,7 +177,7 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
                 type="button"
                 variant="outline"
                 className="w-full"
-                onClick={() => setPaymentMountAttempt((attempt) => attempt + 1)}
+                onClick={state.retry}
               >
                 {t("bill_try_again")}
               </Button>

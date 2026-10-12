@@ -75,6 +75,7 @@ export function useAdaptiveCheckout(enabled = true) {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const hasOpenedCheckout = useRef(false);
 
   useEffect(() => {
     if (!enabled) return;
@@ -172,7 +173,8 @@ export function useAdaptiveCheckout(enabled = true) {
 
   const openCheckout = useCallback(() => {
     setOpen(true);
-    if (error) retry();
+    if (error || hasOpenedCheckout.current) retry();
+    hasOpenedCheckout.current = true;
   }, [error, retry]);
 
   return {
