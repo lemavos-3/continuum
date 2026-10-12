@@ -101,13 +101,9 @@ export default function SubscriptionContent() {
   ] : undefined;
 
   const handleCheckout = async () => {
-    if (!prices.monthly || !prices.monthly.startsWith("price_")) {
-      toast({ title: t("bill_error"), description: "Subscription pricing is not configured yet.", variant: "destructive" });
-      return;
-    }
     setCheckoutLoading(true);
     try {
-      const { data } = await subscriptionApi.checkout(prices.monthly);
+      const { data } = await subscriptionApi.checkout(prices.monthly || "VISION");
       if (data?.url) window.location.href = data.url;
     } catch (err: any) {
       toast({ title: t("bill_error"), description: err.response?.data?.message || t("bill_try_again"), variant: "destructive" });
