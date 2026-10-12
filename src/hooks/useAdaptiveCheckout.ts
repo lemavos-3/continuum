@@ -80,6 +80,7 @@ export function useAdaptiveCheckout(enabled = true) {
     if (!enabled) return;
 
     let cancelled = false;
+    let initializationTimedOut = false;
     setLoading(true);
     setError(null);
     setPrice("…");
@@ -107,7 +108,7 @@ export function useAdaptiveCheckout(enabled = true) {
 
       const initialSession = result.actions.getSession();
       const initialPrice = getRecurringPrice(initialSession);
-      if (cancelled) return;
+      if (cancelled || initializationTimedOut) return;
 
       setPrice(initialPrice);
       setCheckout(instance);
@@ -124,7 +125,17 @@ export function useAdaptiveCheckout(enabled = true) {
       });
     };
 
-    initialize()
+    let timeoutId: number | undefined;
+    const initializationTimeout = new Promise<never>((_, reject) => {
+      timeoutId = window.setTimeout(() => {
+        initializationTimedOut = true;
+        reject(new Error(translateRef.current("bill_checkout_load_error")));
+      }, 30000);
+    });
+    Promise.race([
+      initialize(),
+      initializationTimeout,
+    ])
       .catch((cause: unknown) => {
         if (!cancelled) {
           const message = isAxiosError<{ message?: string }>(cause)
@@ -137,11 +148,13 @@ export function useAdaptiveCheckout(enabled = true) {
         }
       })
       .finally(() => {
+        window.clearTimeout(timeoutId);
         if (!cancelled) setLoading(false);
       });
 
     return () => {
       cancelled = true;
+      window.clearTimeout(timeoutId);
     };
   }, [attempt, enabled, toast]);
 

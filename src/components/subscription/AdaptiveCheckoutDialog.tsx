@@ -12,6 +12,10 @@ type CheckoutState = ReturnType<typeof useAdaptiveCheckout>;
 function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => void }) {
   const { toast } = useToast();
   const { t } = useLanguage();
+  const translateRef = useRef(t);
+  translateRef.current = t;
+  const checkout = state.checkout;
+  const isOpen = state.open;
   const paymentRef = useRef<HTMLDivElement>(null);
   const currencySelectorRef = useRef<HTMLDivElement>(null);
   const [confirming, setConfirming] = useState(false);
@@ -21,20 +25,20 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
   const [applyingPromoCode, setApplyingPromoCode] = useState(false);
 
   useEffect(() => {
-    if (!state.open || !state.checkout || !paymentRef.current || !currencySelectorRef.current) return;
+    if (!isOpen || !checkout || !paymentRef.current || !currencySelectorRef.current) return;
 
     let active = true;
-    let paymentElement: ReturnType<typeof state.checkout.createPaymentElement> | null = null;
-    let currencySelectorElement: ReturnType<typeof state.checkout.createCurrencySelectorElement> | null = null;
+    let paymentElement: ReturnType<typeof checkout.createPaymentElement> | null = null;
+    let currencySelectorElement: ReturnType<typeof checkout.createCurrencySelectorElement> | null = null;
     setPaymentReady(false);
     setPaymentError(null);
 
     const readinessTimeout = window.setTimeout(() => {
-      if (active) setPaymentError(t("bill_payment_fields_error"));
+      if (active) setPaymentError(translateRef.current("bill_payment_fields_error"));
     }, 12000);
 
     try {
-      paymentElement = state.checkout.createPaymentElement({ layout: "tabs" });
+      paymentElement = checkout.createPaymentElement({ layout: "tabs" });
       paymentElement.on("ready", () => {
         if (!active) return;
         window.clearTimeout(readinessTimeout);
@@ -47,11 +51,11 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
       });
       paymentElement.mount(paymentRef.current);
 
-      currencySelectorElement = state.checkout.createCurrencySelectorElement();
+      currencySelectorElement = checkout.createCurrencySelectorElement();
       currencySelectorElement.mount(currencySelectorRef.current);
     } catch (cause) {
       window.clearTimeout(readinessTimeout);
-      setPaymentError(cause instanceof Error ? cause.message : t("bill_payment_fields_error"));
+      setPaymentError(cause instanceof Error ? cause.message : translateRef.current("bill_payment_fields_error"));
     }
 
     return () => {
@@ -60,7 +64,7 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
       paymentElement?.unmount();
       currencySelectorElement?.unmount();
     };
-  }, [state.checkout, state.open, t]);
+  }, [checkout, isOpen]);
 
   const confirmPayment = async () => {
     if (!state.actions) return;
