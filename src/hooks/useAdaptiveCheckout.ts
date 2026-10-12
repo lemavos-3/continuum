@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import { subscriptionApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { Language } from "@/contexts/LanguageContext";
 import { useTheme } from "@/contexts/ThemeContext";
 
 type StripeInstance = NonNullable<Awaited<ReturnType<typeof loadStripe>>>;
@@ -12,25 +13,44 @@ type LoadActionsResult = Awaited<ReturnType<CheckoutSdk["loadActions"]>>;
 type CheckoutActions = Extract<LoadActionsResult, { type: "success" }>["actions"];
 type CheckoutSession = ReturnType<CheckoutActions["getSession"]>;
 
-let stripeClientPromise: Promise<StripeInstance | null> | null = null;
+let stripeConfigPromise: Promise<string> | null = null;
+const stripeClientPromises = new Map<Language, Promise<StripeInstance | null>>();
 
-async function getStripeClient(): Promise<StripeInstance | null> {
-  if (!stripeClientPromise) {
-    const pending = subscriptionApi.checkoutConfig().then(({ data }) => {
+function getStripeLocale(language: Language) {
+  switch (language) {
+    case "en": return "en";
+    case "es": return "es";
+    case "pt": return "pt-BR";
+    case "fr": return "fr";
+  }
+}
+
+async function getStripeClient(language: Language): Promise<StripeInstance | null> {
+  const cached = stripeClientPromises.get(language);
+  if (cached) return cached;
+
+  if (!stripeConfigPromise) {
+    stripeConfigPromise = subscriptionApi.checkoutConfig().then(({ data }) => {
       if (!data.publishableKey) {
         throw new Error("Stripe did not return the publishable key needed for checkout.");
       }
-      return loadStripe(data.publishableKey);
+      return data.publishableKey;
     });
-    stripeClientPromise = pending;
-    try {
-      return await pending;
-    } catch (error) {
-      if (stripeClientPromise === pending) stripeClientPromise = null;
-      throw error;
-    }
   }
-  return stripeClientPromise;
+
+  const pending = stripeConfigPromise.then((publishableKey) =>
+    loadStripe(publishableKey, { locale: getStripeLocale(language) }),
+  );
+  stripeClientPromises.set(language, pending);
+  try {
+    const client = await pending;
+    if (!client) throw new Error("Stripe.js could not be initialized.");
+    return client;
+  } catch (error) {
+    if (stripeClientPromises.get(language) === pending) stripeClientPromises.delete(language);
+    if (stripeClientPromises.size === 0) stripeConfigPromise = null;
+    throw error;
+  }
 }
 
 function getStripeAppearance(theme: string) {
@@ -62,7 +82,7 @@ function getRecurringPrice(session: CheckoutSession): string {
 
 export function useAdaptiveCheckout(enabled = true) {
   const { toast } = useToast();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const { theme } = useTheme();
   const translateRef = useRef(t);
   translateRef.current = t;
@@ -91,7 +111,7 @@ export function useAdaptiveCheckout(enabled = true) {
     const initialize = async () => {
       const [checkoutResponse, stripe] = await Promise.all([
         subscriptionApi.checkoutEmbedded("VISION"),
-        getStripeClient(),
+        getStripeClient(language),
       ]);
       const { data } = checkoutResponse;
       if (!data.clientSecret) {
@@ -160,7 +180,7 @@ export function useAdaptiveCheckout(enabled = true) {
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, [attempt, enabled, toast]);
+  }, [attempt, enabled, language, toast]);
 
   const retry = useCallback(() => {
     setLoading(true);
