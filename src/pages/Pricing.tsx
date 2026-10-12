@@ -30,7 +30,9 @@ export default function Pricing() {
   const { user } = useAuth();
   const isVision = user?.plan === "VISION";
   const adaptiveCheckout = useAdaptiveCheckout(Boolean(user && !isVision));
-  const priceLoading = user && !isVision && adaptiveCheckout.loading && adaptiveCheckout.price === "…";
+  const priceLoading = Boolean(
+    user && !isVision && adaptiveCheckout.loading && adaptiveCheckout.price === "…",
+  );
   const visitorPrice = getVisitorPrice(
     typeof navigator === "undefined" ? [] : [navigator.language, ...navigator.languages],
   );

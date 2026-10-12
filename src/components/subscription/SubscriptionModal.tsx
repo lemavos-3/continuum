@@ -20,6 +20,7 @@ import {
   ArrowRightIcon,
   CheckIcon,
 } from "@heroicons/react/24/outline";
+import { Loader2 } from "lucide-react";
 
 interface SubInfo {
   plan?: string;
@@ -108,7 +109,15 @@ export default function SubscriptionModal({ open, onOpenChange }: Props) {
                 VISION
               </DialogTitle>
               <div className="text-right">
-                <p className="font-serif text-3xl text-foreground">{adaptiveCheckout.price}</p>
+                <p className="flex min-h-9 items-center justify-end font-serif text-3xl text-foreground" aria-live="polite">
+                  {adaptiveCheckout.loading && adaptiveCheckout.price === "…" ? (
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" aria-label={t("bill_price_refreshing")} />
+                  ) : (
+                    adaptiveCheckout.price === "…"
+                      ? t("bill_price_localized_in_checkout")
+                      : adaptiveCheckout.price
+                  )}
+                </p>
                 <p className="mt-1 text-[10px] uppercase tracking-[0.28em] text-muted-foreground">
                   {t("bill_per_month")}
                 </p>
