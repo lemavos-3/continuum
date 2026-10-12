@@ -52,10 +52,11 @@ class EmailServiceTest {
         for (String html : java.util.List.of(welcome, scheduled, deleted)) {
             assertThat(html)
                 .startsWith("<!doctype html>")
-                .contains("lang=\"" + language + "\"", "https://app.continuum.onl/favicon.png")
+                .contains("lang=\"" + language + "\"", "https://app.continuum.onl/icon-transparent.png")
+                .contains("Continuum • Capture, Connect, Resurface.")
                 .contains("background:#000000", "color:#EAE8E2", "color:#A3A19B", "font-family:Inter")
                 .contains("role=\"presentation\"", "name=\"viewport\"")
-                .doesNotContain("icon-transparent.png", "box-shadow", "border:1px", "border-radius:999px", "display:flex");
+                .doesNotContain("favicon.png", "box-shadow", "border:1px", "border-radius:999px", "display:flex");
         }
         assertThat(welcome).contains("href=\"https://app.continuum.onl\"", "border-radius:8px");
         assertThat(scheduled).contains("href=\"https://app.continuum.onl/settings\"", "20/10/2026 12:00 UTC");

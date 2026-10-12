@@ -157,8 +157,7 @@ public class EmailService {
     }
 
     private static String layout(String languageCode, String title, String subtitle, String content, String footerLine, String appUrl) {
-        // PNG is the app favicon, with broader email-client support than ICO.
-        String iconUrl = normalizeAppUrl(appUrl) + "/favicon.png";
+        String iconUrl = normalizeAppUrl(appUrl) + "/icon-transparent.png";
         return "<!doctype html><html lang=\"" + esc(languageCode) + "\"><head>"
                 + "<meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
                 + "<title>" + esc(title) + "</title></head>"
@@ -221,7 +220,7 @@ public class EmailService {
                     "Tu cuenta y todos tus datos han sido eliminados.",
                     "Gracias por usar Continuum.",
                     "Tu cuenta de Continuum ha sido eliminada",
-                    "Continuum • Tu espacio de pensamiento"
+                    "Continuum • Capture, Connect, Resurface."
             );
             case "pt" -> new LocaleBundle(
                     "pt",
@@ -247,7 +246,7 @@ public class EmailService {
                     "Sua conta e todos os seus dados foram excluídos.",
                     "Obrigado por usar o Continuum.",
                     "Sua conta do Continuum foi excluída",
-                    "Continuum • Seu espaço de pensamento"
+                    "Continuum • Capture, Connect, Resurface."
             );
             case "fr" -> new LocaleBundle(
                     "fr",
@@ -273,7 +272,7 @@ public class EmailService {
                     "Votre compte et toutes vos données ont été supprimés.",
                     "Merci d'utiliser Continuum.",
                     "Votre compte Continuum a été supprimé",
-                    "Continuum • Votre espace de pensée"
+                    "Continuum • Capture, Connect, Resurface."
             );
             default -> new LocaleBundle(
                     "en",
@@ -299,7 +298,7 @@ public class EmailService {
                     "Your account and all its data have been deleted.",
                     "Thank you for using Continuum.",
                     "Your Continuum account has been deleted",
-                    "Continuum • Your thinking space"
+                    "Continuum • Capture, Connect, Resurface."
             );
         };
     }
