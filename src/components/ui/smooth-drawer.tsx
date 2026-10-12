@@ -40,6 +40,7 @@ interface SmoothDrawerProps {
   hideHeader?: boolean;
   children: React.ReactNode;
   className?: string;
+  overlayClassName?: string;
   bodyClassName?: string;
   /**
    * vaul resizes/offsets the drawer when the mobile keyboard opens. Pass `false`
@@ -57,6 +58,7 @@ export default function SmoothDrawer({
   hideHeader = false,
   children,
   className,
+  overlayClassName,
   bodyClassName,
   repositionInputs = true,
   expandable = false,
@@ -81,6 +83,7 @@ export default function SmoothDrawer({
       {...snapProps}
     >
       <DrawerContent
+        overlayClassName={overlayClassName}
         className={cn(
           "mx-auto max-h-[88dvh] w-full max-w-lg rounded-t-3xl border-border/10 bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-2xl backdrop-blur-xl sm:bottom-4 sm:rounded-3xl",
           className,

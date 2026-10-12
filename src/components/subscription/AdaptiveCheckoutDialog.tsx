@@ -36,16 +36,15 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
     if (!state.actions) return;
     setConfirming(true);
     try {
-      const returnUrl = new URL("/settings", window.location.origin);
-      returnUrl.searchParams.set("status", "success");
       const result = await state.actions.confirm({
-        returnUrl: returnUrl.toString(),
         redirect: "always",
       });
       if (result.type === "error") {
         toast({ title: t("bill_error"), description: result.error.message, variant: "destructive" });
         return;
       }
+      const returnUrl = new URL("/settings", window.location.origin);
+      returnUrl.searchParams.set("status", "success");
       window.location.assign(returnUrl.toString());
     } catch (cause) {
       toast({
@@ -89,8 +88,10 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
       onOpenChange={(open) => { if (!confirming) state.setOpen(open); }}
       title="VISION"
       description={t("bill_cancel_secure")}
-      className="z-[110] max-h-[92dvh]"
+      className="z-[110] h-[92dvh] max-h-[92dvh] overflow-hidden"
+      overlayClassName="z-[105]"
       bodyClassName="px-5 pb-5"
+      repositionInputs={false}
     >
       {state.loading ? (
         <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground" role="status">
