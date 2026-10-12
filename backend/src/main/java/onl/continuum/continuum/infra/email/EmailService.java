@@ -31,6 +31,16 @@ public class EmailService {
     private static final DateTimeFormatter DATE_FMT =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm 'UTC'").withZone(ZoneOffset.UTC);
 
+    // Email-safe equivalents of the default app tokens in src/index.css.
+    private static final String BACKGROUND = "#000000";
+    private static final String FOREGROUND = "#EAE8E2";
+    private static final String MUTED_FOREGROUND = "#A3A19B";
+    private static final String ACCENT = "#F3F1EB";
+    private static final String ON_ACCENT = "#0B0A09";
+    private static final String FONT = "Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif";
+    private static final String BUTTON_RADIUS = "8px";
+    private static final String PARAGRAPH_STYLE = "margin:0 0 18px;font-size:14px;line-height:1.7;color:" + FOREGROUND;
+
     private final String apiKey;
     private final String from;
     private final String appUrl;
@@ -42,7 +52,7 @@ public class EmailService {
                         @Value("${app.url:http://localhost:5173}") String appUrl) {
         this.apiKey = apiKey;
         this.from = from;
-        this.appUrl = appUrl;
+        this.appUrl = normalizeAppUrl(appUrl);
     }
 
     public boolean isEnabled() {
@@ -58,11 +68,10 @@ public class EmailService {
     public String buildWelcomeEmail(String name, String language) {
         LocaleBundle bundle = locale(language);
         String who = esc(name == null || name.isBlank() ? bundle.defaultName() : name);
-        String content = "<p><strong>" + bundle.greeting() + " " + who + ",</strong></p>"
-                + "<p>" + bundle.welcomeParagraph1() + "</p>"
-                + "<p>" + bundle.welcomeParagraph2() + "</p>"
-                + "<p style=\"margin:24px 0 0\"><a href=\"" + esc(appUrl) + "\" style=\"display:inline-block;padding:12px 20px;background:#F3F1EB;color:#0B0A09;text-decoration:none;border-radius:999px;font-weight:700;letter-spacing:0.02em\">"
-                + bundle.cta() + "</a></p>";
+        String content = paragraph(bundle.greeting() + " " + who + ",")
+                + paragraph(bundle.welcomeParagraph1())
+                + paragraph(bundle.welcomeParagraph2())
+                + button(appUrl, bundle.cta());
         return layout(bundle.languageCode(), bundle.welcomeTitle(), bundle.welcomeSubtitle(), content, bundle.footerLine(), appUrl);
     }
 
@@ -79,12 +88,12 @@ public class EmailService {
     public String buildDeletionScheduledEmail(String name, Instant purgeAt, String language) {
         LocaleBundle bundle = locale(language);
         String who = esc(name == null || name.isBlank() ? bundle.defaultName() : name);
-        String content = "<p><strong>" + bundle.deleteGreeting() + " " + who + ",</strong></p>"
-                + "<p>" + bundle.deleteScheduledLine1().replace("{date}", DATE_FMT.format(purgeAt)) + "</p>"
-                + "<p>" + bundle.deleteScheduledLine2() + "</p>"
-                + "<p><a href=\"" + esc(appUrl) + "/settings\" style=\"display:inline-block;padding:12px 20px;background:#F3F1EB;color:#0B0A09;text-decoration:none;border-radius:999px;font-weight:700;letter-spacing:0.02em\">"
-                + bundle.deleteCancelButton() + "</a></p>"
-                + "<p style=\"color:#A3A19B;margin-top:18px\">" + bundle.deleteFootnote() + "</p>";
+        String content = paragraph(bundle.deleteGreeting() + " " + who + ",")
+                + paragraph(bundle.deleteScheduledLine1().replace("{date}", DATE_FMT.format(purgeAt)))
+                + paragraph(bundle.deleteScheduledLine2())
+                + button(appUrl + "/settings", bundle.deleteCancelButton())
+                + "<p style=\"margin:24px 0 0;font-size:12px;line-height:1.7;color:" + MUTED_FOREGROUND + "\">"
+                + bundle.deleteFootnote() + "</p>";
         return layout(bundle.languageCode(), bundle.deleteScheduledTitle(), bundle.deleteScheduledSubtitle(), content, bundle.footerLine(), appUrl);
     }
 
@@ -101,9 +110,9 @@ public class EmailService {
     public String buildAccountDeletedEmail(String name, String language) {
         LocaleBundle bundle = locale(language);
         String who = esc(name == null || name.isBlank() ? bundle.defaultName() : name);
-        String content = "<p><strong>" + bundle.accountDeletedGreeting() + " " + who + ",</strong></p>"
-                + "<p>" + bundle.accountDeletedParagraph1() + "</p>"
-                + "<p>" + bundle.accountDeletedParagraph2() + "</p>";
+        String content = paragraph(bundle.accountDeletedGreeting() + " " + who + ",")
+                + paragraph(bundle.accountDeletedParagraph1())
+                + paragraph(bundle.accountDeletedParagraph2());
         return layout(bundle.languageCode(), bundle.accountDeletedTitle(), bundle.accountDeletedSubtitle(), content, bundle.footerLine(), appUrl);
     }
 
@@ -134,20 +143,43 @@ public class EmailService {
         }
     }
 
+    private static String paragraph(String content) {
+        return "<p style=\"" + PARAGRAPH_STYLE + "\">" + content + "</p>";
+    }
+
+    private static String button(String url, String label) {
+        return "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin:28px 0 0\"><tr>"
+                + "<td bgcolor=\"" + ACCENT + "\" style=\"background:" + ACCENT + ";border-radius:" + BUTTON_RADIUS + "\">"
+                + "<a href=\"" + esc(url) + "\" style=\"display:inline-block;padding:10px 18px;border-radius:" + BUTTON_RADIUS
+                + ";background:" + ACCENT + ";color:" + ON_ACCENT + ";font-family:" + FONT
+                + ";font-size:13px;line-height:20px;font-weight:600;text-decoration:none;letter-spacing:0\">"
+                + esc(label) + "</a></td></tr></table>";
+    }
+
     private static String layout(String languageCode, String title, String subtitle, String content, String footerLine, String appUrl) {
-        String iconUrl = normalizeAppUrl(appUrl) + "/icon-transparent.png";
-        return "<div lang=\"" + esc(languageCode) + "\" style=\"margin:0;padding:40px 20px;background:#0B0A09;font-family:Inter,Arial,sans-serif;color:#EAE8E2\">"
-                + "<div style=\"max-width:560px;margin:0 auto;background:#111111;border:1px solid rgba(243,241,235,0.12);border-radius:18px;overflow:hidden;box-shadow:0 18px 40px rgba(0,0,0,0.28)\">"
-                + "<div style=\"padding:20px 24px 10px;display:flex;align-items:center;gap:12px;border-bottom:1px solid rgba(243,241,235,0.08)\">"
-                + "<img src=\"" + esc(iconUrl) + "\" alt=\"Continuum\" width=\"28\" height=\"28\" style=\"display:block;width:28px;height:28px;border-radius:8px\" />"
-                + "<span style=\"font-size:11px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#F3F1EB\">Continuum</span>"
-                + "</div>"
-                + "<div style=\"padding:24px 24px 28px\">"
-                + "<h1 style=\"margin:0 0 12px;font-size:32px;line-height:1.18;font-weight:700;color:#F3F1EB\">" + title + "</h1>"
-                + "<p style=\"margin:0 0 22px;font-size:14px;line-height:1.6;color:#A3A19B\">" + subtitle + "</p>"
-                + "<div style=\"background:#F3F1EB;color:#1D1B18;padding:24px;border-radius:14px;border:1px solid rgba(18,17,16,0.08);font-family:Inter,Arial,sans-serif;font-size:14px;line-height:1.7\">" + content + "</div>"
-                + "<p style=\"margin:24px 0 0;font-size:12px;line-height:1.5;color:#726F69;text-align:center\">" + footerLine + "</p>"
-                + "</div></div></div>";
+        // PNG is the app favicon, with broader email-client support than ICO.
+        String iconUrl = normalizeAppUrl(appUrl) + "/favicon.png";
+        return "<!doctype html><html lang=\"" + esc(languageCode) + "\"><head>"
+                + "<meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">"
+                + "<title>" + esc(title) + "</title></head>"
+                + "<body style=\"margin:0;padding:0;background:" + BACKGROUND + ";color:" + FOREGROUND
+                + ";font-family:" + FONT + ";letter-spacing:0;-webkit-text-size-adjust:100%\">"
+                + "<div style=\"display:none;max-height:0;overflow:hidden;mso-hide:all\">" + esc(subtitle) + "</div>"
+                + "<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" bgcolor=\"" + BACKGROUND
+                + "\" style=\"background:" + BACKGROUND + "\"><tr><td align=\"center\" style=\"padding:40px 24px\">"
+                + "<div style=\"max-width:512px;margin:0 auto;text-align:left\">"
+                + "<!--[if mso]><table role=\"presentation\" width=\"512\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"><tr><td><![endif]-->"
+                + "<table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\" style=\"margin:0 0 40px\"><tr>"
+                + "<td width=\"28\"><img src=\"" + esc(iconUrl) + "\" alt=\"\" width=\"28\" height=\"28\" style=\"display:block;width:28px;height:28px\"></td>"
+                + "<td style=\"padding-left:12px;font-family:" + FONT + ";font-size:14px;font-weight:600;color:" + ACCENT + "\">Continuum</td>"
+                + "</tr></table>"
+                + "<h1 style=\"margin:0 0 12px;font-family:" + FONT + ";font-size:28px;line-height:1.25;font-weight:700;color:" + ACCENT
+                + ";letter-spacing:0;overflow-wrap:break-word\">" + esc(title) + "</h1>"
+                + "<p style=\"margin:0 0 32px;font-size:14px;line-height:1.7;color:" + MUTED_FOREGROUND + "\">" + esc(subtitle) + "</p>"
+                + content
+                + "<p style=\"margin:40px 0 0;font-size:12px;line-height:1.7;color:" + MUTED_FOREGROUND + "\">" + esc(footerLine) + "</p>"
+                + "<!--[if mso]></td></tr></table><![endif]-->"
+                + "</div></td></tr></table></body></html>";
     }
 
     private static String esc(String s) {
