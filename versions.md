@@ -11,7 +11,7 @@ v1.3.3 — Oct XX, 2026
 - Notes: Filter by type now uses drawer.
 - Billing: Enabled Stripe Adaptive Pricing for embedded subscription checkout.
 - Billing: Added an in-app Stripe checkout experience.
-- UI: Updated the Charcoal theme background to #1C1C1C.
+
 ---
 
 v1.3.2 — Oct 11, 2026
