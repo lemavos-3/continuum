@@ -28,10 +28,11 @@ export default function Pricing() {
   const { language, t } = useLanguage();
   const { user } = useAuth();
   const isVision = user?.plan === "VISION";
-  const adaptiveCheckout = useAdaptiveCheckout(Boolean(user && !isVision));
+  const cachedPrice = readCachedAdaptivePrice(language);
+  const adaptiveCheckout = useAdaptiveCheckout(Boolean(user && !isVision && !cachedPrice));
   const visionPrice = adaptiveCheckout.price !== "…"
     ? adaptiveCheckout.price
-    : readCachedAdaptivePrice(language) ?? t("bill_price_localized_in_checkout");
+    : cachedPrice ?? t("bill_price_localized_in_checkout");
 
   const rows: Row[] = [
     { label: t("bill_row_notes"), free: "50", vision: t("bill_unlimited") },

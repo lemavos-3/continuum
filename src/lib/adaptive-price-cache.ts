@@ -1,6 +1,6 @@
 import type { Language } from "@/contexts/LanguageContext";
 
-const CACHE_TTL_MS = 30 * 60 * 1000;
+const CACHE_TTL_MS = 20 * 60 * 60 * 1000;
 
 function getCacheKey(language: Language): string {
   const browserLocale = typeof navigator === "undefined" ? "unknown" : navigator.language.toLowerCase();
