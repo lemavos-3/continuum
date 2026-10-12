@@ -394,21 +394,7 @@ export default function SettingsPage() {
       />
       <MarkdownImportDialog open={importOpen} onOpenChange={setImportOpen} onImported={() => refreshUser()} />
 
-      {subscriptionOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-black/70 p-0 backdrop-blur-md"
-          role="dialog"
-          aria-modal="true"
-          onMouseDown={(event) => {
-            const target = event.target as HTMLElement;
-            if (!target.closest("[data-subscription-panel]")) setSubscriptionOpen(false);
-          }}
-        >
-          <div className="w-full">
-            <SubscriptionContent />
-          </div>
-        </div>
-      )}
+      <SubscriptionContent open={subscriptionOpen} onClose={() => setSubscriptionOpen(false)} />
     </AppLayout>
   );
 }

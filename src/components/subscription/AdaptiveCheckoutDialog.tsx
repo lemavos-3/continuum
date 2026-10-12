@@ -4,13 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import SmoothDrawer from "@/components/ui/smooth-drawer";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 
 type CheckoutState = ReturnType<typeof useAdaptiveCheckout>;
@@ -20,7 +14,6 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
   const { t } = useLanguage();
   const paymentRef = useRef<HTMLDivElement>(null);
   const currencySelectorRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLHeadingElement>(null);
   const [confirming, setConfirming] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [applyingPromoCode, setApplyingPromoCode] = useState(false);
@@ -43,12 +36,17 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
     if (!state.actions) return;
     setConfirming(true);
     try {
+      const returnUrl = new URL("/settings", window.location.origin);
+      returnUrl.searchParams.set("status", "success");
       const result = await state.actions.confirm({
-        returnUrl: `${window.location.origin}/settings?status=success`,
+        returnUrl: returnUrl.toString(),
+        redirect: "always",
       });
       if (result.type === "error") {
         toast({ title: t("bill_error"), description: result.error.message, variant: "destructive" });
+        return;
       }
+      window.location.assign(returnUrl.toString());
     } catch (cause) {
       toast({
         title: t("bill_error"),
@@ -86,30 +84,25 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
   };
 
   return (
-    <Dialog open={state.open} onOpenChange={(open) => { if (!confirming) state.setOpen(open); }}>
-      <DialogContent
-        className="z-[101] max-h-[90dvh] max-w-lg overflow-y-auto"
-        overlayClassName="z-[100]"
-        onOpenAutoFocus={(event) => {
-          event.preventDefault();
-          titleRef.current?.focus();
-        }}
-      >
-        <DialogHeader>
-          <DialogTitle ref={titleRef} tabIndex={-1}>VISION</DialogTitle>
-          <DialogDescription>{t("bill_cancel_secure")}</DialogDescription>
-        </DialogHeader>
-        {state.loading ? (
-          <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground" role="status">
-            <ArrowPathIcon className="h-4 w-4 animate-spin" />
-            {t("bill_preparing_checkout")}
-          </div>
-        ) : state.error ? (
-          <div className="space-y-4 py-4">
-            <p className="text-sm text-destructive" role="alert">{state.error}</p>
-            <Button className="w-full" onClick={state.retry}>{t("bill_try_again")}</Button>
-          </div>
-        ) : (
+    <SmoothDrawer
+      open={state.open}
+      onOpenChange={(open) => { if (!confirming) state.setOpen(open); }}
+      title="VISION"
+      description={t("bill_cancel_secure")}
+      className="z-[110] max-h-[92dvh]"
+      bodyClassName="px-5 pb-5"
+    >
+      {state.loading ? (
+        <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground" role="status">
+          <ArrowPathIcon className="h-4 w-4 animate-spin" />
+          {t("bill_preparing_checkout")}
+        </div>
+      ) : state.error ? (
+        <div className="space-y-4 py-4">
+          <p className="text-sm text-destructive" role="alert">{state.error}</p>
+          <Button className="w-full" onClick={state.retry}>{t("bill_try_again")}</Button>
+        </div>
+      ) : (
         <div className="space-y-4">
           <div className="flex gap-2">
             <Input
@@ -139,9 +132,8 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
             {t("common_cancel")}
           </Button>
         </div>
-        )}
-      </DialogContent>
-    </Dialog>
+      )}
+    </SmoothDrawer>
   );
 }
 

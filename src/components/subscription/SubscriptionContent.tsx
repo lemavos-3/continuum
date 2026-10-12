@@ -20,7 +20,12 @@ interface SubInfo {
   cancelAtPeriodEnd?: boolean;
 }
 
-export default function SubscriptionContent() {
+interface SubscriptionContentProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export default function SubscriptionContent({ open, onClose }: SubscriptionContentProps) {
   const { user } = useAuth();
   const { usage } = useUsage();
   const { toast } = useToast();
@@ -29,9 +34,14 @@ export default function SubscriptionContent() {
   const [sub, setSub] = useState<SubInfo | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const [checkoutMode, setCheckoutMode] = useState(false);
   const currentPlan = ((sub?.effectivePlan || user?.plan) as Plan | string) || "FREE";
   const isPro = (currentPlan === "PRO" ? "VISION" : currentPlan) === "VISION";
-  const adaptiveCheckout = useAdaptiveCheckout(!isPro);
+  const adaptiveCheckout = useAdaptiveCheckout((open || checkoutMode) && !isPro);
+
+  useEffect(() => {
+    if (open) setCheckoutMode(false);
+  }, [open]);
 
   const visionBenefits = [
     t("bill_benefit_unlimited_notes_entities"),
@@ -94,7 +104,11 @@ export default function SubscriptionContent() {
     { label: t("bill_vault"), value: formatUsageLimit(usage?.vaultSizeMB, user?.maxVaultSizeMB, " MB") },
   ] : undefined;
 
-  const handleCheckout = () => adaptiveCheckout.openCheckout();
+  const handleCheckout = () => {
+    setCheckoutMode(true);
+    onClose();
+    adaptiveCheckout.openCheckout();
+  };
 
   const handlePortal = async () => {
     setPortalLoading(true);
@@ -112,21 +126,33 @@ export default function SubscriptionContent() {
   };
 
   return (
-    <div className="flex min-h-[100dvh] w-full items-end justify-center">
-      <SubscriptionScreen
-        headerImageSrc={theme === "LIGHT" ? "/vision-symbol-light.png" : "/vision-symbol.png"}
-        appName="Continuum"
-        planType="VISION"
-        features={visionBenefits.map((text) => ({ text }))}
-        pricingOptions={[{ id: "monthly", price: adaptiveCheckout.price, period: t("bill_per_month") }]}
-        defaultPlanId="monthly"
-        subscribeButtonText={isPro ? (portalLoading ? t("bill_opening") : t("bill_manage_billing")) : t("bill_upgrade_to_vision")}
-        footerText={syncing ? "Confirming your payment with Stripe…" : t("bill_cancel_secure")}
-        currentPlanText={`${t("bill_current")}: ${isPro ? "VISION" : "FREE"}${sub?.status ? ` · ${sub.status.toLowerCase()}` : ""}`}
-        planDetails={planDetails}
-        onSubscribe={isPro ? handlePortal : handleCheckout}
-      />
+    <>
+      {open && (
+        <div
+          className="fixed inset-0 z-[100] flex min-h-[100dvh] w-full items-end justify-center overflow-y-auto bg-black/70 p-0 backdrop-blur-md"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(event) => {
+            const target = event.target as HTMLElement;
+            if (!target.closest("[data-subscription-panel]")) onClose();
+          }}
+        >
+          <SubscriptionScreen
+            headerImageSrc={theme === "LIGHT" ? "/vision-symbol-light.png" : "/vision-symbol.png"}
+            appName="Continuum"
+            planType="VISION"
+            features={visionBenefits.map((text) => ({ text }))}
+            pricingOptions={[{ id: "monthly", price: adaptiveCheckout.price, period: t("bill_per_month") }]}
+            defaultPlanId="monthly"
+            subscribeButtonText={isPro ? (portalLoading ? t("bill_opening") : t("bill_manage_billing")) : t("bill_upgrade_to_vision")}
+            footerText={syncing ? "Confirming your payment with Stripe…" : t("bill_cancel_secure")}
+            currentPlanText={`${t("bill_current")}: ${isPro ? "VISION" : "FREE"}${sub?.status ? ` · ${sub.status.toLowerCase()}` : ""}`}
+            planDetails={planDetails}
+            onSubscribe={isPro ? handlePortal : handleCheckout}
+          />
+        </div>
+      )}
       <AdaptiveCheckoutDialog state={adaptiveCheckout} />
-    </div>
+    </>
   );
 }
