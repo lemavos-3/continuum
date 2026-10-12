@@ -90,6 +90,22 @@ public class SubscriptionService {
         }
     }
 
+    public CheckoutResponse createEmbeddedCheckout(String userId, String email, String priceOrPlan) {
+        User user = userRepo.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        try {
+            String customerId = stripe.ensureCustomer(user.getStripeCustomerId(), userId, email);
+            if (user.getStripeCustomerId() == null || user.getStripeCustomerId().isBlank()) {
+                user.setStripeCustomerId(customerId);
+                userRepo.save(user);
+            }
+            return stripe.createEmbeddedCheckout(customerId, userId, email, priceOrPlan);
+        } catch (StripeException e) {
+            log.error("[Stripe] Failed to prepare embedded checkout customer: {}", e.getMessage(), e);
+            throw new StripeIntegrationException("Failed to create Stripe checkout: " + e.getMessage(), e);
+        }
+    }
+
     public String createPortalSession(String userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));

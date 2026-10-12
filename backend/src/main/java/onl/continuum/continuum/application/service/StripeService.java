@@ -34,6 +34,7 @@ public class StripeService {
     private static final Logger log = LoggerFactory.getLogger(StripeService.class);
 
     private final String apiKey;
+    private final String publishableKey;
     private final String successUrl;
     private final String cancelUrl;
     private final String portalReturnUrl;
@@ -43,6 +44,7 @@ public class StripeService {
 
     public StripeService(
             @Value("${stripe.api.key:}") String apiKey,
+            @Value("${stripe.publishable.key:}") String publishableKey,
             @Value("${stripe.checkout.success.url}") String successUrl,
             @Value("${stripe.checkout.cancel.url}") String cancelUrl,
             @Value("${stripe.portal.return.url}") String portalReturnUrl,
@@ -50,6 +52,7 @@ public class StripeService {
             @Value("${stripe.price.vision.yearly:}") String priceVisionYearly,
             @Value("${stripe.trial.days:0}") long trialDays) {
         this.apiKey = apiKey;
+        this.publishableKey = publishableKey;
         this.successUrl = successUrl;
         this.cancelUrl = cancelUrl;
         this.portalReturnUrl = portalReturnUrl;
@@ -122,9 +125,52 @@ public class StripeService {
 
             com.stripe.model.checkout.Session session =
                     com.stripe.model.checkout.Session.create(builder.build());
-            return new CheckoutResponse(session.getId(), session.getUrl());
+            return new CheckoutResponse(session.getId(), session.getUrl(), null, null);
         } catch (StripeException e) {
             log.error("[Stripe] Failed to create Checkout Session: {}", e.getMessage(), e);
+            throw new StripeIntegrationException("Failed to create Stripe checkout: " + e.getMessage(), e);
+        }
+    }
+
+    public CheckoutResponse createEmbeddedCheckout(String customerId, String userId, String email, String priceOrPlan) {
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new StripeConfigurationException("Stripe checkout is not configured on the server");
+        }
+        if (publishableKey == null || publishableKey.isBlank()) {
+            throw new StripeConfigurationException("Stripe publishable key is not configured on the server");
+        }
+        String priceId = resolvePriceId(priceOrPlan);
+        if (priceId == null || priceId.isBlank()) {
+            throw new BadRequestException("Invalid Stripe price or plan: " + priceOrPlan);
+        }
+        try {
+            String cid = ensureCustomer(customerId, userId, email);
+
+            SessionCreateParams.SubscriptionData.Builder subData =
+                    SessionCreateParams.SubscriptionData.builder().putMetadata("user_id", userId);
+            if (trialDays > 0) subData.setTrialPeriodDays(trialDays);
+
+            SessionCreateParams params = SessionCreateParams.builder()
+                    .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
+                    .setUiMode(SessionCreateParams.UiMode.ELEMENTS)
+                    .setCustomer(cid)
+                    .setReturnUrl(successUrl)
+                    .setAllowPromotionCodes(true)
+                    .setClientReferenceId(userId)
+                    .putMetadata("user_id", userId)
+                    .addLineItem(
+                            SessionCreateParams.LineItem.builder()
+                                    .setPrice(priceId)
+                                    .setQuantity(1L)
+                                    .build())
+                    .setSubscriptionData(subData.build())
+                    .build();
+
+            com.stripe.model.checkout.Session session =
+                    com.stripe.model.checkout.Session.create(params);
+            return new CheckoutResponse(session.getId(), null, session.getClientSecret(), publishableKey);
+        } catch (StripeException e) {
+            log.error("[Stripe] Failed to create embedded Checkout Session: {}", e.getMessage(), e);
             throw new StripeIntegrationException("Failed to create Stripe checkout: " + e.getMessage(), e);
         }
     }

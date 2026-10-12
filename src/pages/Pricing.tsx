@@ -1,4 +1,3 @@
-import { useVisionPrice } from "@/hooks/useVisionPrice";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -24,7 +23,6 @@ function Cell({ value, accent }: { value: string | boolean; accent?: boolean }) 
 export default function Pricing() {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const visionPrice = useVisionPrice();
 
   const rows: Row[] = [
     { label: t("bill_row_notes"), free: "50", vision: t("bill_unlimited") },
@@ -60,7 +58,7 @@ export default function Pricing() {
             </div>
             <div className="text-center">
               <p className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">{t("bill_vision")}</p>
-              <p className="mt-2 font-serif text-2xl text-foreground">{visionPrice}</p>
+              <p className="mt-2 min-h-8 text-sm text-foreground">{t("bill_price_localized_in_checkout")}</p>
               <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{t("bill_per_month")}</p>
             </div>
           </div>

@@ -562,6 +562,8 @@ export const subscriptionApi = {
   // Accepts either a Stripe price id (price_xxx) or a plan code ("VISION").
   checkout: (priceOrPlan: string) =>
     api.post("/api/subscriptions/checkout", { priceId: priceOrPlan, planId: priceOrPlan }),
+  checkoutEmbedded: (priceOrPlan: string) =>
+    api.post("/api/subscriptions/checkout/embedded", { priceId: priceOrPlan, planId: priceOrPlan }),
   cancel: (immediately = false) =>
     api.post("/api/subscriptions/cancel", { immediately }),
   changePlan: (priceOrPlan: string) =>

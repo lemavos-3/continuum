@@ -47,6 +47,17 @@ public class SubscriptionController {
                 subscriptionService.createCheckout(user.getUserId(), user.getEmail(), priceOrPlan));
     }
 
+    @PostMapping("/checkout/embedded")
+    public ResponseEntity<CheckoutResponse> embeddedCheckout(
+            @AuthenticationPrincipal CustomUserDetails user,
+            @RequestBody Map<String, String> body) {
+        String priceOrPlan = body.getOrDefault("priceId", body.get("planId"));
+        if (priceOrPlan == null || priceOrPlan.isBlank())
+            throw new BadRequestException("priceId or planId is required");
+        return ResponseEntity.ok(
+                subscriptionService.createEmbeddedCheckout(user.getUserId(), user.getEmail(), priceOrPlan));
+    }
+
     @PostMapping("/cancel")
     public ResponseEntity<SubscriptionDTO> cancel(
             @AuthenticationPrincipal CustomUserDetails user,

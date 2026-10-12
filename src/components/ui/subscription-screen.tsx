@@ -33,6 +33,7 @@ interface SubscriptionScreenProps {
   currentPlanText?: string;
   planDetails?: PlanDetail[];
   onSubscribe: (planId: string) => void;
+  subscribeDisabled?: boolean;
 }
 
 export function SubscriptionScreen({
@@ -48,6 +49,7 @@ export function SubscriptionScreen({
   currentPlanText,
   planDetails,
   onSubscribe,
+  subscribeDisabled = false,
 }: SubscriptionScreenProps) {
   const pricing = pricingOptions.find((option) => option.id === defaultPlanId) ?? pricingOptions[0];
 
@@ -113,7 +115,12 @@ export function SubscriptionScreen({
           </dl>
         )}
 
-        <Button size="lg" className="mt-6 w-full text-base" onClick={() => onSubscribe(defaultPlanId)}>
+        <Button
+          size="lg"
+          className="mt-6 w-full text-base"
+          onClick={() => onSubscribe(defaultPlanId)}
+          disabled={subscribeDisabled}
+        >
           {subscribeButtonText}
         </Button>
         <p className="mt-3 text-center text-xs text-muted-foreground">{footerText}</p>

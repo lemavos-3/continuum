@@ -1,6 +1,8 @@
-import { useVisionPrice } from "@/hooks/useVisionPrice";
+import { AdaptiveCheckoutDialog } from "@/components/subscription/AdaptiveCheckoutDialog";
+import { useAdaptiveCheckout } from "@/hooks/useAdaptiveCheckout";
 import { useEffect, useState } from "react";
-import api, { subscriptionApi } from "@/lib/api";
+import { isAxiosError } from "axios";
+import { subscriptionApi } from "@/lib/api";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUsage } from "@/contexts/UsageContext";
 import { useToast } from "@/hooks/use-toast";
@@ -24,12 +26,12 @@ export default function SubscriptionContent() {
   const { toast } = useToast();
   const { t } = useLanguage();
   const { theme } = useTheme();
-  const visionPrice = useVisionPrice();
   const [sub, setSub] = useState<SubInfo | null>(null);
-  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [portalLoading, setPortalLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [prices, setPrices] = useState<{ monthly?: string }>({});
+  const currentPlan = ((sub?.effectivePlan || user?.plan) as Plan | string) || "FREE";
+  const isPro = (currentPlan === "PRO" ? "VISION" : currentPlan) === "VISION";
+  const adaptiveCheckout = useAdaptiveCheckout(!isPro);
 
   const visionBenefits = [
     t("bill_benefit_unlimited_notes_entities"),
@@ -76,14 +78,6 @@ export default function SubscriptionContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    api.get("/api/plans/prices")
-      .then(({ data }) => setPrices({ monthly: data?.vision?.monthly }))
-      .catch(() => {});
-  }, []);
-
-  const currentPlan = ((sub?.effectivePlan || user?.plan) as Plan | string) || "FREE";
-  const isPro = (currentPlan === "PRO" ? "VISION" : currentPlan) === "VISION";
   const formatLimit = (value?: number, suffix = "") => {
     if (value === undefined) return "—";
     return isUnlimited(value) ? "∞" : `${value}${suffix}`;
@@ -100,24 +94,18 @@ export default function SubscriptionContent() {
     { label: t("bill_vault"), value: formatUsageLimit(usage?.vaultSizeMB, user?.maxVaultSizeMB, " MB") },
   ] : undefined;
 
-  const handleCheckout = async () => {
-    setCheckoutLoading(true);
-    try {
-      const { data } = await subscriptionApi.checkout(prices.monthly || "VISION");
-      if (data?.url) window.location.href = data.url;
-    } catch (err: any) {
-      toast({ title: t("bill_error"), description: err.response?.data?.message || t("bill_try_again"), variant: "destructive" });
-      setCheckoutLoading(false);
-    }
-  };
+  const handleCheckout = () => adaptiveCheckout.openCheckout();
 
   const handlePortal = async () => {
     setPortalLoading(true);
     try {
       const { data } = await subscriptionApi.portal();
       if (data?.url) window.location.href = data.url;
-    } catch (err: any) {
-      toast({ title: t("bill_error"), description: err.response?.data?.message || t("bill_portal_error"), variant: "destructive" });
+    } catch (err: unknown) {
+      const message = isAxiosError<{ message?: string }>(err)
+        ? err.response?.data?.message || t("bill_portal_error")
+        : t("bill_portal_error");
+      toast({ title: t("bill_error"), description: message, variant: "destructive" });
     } finally {
       setPortalLoading(false);
     }
@@ -130,14 +118,16 @@ export default function SubscriptionContent() {
         appName="Continuum"
         planType="VISION"
         features={visionBenefits.map((text) => ({ text }))}
-        pricingOptions={[{ id: "monthly", price: visionPrice, period: t("bill_per_month") }]}
+        pricingOptions={[{ id: "monthly", price: adaptiveCheckout.price, period: t("bill_per_month") }]}
         defaultPlanId="monthly"
-        subscribeButtonText={isPro ? (portalLoading ? t("bill_opening") : t("bill_manage_billing")) : checkoutLoading ? t("bill_opening") : t("bill_upgrade_to_vision")}
+        subscribeButtonText={isPro ? (portalLoading ? t("bill_opening") : t("bill_manage_billing")) : t("bill_upgrade_to_vision")}
         footerText={syncing ? "Confirming your payment with Stripe…" : t("bill_cancel_secure")}
         currentPlanText={`${t("bill_current")}: ${isPro ? "VISION" : "FREE"}${sub?.status ? ` · ${sub.status.toLowerCase()}` : ""}`}
         planDetails={planDetails}
         onSubscribe={isPro ? handlePortal : handleCheckout}
+        subscribeDisabled={!isPro && !adaptiveCheckout.canOpenCheckout && !adaptiveCheckout.error}
       />
+      <AdaptiveCheckoutDialog state={adaptiveCheckout} />
     </div>
   );
 }
