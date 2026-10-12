@@ -189,7 +189,6 @@ public class EmailService {
                     "Tu cuenta y todos tus datos han sido eliminados.",
                     "Gracias por usar Continuum.",
                     "Tu cuenta de Continuum ha sido eliminada",
-                    "Tu cuenta de Continuum ha sido eliminada",
                     "Continuum • Tu espacio de pensamiento"
             );
             case "pt" -> new LocaleBundle(
@@ -215,7 +214,6 @@ public class EmailService {
                     "Olá",
                     "Sua conta e todos os seus dados foram excluídos.",
                     "Obrigado por usar o Continuum.",
-                    "Sua conta do Continuum foi excluída",
                     "Sua conta do Continuum foi excluída",
                     "Continuum • Seu espaço de pensamento"
             );
@@ -243,7 +241,6 @@ public class EmailService {
                     "Votre compte et toutes vos données ont été supprimés.",
                     "Merci d'utiliser Continuum.",
                     "Votre compte Continuum a été supprimé",
-                    "Votre compte Continuum a été supprimé",
                     "Continuum • Votre espace de pensée"
             );
             default -> new LocaleBundle(
@@ -268,7 +265,6 @@ public class EmailService {
                     "Hi",
                     "Your account and all its data have been deleted.",
                     "Thank you for using Continuum.",
-                    "Your Continuum account has been deleted",
                     "Your Continuum account has been deleted",
                     "Continuum • Your thinking space"
             );
