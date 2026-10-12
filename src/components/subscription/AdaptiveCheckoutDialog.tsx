@@ -15,22 +15,52 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
   const paymentRef = useRef<HTMLDivElement>(null);
   const currencySelectorRef = useRef<HTMLDivElement>(null);
   const [confirming, setConfirming] = useState(false);
+  const [paymentReady, setPaymentReady] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
   const [promoCode, setPromoCode] = useState("");
   const [applyingPromoCode, setApplyingPromoCode] = useState(false);
 
   useEffect(() => {
     if (!state.open || !state.checkout || !paymentRef.current || !currencySelectorRef.current) return;
 
-    const paymentElement = state.checkout.createPaymentElement({ layout: "tabs" });
-    const currencySelectorElement = state.checkout.createCurrencySelectorElement();
-    paymentElement.mount(paymentRef.current);
-    currencySelectorElement.mount(currencySelectorRef.current);
+    let active = true;
+    let paymentElement: ReturnType<typeof state.checkout.createPaymentElement> | null = null;
+    let currencySelectorElement: ReturnType<typeof state.checkout.createCurrencySelectorElement> | null = null;
+    setPaymentReady(false);
+    setPaymentError(null);
+
+    const readinessTimeout = window.setTimeout(() => {
+      if (active) setPaymentError(t("bill_payment_fields_error"));
+    }, 12000);
+
+    try {
+      paymentElement = state.checkout.createPaymentElement({ layout: "tabs" });
+      paymentElement.on("ready", () => {
+        if (!active) return;
+        window.clearTimeout(readinessTimeout);
+        setPaymentReady(true);
+      });
+      paymentElement.on("loaderror", ({ error }) => {
+        if (!active) return;
+        window.clearTimeout(readinessTimeout);
+        setPaymentError(error.message);
+      });
+      paymentElement.mount(paymentRef.current);
+
+      currencySelectorElement = state.checkout.createCurrencySelectorElement();
+      currencySelectorElement.mount(currencySelectorRef.current);
+    } catch (cause) {
+      window.clearTimeout(readinessTimeout);
+      setPaymentError(cause instanceof Error ? cause.message : t("bill_payment_fields_error"));
+    }
 
     return () => {
-      paymentElement.unmount();
-      currencySelectorElement.unmount();
+      active = false;
+      window.clearTimeout(readinessTimeout);
+      paymentElement?.unmount();
+      currencySelectorElement?.unmount();
     };
-  }, [state.checkout, state.open]);
+  }, [state.checkout, state.open, t]);
 
   const confirmPayment = async () => {
     if (!state.actions) return;
@@ -124,8 +154,22 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
           <div ref={currencySelectorRef} />
           <p className="text-center font-serif text-3xl text-foreground">{state.price}</p>
           <p className="text-center text-xs text-muted-foreground">{t("bill_per_month")}</p>
-          <div ref={paymentRef} />
-          <Button className="w-full" onClick={confirmPayment} disabled={confirming || !state.actions}>
+          <div className="min-h-40" ref={paymentRef} aria-busy={!paymentReady} />
+          {!paymentReady && !paymentError && (
+            <p className="text-center text-sm text-muted-foreground" role="status">
+              <ArrowPathIcon className="mr-2 inline h-4 w-4 animate-spin" />
+              {t("bill_payment_fields_loading")}
+            </p>
+          )}
+          {paymentError && (
+            <div className="space-y-2" role="alert">
+              <p className="text-sm text-destructive">{paymentError}</p>
+              <Button type="button" variant="outline" className="w-full" onClick={state.retry}>
+                {t("bill_try_again")}
+              </Button>
+            </div>
+          )}
+          <Button className="w-full" onClick={confirmPayment} disabled={confirming || !state.actions || !paymentReady || !!paymentError}>
             {confirming && <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />}
             {confirming ? t("bill_opening") : t("bill_upgrade_to_vision")}
           </Button>

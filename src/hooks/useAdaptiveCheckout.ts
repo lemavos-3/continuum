@@ -12,6 +12,48 @@ type LoadActionsResult = Awaited<ReturnType<CheckoutSdk["loadActions"]>>;
 type CheckoutActions = Extract<LoadActionsResult, { type: "success" }>["actions"];
 type CheckoutSession = ReturnType<CheckoutActions["getSession"]>;
 
+let stripeClientPromise: Promise<StripeInstance | null> | null = null;
+
+async function getStripeClient(): Promise<StripeInstance | null> {
+  if (!stripeClientPromise) {
+    const pending = subscriptionApi.checkoutConfig().then(({ data }) => {
+      if (!data.publishableKey) {
+        throw new Error("Stripe did not return the publishable key needed for checkout.");
+      }
+      return loadStripe(data.publishableKey);
+    });
+    stripeClientPromise = pending;
+    try {
+      return await pending;
+    } catch (error) {
+      if (stripeClientPromise === pending) stripeClientPromise = null;
+      throw error;
+    }
+  }
+  return stripeClientPromise;
+}
+
+function getStripeAppearance(theme: string) {
+  const rootStyles = getComputedStyle(document.documentElement);
+  const bodyStyles = getComputedStyle(document.body);
+  const token = (name: string, fallback: string) => rootStyles.getPropertyValue(name).trim() || fallback;
+
+  return {
+    theme: theme === "LIGHT" ? "stripe" as const : "night" as const,
+    variables: {
+      fontFamily: bodyStyles.fontFamily,
+      colorPrimary: token("--accent-solid", "#F3F1EB"),
+      colorBackground: token("--bg-surface", "#0D0D0D"),
+      colorText: token("--text-primary", "#EAE8E2"),
+      colorTextSecondary: token("--text-secondary", "#A3A19B"),
+      colorTextPlaceholder: token("--text-tertiary", "#726F69"),
+      colorBorder: token("--bg-active", "#292929"),
+      colorDanger: token("--danger-color", "#F0616D"),
+      borderRadius: token("--radius-md", "8px"),
+    },
+  };
+}
+
 function getRecurringPrice(session: CheckoutSession): string {
   const amount = session.recurring?.dueNext.total.amount ?? session.lineItems[0]?.unitAmount.amount;
   if (!amount) throw new Error("Stripe did not return the localized subscription price.");
@@ -41,19 +83,16 @@ export function useAdaptiveCheckout(enabled = true) {
     setLoading(true);
     setError(null);
     setPrice("…");
+    setCheckout(null);
+    setActions(null);
 
     const initialize = async () => {
       const [checkoutResponse, stripe] = await Promise.all([
         subscriptionApi.checkoutEmbedded("VISION"),
-        subscriptionApi.checkoutConfig().then(({ data }) => {
-          if (!data.publishableKey) {
-            throw new Error("Stripe did not return the publishable key needed for checkout.");
-          }
-          return loadStripe(data.publishableKey);
-        }),
+        getStripeClient(),
       ]);
       const { data } = checkoutResponse;
-      if (!data.clientSecret || !data.publishableKey) {
+      if (!data.clientSecret) {
         throw new Error("Stripe did not return the credentials needed for localized checkout.");
       }
       if (!stripe) throw new Error("Stripe.js could not be initialized.");
@@ -61,7 +100,7 @@ export function useAdaptiveCheckout(enabled = true) {
       const instance = stripe.initCheckoutElementsSdk({
         clientSecret: data.clientSecret,
         adaptivePricing: { allowed: true },
-        elementsOptions: { appearance: { theme: themeRef.current === "LIGHT" ? "stripe" : "night" } },
+        elementsOptions: { appearance: getStripeAppearance(themeRef.current) },
       });
       const result = await instance.loadActions();
       if (result.type === "error") throw new Error(result.error.message);
@@ -106,12 +145,19 @@ export function useAdaptiveCheckout(enabled = true) {
     };
   }, [attempt, enabled, toast]);
 
+  const retry = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    setPrice("…");
+    setCheckout(null);
+    setActions(null);
+    setAttempt((current) => current + 1);
+  }, []);
+
   const openCheckout = useCallback(() => {
     setOpen(true);
-    if (error) setAttempt((current) => current + 1);
-  }, [error]);
-
-  const retry = useCallback(() => setAttempt((current) => current + 1), []);
+    if (error) retry();
+  }, [error, retry]);
 
   return {
     price,

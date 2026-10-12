@@ -1,6 +1,7 @@
 package onl.continuum.continuum.application.service;
 
 import com.stripe.Stripe;
+import com.stripe.exception.InvalidRequestException;
 import com.stripe.exception.StripeException;
 import com.stripe.model.Customer;
 import com.stripe.model.Refund;
@@ -75,12 +76,23 @@ public class StripeService {
 
     public String ensureCustomer(String existingCustomerId, String userId, String email) throws StripeException {
         if (existingCustomerId != null && !existingCustomerId.isBlank()) {
-            Customer customer = Customer.retrieve(existingCustomerId);
-            CustomerUpdateParams.Builder update = CustomerUpdateParams.builder()
-                    .putMetadata("user_id", userId);
-            if (email != null && !email.isBlank()) update.setEmail(email);
-            customer.update(update.build());
-            return existingCustomerId;
+            try {
+                Customer customer = Customer.retrieve(existingCustomerId);
+                boolean emailChanged = email != null && !email.isBlank() && !email.equals(customer.getEmail());
+                boolean metadataMissing = customer.getMetadata() == null
+                        || !userId.equals(customer.getMetadata().get("user_id"));
+                if (emailChanged || metadataMissing) {
+                    CustomerUpdateParams.Builder update = CustomerUpdateParams.builder()
+                            .putMetadata("user_id", userId);
+                    if (email != null && !email.isBlank()) update.setEmail(email);
+                    customer.update(update.build());
+                }
+                return existingCustomerId;
+            } catch (InvalidRequestException e) {
+                if (!"resource_missing".equals(e.getCode())) throw e;
+                log.warn("[Stripe] Customer {} is missing from the configured account; recreating it for user {}",
+                        existingCustomerId, userId);
+            }
         }
         CustomerCreateParams params = CustomerCreateParams.builder()
                 .setEmail(email)
@@ -101,11 +113,9 @@ public class StripeService {
             throw new BadRequestException("Invalid Stripe price or plan: " + priceOrPlan);
         }
         try {
-            String cid = ensureCustomer(customerId, userId, email);
-
             SessionCreateParams.Builder builder = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
-                    .setCustomer(cid)
+                    .setCustomer(customerId)
                     .setSuccessUrl(successUrl)
                     .setCancelUrl(cancelUrl)
                     .setAllowPromotionCodes(true)
@@ -144,8 +154,6 @@ public class StripeService {
             throw new BadRequestException("Invalid Stripe price or plan: " + priceOrPlan);
         }
         try {
-            String cid = ensureCustomer(customerId, userId, email);
-
             SessionCreateParams.SubscriptionData.Builder subData =
                     SessionCreateParams.SubscriptionData.builder().putMetadata("user_id", userId);
             if (trialDays > 0) subData.setTrialPeriodDays(trialDays);
@@ -153,7 +161,7 @@ public class StripeService {
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setUiMode(SessionCreateParams.UiMode.ELEMENTS)
-                    .setCustomer(cid)
+                    .setCustomer(customerId)
                     .setReturnUrl(successUrl)
                     .setAllowPromotionCodes(true)
                     .setClientReferenceId(userId)

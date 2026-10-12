@@ -79,7 +79,7 @@ public class SubscriptionService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
         try {
             String customerId = stripe.ensureCustomer(user.getStripeCustomerId(), userId, email);
-            if (user.getStripeCustomerId() == null || user.getStripeCustomerId().isBlank()) {
+            if (!customerId.equals(user.getStripeCustomerId())) {
                 user.setStripeCustomerId(customerId);
                 userRepo.save(user);
             }
@@ -95,7 +95,7 @@ public class SubscriptionService {
                 .orElseThrow(() -> new NotFoundException("User not found"));
         try {
             String customerId = stripe.ensureCustomer(user.getStripeCustomerId(), userId, email);
-            if (user.getStripeCustomerId() == null || user.getStripeCustomerId().isBlank()) {
+            if (!customerId.equals(user.getStripeCustomerId())) {
                 user.setStripeCustomerId(customerId);
                 userRepo.save(user);
             }
