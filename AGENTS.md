@@ -1,4 +1,5 @@
 # Architecture rules
+- Share one email layout, button helper and token palette across account notifications and welcome emails so branding stays consistent without duplicated templates.
 - Use SmoothDrawer for mobile Notes filters and opt-in Vaul snap points for graph details; reset the compact snap on reopening or changing the selected node to preserve drag-to-expand behavior.
 - Reuse the mobile search input, FilterChips and ListSortMenu on desktop list pages; keep the desktop Notes sidebar non-modal with independent toggle state so filter actions cannot dismiss it.
 - Render the knowledge graph through a dedicated React Three Fiber viewer; keep graph fetching, filters and the existing inspector in the page to preserve the API contract.
