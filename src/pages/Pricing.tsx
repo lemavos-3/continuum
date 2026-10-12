@@ -6,8 +6,40 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { PageBackButton } from "@/components/PageBackButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdaptiveCheckout } from "@/hooks/useAdaptiveCheckout";
+import { Loader2 } from "lucide-react";
 
 type Row = { label: string; free: string | boolean; vision: string | boolean };
+
+const EUR_REGIONS = new Set([
+  "AD", "AT", "BE", "BG", "BL", "CY", "DE", "EE", "ES", "FI", "FR", "GF",
+  "GP", "GR", "HR", "IE", "IT", "LT", "LU", "LV", "MC", "MF", "MQ", "MT",
+  "NL", "PM", "PT", "RE", "SI", "SK", "SM", "VA", "XK", "YT",
+]);
+
+function getVisitorPrice(t: (key: string) => string): string {
+  if (typeof navigator === "undefined") return t("bill_price_check_checkout");
+
+  for (const rawLocale of [navigator.language, ...navigator.languages]) {
+    const locale = rawLocale.replace(/_/g, "-");
+    const region = locale.split("-").slice(1).find((part) => /^[a-z]{2}$/i.test(part))?.toUpperCase();
+    const currency = region === "US"
+      ? "USD"
+      : region === "BR"
+        ? "BRL"
+        : region && EUR_REGIONS.has(region)
+          ? "EUR"
+          : null;
+
+    if (currency) {
+      return new Intl.NumberFormat(locale, {
+        style: "currency",
+        currency,
+      }).format(7.9);
+    }
+  }
+
+  return t("bill_price_check_checkout");
+}
 
 function Cell({ value, accent }: { value: string | boolean; accent?: boolean }) {
   if (typeof value === "boolean") {
@@ -28,11 +60,12 @@ export default function Pricing() {
   const { user } = useAuth();
   const isVision = user?.plan === "VISION";
   const adaptiveCheckout = useAdaptiveCheckout(Boolean(user && !isVision));
-  const visionPrice = adaptiveCheckout.price !== "…"
-    ? adaptiveCheckout.price
-    : user && !isVision && adaptiveCheckout.loading
-      ? t("bill_price_refreshing")
-      : t("bill_price_localized_in_checkout");
+  const priceLoading = user && !isVision && adaptiveCheckout.loading && adaptiveCheckout.price === "…";
+  const visionPrice = user
+    ? adaptiveCheckout.price === "…"
+      ? t("bill_price_localized_in_checkout")
+      : adaptiveCheckout.price
+    : getVisitorPrice(t);
 
   const rows: Row[] = [
     { label: t("bill_row_notes"), free: "50", vision: t("bill_unlimited") },
@@ -68,7 +101,13 @@ export default function Pricing() {
             </div>
             <div className="text-center">
               <p className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">{t("bill_vision")}</p>
-              <p className="mt-2 min-h-8 font-serif text-xl text-foreground" aria-live="polite">{visionPrice}</p>
+              <p className="mt-2 flex min-h-8 items-center justify-center font-serif text-xl text-foreground" aria-live="polite">
+                {priceLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-label={t("bill_price_refreshing")} />
+                ) : (
+                  visionPrice
+                )}
+              </p>
               <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{t("bill_per_month")}</p>
             </div>
           </div>

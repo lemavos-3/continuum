@@ -1,6 +1,6 @@
 import * as React from "react";
 import { motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Feature {
@@ -13,6 +13,8 @@ interface PricingOption {
   price: string;
   period: string;
   badge?: string;
+  loading?: boolean;
+  loadingLabel?: string;
 }
 
 interface PlanDetail {
@@ -98,7 +100,13 @@ export function SubscriptionScreen({
 
         {pricing && (
           <div className="mt-6 flex w-full items-baseline justify-center gap-2 border-y border-border/20 py-5 text-center">
-            <span className="font-serif text-2xl text-foreground">{pricing.price}</span>
+            {pricing.loading ? (
+              <span className="inline-flex min-h-8 items-center" role="status" aria-label={pricing.loadingLabel}>
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" aria-hidden="true" />
+              </span>
+            ) : (
+              <span className="font-serif text-2xl text-foreground">{pricing.price}</span>
+            )}
             <span className="text-sm text-muted-foreground">{pricing.period}</span>
             {pricing.badge && <span className="text-xs font-semibold text-primary">{pricing.badge}</span>}
           </div>

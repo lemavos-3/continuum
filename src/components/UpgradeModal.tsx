@@ -3,6 +3,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useAdaptiveCheckout } from "@/hooks/useAdaptiveCheckout";
 import { AdaptiveCheckoutDialog } from "@/components/subscription/AdaptiveCheckoutDialog";
 import { useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
 
 interface UpgradeModalProps { open: boolean; onOpenChange: (open: boolean) => void; reason?: string; }
 
@@ -10,6 +11,10 @@ export default function UpgradeModal({ open, onOpenChange, reason }: UpgradeModa
   const { t } = useLanguage();
   const [checkoutMode, setCheckoutMode] = useState(false);
   const adaptiveCheckout = useAdaptiveCheckout(open || checkoutMode);
+  const priceLoading = adaptiveCheckout.loading && adaptiveCheckout.price === "…";
+  const displayedPrice = adaptiveCheckout.price === "…"
+    ? t("bill_price_localized_in_checkout")
+    : adaptiveCheckout.price;
 
   useEffect(() => {
     if (open) setCheckoutMode(false);
@@ -48,7 +53,12 @@ export default function UpgradeModal({ open, onOpenChange, reason }: UpgradeModa
             <div>
               <p className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground">Vision</p>
               <p className="mt-1 font-serif text-3xl text-foreground">
-                {adaptiveCheckout.price}<span className="text-xs text-muted-foreground">/{t("bill_per_month")}</span>
+                {priceLoading ? (
+                  <Loader2 className="inline h-6 w-6 animate-spin text-muted-foreground" aria-label={t("bill_price_refreshing")} />
+                ) : (
+                  displayedPrice
+                )}
+                <span className="text-xs text-muted-foreground">/{t("bill_per_month")}</span>
               </p>
             </div>
             <ul className="space-y-1.5 border-t border-border/10 pt-3">

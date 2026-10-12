@@ -142,7 +142,13 @@ export default function SubscriptionContent({ open, onClose }: SubscriptionConte
             appName="Continuum"
             planType="VISION"
             features={visionBenefits.map((text) => ({ text }))}
-            pricingOptions={[{ id: "monthly", price: adaptiveCheckout.price, period: t("bill_per_month") }]}
+            pricingOptions={[{
+              id: "monthly",
+              price: adaptiveCheckout.price === "…" ? t("bill_price_localized_in_checkout") : adaptiveCheckout.price,
+              period: t("bill_per_month"),
+              loading: adaptiveCheckout.loading && adaptiveCheckout.price === "…",
+              loadingLabel: t("bill_price_refreshing"),
+            }]}
             defaultPlanId="monthly"
             subscribeButtonText={isPro ? (portalLoading ? t("bill_opening") : t("bill_manage_billing")) : t("bill_upgrade_to_vision")}
             footerText={syncing ? "Confirming your payment with Stripe…" : t("bill_cancel_secure")}
