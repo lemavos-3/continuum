@@ -19,6 +19,7 @@ import onl.continuum.continuum.domain.token.TokenBlacklist;
 import onl.continuum.continuum.domain.token.TokenBlacklistRepository;
 import onl.continuum.continuum.domain.user.User;
 import onl.continuum.continuum.domain.user.UserRepository;
+import onl.continuum.continuum.infra.email.EmailService;
 import onl.continuum.continuum.infra.notification.TelegramNotificationService;
 import onl.continuum.continuum.infra.security.JwtService;
 import onl.continuum.continuum.infra.security.RefreshTokenService;
@@ -43,6 +44,7 @@ public class AuthService {
     private final RefreshTokenService refreshTokenService;
     private final VaultStorageService vaultStorage;
     private final TelegramNotificationService telegramNotificationService;
+    private final EmailService emailService;
     private final PlanConfiguration planConfig;
 
     public AuthService(UserRepository users,
@@ -53,6 +55,7 @@ public class AuthService {
                        RefreshTokenService refreshTokenService,
                        VaultStorageService vaultStorage,
                        TelegramNotificationService telegramNotificationService,
+                       EmailService emailService,
                        PlanConfiguration planConfig) {
         this.users = users;
         this.subscriptions = subscriptions;
@@ -62,6 +65,7 @@ public class AuthService {
         this.refreshTokenService = refreshTokenService;
         this.vaultStorage = vaultStorage;
         this.telegramNotificationService = telegramNotificationService;
+        this.emailService = emailService;
         this.planConfig = planConfig;
     }
 
@@ -95,6 +99,9 @@ public class AuthService {
             createFreeSubscription(user.getId());
             initVaultAsync(vaultId);
             notifyTelegramNewUser(user);
+            if (emailService != null) {
+                emailService.sendWelcome(user.getEmail(), user.getUsername(), user.getLanguage());
+            }
         } else {
             boolean changed = false;
             if (user.getGoogleId() == null) {
@@ -176,6 +183,9 @@ public class AuthService {
         createFreeSubscription(user.getId());
         initVaultAsync(vaultId);
         notifyTelegramNewUser(user);
+        if (emailService != null) {
+            emailService.sendWelcome(user.getEmail(), user.getUsername(), user.getLanguage());
+        }
         return buildAuthResponseWithTokenPair(user).withNewUserFlag(true);
     }
 

@@ -18,6 +18,7 @@ import onl.continuum.continuum.domain.plan.PlanType;
 import onl.continuum.continuum.domain.subscription.SubscriptionRepository;
 import onl.continuum.continuum.domain.user.User;
 import onl.continuum.continuum.domain.user.UserRepository;
+import onl.continuum.continuum.infra.email.EmailService;
 import onl.continuum.continuum.infra.security.JwtService;
 import onl.continuum.continuum.infra.vault.VaultStorageService;
 
@@ -51,6 +52,9 @@ class AuthServiceUnitTest {
 
     @Mock
     PlanConfiguration planConfig;
+
+    @Mock
+    EmailService emailService;
 
     @InjectMocks
     AuthService authService;

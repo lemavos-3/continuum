@@ -104,7 +104,7 @@ public class UserService {
         java.time.Instant purgeAt = now.plus(java.time.Duration.ofDays(DELETION_GRACE_DAYS));
         if (emailService != null) {
             userRepository.findById(userId).ifPresent(u ->
-                emailService.sendDeletionScheduled(u.getEmail(), u.getUsername(), purgeAt));
+                emailService.sendDeletionScheduled(u.getEmail(), u.getUsername(), purgeAt, u.getLanguage()));
         }
         return purgeAt;
     }
@@ -162,7 +162,7 @@ public class UserService {
         }
         userRepository.deleteById(userId);
         if (emailService != null) {
-            emailService.sendAccountDeleted(user.getEmail(), user.getUsername());
+            emailService.sendAccountDeleted(user.getEmail(), user.getUsername(), user.getLanguage());
         }
     }
 
