@@ -26,7 +26,7 @@ export function useAdaptiveCheckout(enabled = true) {
   translateRef.current = t;
   const themeRef = useRef(theme);
   themeRef.current = theme;
-  const [price, setPrice] = useState("—");
+  const [price, setPrice] = useState("…");
   const [checkout, setCheckout] = useState<CheckoutSdk | null>(null);
   const [actions, setActions] = useState<CheckoutActions | null>(null);
   const [loading, setLoading] = useState(enabled);
@@ -40,14 +40,22 @@ export function useAdaptiveCheckout(enabled = true) {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setPrice("…");
 
     const initialize = async () => {
-      const { data } = await subscriptionApi.checkoutEmbedded("VISION");
+      const [checkoutResponse, stripe] = await Promise.all([
+        subscriptionApi.checkoutEmbedded("VISION"),
+        subscriptionApi.checkoutConfig().then(({ data }) => {
+          if (!data.publishableKey) {
+            throw new Error("Stripe did not return the publishable key needed for checkout.");
+          }
+          return loadStripe(data.publishableKey);
+        }),
+      ]);
+      const { data } = checkoutResponse;
       if (!data.clientSecret || !data.publishableKey) {
         throw new Error("Stripe did not return the credentials needed for localized checkout.");
       }
-
-      const stripe = await loadStripe(data.publishableKey);
       if (!stripe) throw new Error("Stripe.js could not be initialized.");
 
       const instance = stripe.initCheckoutElementsSdk({
@@ -99,16 +107,11 @@ export function useAdaptiveCheckout(enabled = true) {
   }, [attempt, enabled, toast]);
 
   const openCheckout = useCallback(() => {
-    if (loading) return;
-    if (error) {
-      setAttempt((current) => current + 1);
-      return;
-    }
-    if (!checkout || !actions) return;
     setOpen(true);
-  }, [actions, checkout, error, loading]);
+    if (error) setAttempt((current) => current + 1);
+  }, [error]);
 
-  const canOpenCheckout = !loading && !error && Boolean(checkout && actions);
+  const retry = useCallback(() => setAttempt((current) => current + 1), []);
 
   return {
     price,
@@ -116,7 +119,7 @@ export function useAdaptiveCheckout(enabled = true) {
     actions,
     loading,
     error,
-    canOpenCheckout,
+    retry,
     open,
     setOpen,
     openCheckout,

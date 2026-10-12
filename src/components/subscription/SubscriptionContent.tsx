@@ -125,7 +125,6 @@ export default function SubscriptionContent() {
         currentPlanText={`${t("bill_current")}: ${isPro ? "VISION" : "FREE"}${sub?.status ? ` · ${sub.status.toLowerCase()}` : ""}`}
         planDetails={planDetails}
         onSubscribe={isPro ? handlePortal : handleCheckout}
-        subscribeDisabled={!isPro && !adaptiveCheckout.canOpenCheckout && !adaptiveCheckout.error}
       />
       <AdaptiveCheckoutDialog state={adaptiveCheckout} />
     </div>

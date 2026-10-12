@@ -175,6 +175,13 @@ public class StripeService {
         }
     }
 
+    public String getCheckoutPublishableKey() {
+        if (publishableKey == null || publishableKey.isBlank()) {
+            throw new StripeConfigurationException("Stripe publishable key is not configured on the server");
+        }
+        return publishableKey;
+    }
+
     /* ─────────────────── Billing Portal ─────────────────── */
 
     public String createPortalSession(String customerId) {

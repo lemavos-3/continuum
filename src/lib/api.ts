@@ -564,6 +564,7 @@ export const subscriptionApi = {
     api.post("/api/subscriptions/checkout", { priceId: priceOrPlan, planId: priceOrPlan }),
   checkoutEmbedded: (priceOrPlan: string) =>
     api.post("/api/subscriptions/checkout/embedded", { priceId: priceOrPlan, planId: priceOrPlan }),
+  checkoutConfig: () => api.get<{ publishableKey: string }>("/api/subscriptions/checkout/config"),
   cancel: (immediately = false) =>
     api.post("/api/subscriptions/cancel", { immediately }),
   changePlan: (priceOrPlan: string) =>

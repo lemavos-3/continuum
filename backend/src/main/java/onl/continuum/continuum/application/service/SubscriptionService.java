@@ -106,6 +106,10 @@ public class SubscriptionService {
         }
     }
 
+    public String getCheckoutPublishableKey() {
+        return stripe.getCheckoutPublishableKey();
+    }
+
     public String createPortalSession(String userId) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));

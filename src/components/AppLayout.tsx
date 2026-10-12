@@ -34,7 +34,6 @@ import { SessionNavBar } from "@/components/ui/session-nav-bar";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { VaultPicker } from "@/components/AccountExtras";
 import { OfflineStatus } from "@/components/offline/OfflineStatus";
-import { PrefetchProgressLine } from "@/components/offline/PrefetchProgressLine";
 
 // Primary tabs shown in the bottom navigation bar on mobile.
 const mobileTabs = [
@@ -55,7 +54,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-background text-foreground">
       <CommandPalette />
       <VaultPicker />
-      <PrefetchProgressLine />
       {/* Desktop hover-expand sidebar */}
       <SessionNavBar />
 

@@ -2,7 +2,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAdaptiveCheckout } from "@/hooks/useAdaptiveCheckout";
 import { AdaptiveCheckoutDialog } from "@/components/subscription/AdaptiveCheckoutDialog";
-import { Loader2 } from "@/lib/heroicons";
 
 interface UpgradeModalProps { open: boolean; onOpenChange: (open: boolean) => void; reason?: string; }
 
@@ -50,13 +49,10 @@ export default function UpgradeModal({ open, onOpenChange, reason }: UpgradeModa
               ))}
             </ul>
             <button
-              disabled={!adaptiveCheckout.canOpenCheckout && !adaptiveCheckout.error}
               onClick={handleCheckout}
-              className="flex w-full items-center justify-center gap-2 rounded-sm border border-border/10 bg-foreground px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/90 disabled:opacity-50"
+              className="flex w-full items-center justify-center gap-2 rounded-sm border border-border/10 bg-foreground px-4 py-2 text-[11px] uppercase tracking-[0.22em] text-background transition-colors hover:bg-foreground/90"
             >
-              {!adaptiveCheckout.canOpenCheckout && !adaptiveCheckout.error
-                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                : t("bill_upgrade_to_vision")}
+              {t("bill_upgrade_to_vision")}
             </button>
           </div>
         </DialogContent>

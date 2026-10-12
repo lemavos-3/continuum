@@ -20,6 +20,7 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
   const { t } = useLanguage();
   const paymentRef = useRef<HTMLDivElement>(null);
   const currencySelectorRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const [confirming, setConfirming] = useState(false);
   const [promoCode, setPromoCode] = useState("");
   const [applyingPromoCode, setApplyingPromoCode] = useState(false);
@@ -86,11 +87,28 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
 
   return (
     <Dialog open={state.open} onOpenChange={(open) => { if (!confirming) state.setOpen(open); }}>
-      <DialogContent className="max-h-[90dvh] max-w-lg overflow-y-auto">
+      <DialogContent
+        className="max-h-[90dvh] max-w-lg overflow-y-auto"
+        onOpenAutoFocus={(event) => {
+          event.preventDefault();
+          titleRef.current?.focus();
+        }}
+      >
         <DialogHeader>
-          <DialogTitle>VISION</DialogTitle>
+          <DialogTitle ref={titleRef} tabIndex={-1}>VISION</DialogTitle>
           <DialogDescription>{t("bill_cancel_secure")}</DialogDescription>
         </DialogHeader>
+        {state.loading ? (
+          <div className="flex items-center justify-center gap-2 py-8 text-sm text-muted-foreground" role="status">
+            <ArrowPathIcon className="h-4 w-4 animate-spin" />
+            {t("bill_preparing_checkout")}
+          </div>
+        ) : state.error ? (
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-destructive" role="alert">{state.error}</p>
+            <Button className="w-full" onClick={state.retry}>{t("bill_try_again")}</Button>
+          </div>
+        ) : (
         <div className="space-y-4">
           <div className="flex gap-2">
             <Input
@@ -120,6 +138,7 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
             {t("common_cancel")}
           </Button>
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );

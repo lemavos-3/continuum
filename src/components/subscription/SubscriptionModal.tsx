@@ -171,7 +171,6 @@ export default function SubscriptionModal({ open, onOpenChange }: Props) {
                 variant="white"
                 size="lg"
                 onClick={handleCheckout}
-                disabled={!adaptiveCheckout.canOpenCheckout && !adaptiveCheckout.error}
                 className="group w-full justify-center gap-2"
               >
                 {t("bill_upgrade_to_vision")}
