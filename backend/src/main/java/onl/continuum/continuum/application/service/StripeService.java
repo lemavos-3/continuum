@@ -161,6 +161,8 @@ public class StripeService {
             SessionCreateParams params = SessionCreateParams.builder()
                     .setMode(SessionCreateParams.Mode.SUBSCRIPTION)
                     .setUiMode(SessionCreateParams.UiMode.ELEMENTS)
+                    .setAdaptivePricing(
+                            SessionCreateParams.AdaptivePricing.builder().setEnabled(true).build())
                     .setCustomer(customerId)
                     .setReturnUrl(successUrl)
                     .setAllowPromotionCodes(true)

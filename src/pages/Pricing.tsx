@@ -6,7 +6,6 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { PageBackButton } from "@/components/PageBackButton";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdaptiveCheckout } from "@/hooks/useAdaptiveCheckout";
-import { readCachedAdaptivePrice } from "@/lib/adaptive-price-cache";
 
 type Row = { label: string; free: string | boolean; vision: string | boolean };
 
@@ -25,14 +24,15 @@ function Cell({ value, accent }: { value: string | boolean; accent?: boolean }) 
 
 export default function Pricing() {
   const navigate = useNavigate();
-  const { language, t } = useLanguage();
+  const { t } = useLanguage();
   const { user } = useAuth();
   const isVision = user?.plan === "VISION";
-  const cachedPrice = readCachedAdaptivePrice(language);
-  const adaptiveCheckout = useAdaptiveCheckout(Boolean(user && !isVision && !cachedPrice));
+  const adaptiveCheckout = useAdaptiveCheckout(Boolean(user && !isVision));
   const visionPrice = adaptiveCheckout.price !== "…"
     ? adaptiveCheckout.price
-    : cachedPrice ?? t("bill_price_localized_in_checkout");
+    : user && !isVision && adaptiveCheckout.loading
+      ? t("bill_price_refreshing")
+      : t("bill_price_localized_in_checkout");
 
   const rows: Row[] = [
     { label: t("bill_row_notes"), free: "50", vision: t("bill_unlimited") },
