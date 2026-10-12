@@ -4,6 +4,9 @@ import { Card } from "@/components/ui/card";
 import { CheckIcon, MinusIcon } from "@heroicons/react/24/outline";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { PageBackButton } from "@/components/PageBackButton";
+import { useAuth } from "@/contexts/AuthContext";
+import { useAdaptiveCheckout } from "@/hooks/useAdaptiveCheckout";
+import { readCachedAdaptivePrice } from "@/lib/adaptive-price-cache";
 
 type Row = { label: string; free: string | boolean; vision: string | boolean };
 
@@ -22,7 +25,13 @@ function Cell({ value, accent }: { value: string | boolean; accent?: boolean }) 
 
 export default function Pricing() {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+  const { user } = useAuth();
+  const isVision = user?.plan === "VISION";
+  const adaptiveCheckout = useAdaptiveCheckout(Boolean(user && !isVision));
+  const visionPrice = adaptiveCheckout.price !== "…"
+    ? adaptiveCheckout.price
+    : readCachedAdaptivePrice(language) ?? t("bill_price_localized_in_checkout");
 
   const rows: Row[] = [
     { label: t("bill_row_notes"), free: "50", vision: t("bill_unlimited") },
@@ -58,7 +67,7 @@ export default function Pricing() {
             </div>
             <div className="text-center">
               <p className="text-[10px] uppercase tracking-[0.28em] text-muted-foreground">{t("bill_vision")}</p>
-              <p className="mt-2 min-h-8 text-sm text-foreground">{t("bill_price_localized_in_checkout")}</p>
+              <p className="mt-2 min-h-8 font-serif text-xl text-foreground" aria-live="polite">{visionPrice}</p>
               <p className="mt-1 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{t("bill_per_month")}</p>
             </div>
           </div>

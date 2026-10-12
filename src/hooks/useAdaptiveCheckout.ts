@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { isAxiosError } from "axios";
 import { subscriptionApi } from "@/lib/api";
+import { cacheAdaptivePrice, readCachedAdaptivePrice } from "@/lib/adaptive-price-cache";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Language } from "@/contexts/LanguageContext";
@@ -88,7 +89,7 @@ export function useAdaptiveCheckout(enabled = true) {
   translateRef.current = t;
   const themeRef = useRef(theme);
   themeRef.current = theme;
-  const [price, setPrice] = useState("…");
+  const [price, setPrice] = useState(() => readCachedAdaptivePrice(language) ?? "…");
   const [checkout, setCheckout] = useState<CheckoutSdk | null>(null);
   const [actions, setActions] = useState<CheckoutActions | null>(null);
   const [loading, setLoading] = useState(enabled);
@@ -104,7 +105,7 @@ export function useAdaptiveCheckout(enabled = true) {
     let initializationTimedOut = false;
     setLoading(true);
     setError(null);
-    setPrice("…");
+    setPrice(readCachedAdaptivePrice(language) ?? "…");
     setCheckout(null);
     setActions(null);
 
@@ -134,13 +135,16 @@ export function useAdaptiveCheckout(enabled = true) {
       const initialPrice = getRecurringPrice(initialSession);
       if (cancelled || initializationTimedOut) return;
 
+      cacheAdaptivePrice(language, initialPrice);
       setPrice(initialPrice);
       setCheckout(instance);
       setActions(result.actions);
       instance.on("change", (session) => {
         if (!cancelled) {
           try {
-            setPrice(getRecurringPrice(session));
+            const updatedPrice = getRecurringPrice(session);
+            cacheAdaptivePrice(language, updatedPrice);
+            setPrice(updatedPrice);
             setError(null);
           } catch (cause) {
             setError(cause instanceof Error ? cause.message : "Stripe could not update the localized price.");
@@ -185,11 +189,11 @@ export function useAdaptiveCheckout(enabled = true) {
   const retry = useCallback(() => {
     setLoading(true);
     setError(null);
-    setPrice("…");
+    setPrice(readCachedAdaptivePrice(language) ?? "…");
     setCheckout(null);
     setActions(null);
     setAttempt((current) => current + 1);
-  }, []);
+  }, [language]);
 
   const openCheckout = useCallback(() => {
     setOpen(true);
