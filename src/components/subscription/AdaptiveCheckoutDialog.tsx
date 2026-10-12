@@ -21,6 +21,7 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
   const [confirming, setConfirming] = useState(false);
   const [paymentReady, setPaymentReady] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentMountAttempt, setPaymentMountAttempt] = useState(0);
   const [promoCode, setPromoCode] = useState("");
   const [applyingPromoCode, setApplyingPromoCode] = useState(false);
 
@@ -28,43 +29,48 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
     if (!isOpen || !checkout || !paymentRef.current || !currencySelectorRef.current) return;
 
     let active = true;
+    let readinessTimeout: number | undefined;
     let paymentElement: ReturnType<typeof checkout.createPaymentElement> | null = null;
     let currencySelectorElement: ReturnType<typeof checkout.createCurrencySelectorElement> | null = null;
     setPaymentReady(false);
     setPaymentError(null);
 
-    const readinessTimeout = window.setTimeout(() => {
-      if (active) setPaymentError(translateRef.current("bill_payment_fields_error"));
-    }, 12000);
+    const mountElements = () => {
+      if (!active || !paymentRef.current || !currencySelectorRef.current) return;
+      try {
+        paymentElement = checkout.createPaymentElement({ layout: "tabs" });
+        readinessTimeout = window.setTimeout(() => {
+          if (active) setPaymentError(translateRef.current("bill_payment_fields_error"));
+        }, 12000);
+        paymentElement.on("ready", () => {
+          if (!active) return;
+          window.clearTimeout(readinessTimeout);
+          setPaymentReady(true);
+        });
+        paymentElement.on("loaderror", ({ error }) => {
+          if (!active) return;
+          window.clearTimeout(readinessTimeout);
+          setPaymentError(error.message);
+        });
+        paymentElement.mount(paymentRef.current);
 
-    try {
-      paymentElement = checkout.createPaymentElement({ layout: "tabs" });
-      paymentElement.on("ready", () => {
-        if (!active) return;
-        window.clearTimeout(readinessTimeout);
-        setPaymentReady(true);
-      });
-      paymentElement.on("loaderror", ({ error }) => {
-        if (!active) return;
-        window.clearTimeout(readinessTimeout);
-        setPaymentError(error.message);
-      });
-      paymentElement.mount(paymentRef.current);
+        currencySelectorElement = checkout.createCurrencySelectorElement();
+        currencySelectorElement.mount(currencySelectorRef.current);
+      } catch (cause) {
+        setPaymentError(cause instanceof Error ? cause.message : translateRef.current("bill_payment_fields_error"));
+      }
+    };
 
-      currencySelectorElement = checkout.createCurrencySelectorElement();
-      currencySelectorElement.mount(currencySelectorRef.current);
-    } catch (cause) {
-      window.clearTimeout(readinessTimeout);
-      setPaymentError(cause instanceof Error ? cause.message : translateRef.current("bill_payment_fields_error"));
-    }
+    const mountTimer = window.setTimeout(mountElements, 350);
 
     return () => {
       active = false;
+      window.clearTimeout(mountTimer);
       window.clearTimeout(readinessTimeout);
       paymentElement?.unmount();
       currencySelectorElement?.unmount();
     };
-  }, [checkout, isOpen]);
+  }, [checkout, isOpen, paymentMountAttempt]);
 
   const confirmPayment = async () => {
     if (!state.actions) return;
@@ -168,7 +174,12 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
           {paymentError && (
             <div className="space-y-2" role="alert">
               <p className="text-sm text-destructive">{paymentError}</p>
-              <Button type="button" variant="outline" className="w-full" onClick={state.retry}>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => setPaymentMountAttempt((attempt) => attempt + 1)}
+              >
                 {t("bill_try_again")}
               </Button>
             </div>

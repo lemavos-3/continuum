@@ -101,7 +101,10 @@ export function useAdaptiveCheckout(enabled = true) {
       const instance = stripe.initCheckoutElementsSdk({
         clientSecret: data.clientSecret,
         adaptivePricing: { allowed: true },
-        elementsOptions: { appearance: getStripeAppearance(themeRef.current) },
+        elementsOptions: {
+          appearance: getStripeAppearance(themeRef.current),
+          loader: "always",
+        },
       });
       const result = await instance.loadActions();
       if (result.type === "error") throw new Error(result.error.message);
