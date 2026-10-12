@@ -21,6 +21,11 @@ import { SideInspector } from "@/components/SideInspector";
 import { useEntityStore } from "@/contexts/EntityContext";
 import type { Entity, EntityType } from "@/types";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { queryClient } from "@/lib/query-client";
+import { qk, STALE } from "@/lib/queries";
+import { BrainGraph3D, type BrainGraphHandle } from "@/components/graph/BrainGraph3D";
+import { normalizeBrainLinks, type BrainNode, type BrainLink } from "@/lib/brain-layout";
 
 interface GraphNode {
   id: string;
@@ -144,16 +149,16 @@ function OptionSwitch({
       role="switch"
       aria-checked={checked}
       onClick={onChange}
-      className="flex w-full items-center justify-between gap-3 rounded-2xl px-2 py-2.5 text-left transition-colors hover:bg-white/[0.04]"
+      className="flex w-full items-center justify-between gap-3 rounded-2xl px-2 py-2.5 text-left transition-colors hover:bg-muted/60"
     >
       <span className="text-sm text-foreground">{label}</span>
       <span
         className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors ${
-          checked ? "bg-white/85" : "bg-white/15"
+          checked ? "bg-foreground/85" : "bg-muted"
         }`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-black transition-transform ${
+          className={`inline-block h-4 w-4 transform rounded-full bg-background transition-transform ${
             checked ? "translate-x-4" : "translate-x-1"
           }`}
         />
@@ -164,9 +169,11 @@ function OptionSwitch({
 
 export default function KnowledgeGraph() {
   const { t } = useLanguage();
+  const { theme } = useTheme();
   const typeLabel = useCallback((type: string) => t(TYPE_LABEL_KEYS[type]) || type, [t]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const brainGraphRef = useRef<BrainGraphHandle>(null);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [empty, setEmpty] = useState(false);
@@ -183,7 +190,8 @@ export default function KnowledgeGraph() {
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
   // Default false para formação orgânica estilo Obsidian
-  const [clusterByPeriod, setClusterByPeriod] = useState(false); 
+  const [clusterByPeriod, setClusterByPeriod] = useState(false);
+  const [show3D, setShow3D] = useState(false);
 
   const { inspectorOpen, inspectorEntity, openInspector, closeInspector } = useEntityStore();
   const [allEntities, setAllEntities] = useState<Entity[]>([]);
@@ -199,7 +207,7 @@ export default function KnowledgeGraph() {
   const lastMouseRef = useRef({ x: 0, y: 0 });
   const animFrameRef = useRef<number>(0);
   const alphaRef = useRef(1); // Temperatura da simulação
-  
+
   const selectedRef = useRef<GraphNode | null>(null);
   const hoveredRef = useRef<GraphNode | null>(null);
   const filtersRef = useRef<Set<string>>(typeFilters);
@@ -271,6 +279,34 @@ export default function KnowledgeGraph() {
     return out;
   }, [selectedNode]);
 
+  const brainNodes = useMemo<BrainNode[]>(() => {
+    const visible = nodesRef.current.filter(node => {
+      if (typeFilters.size && !typeFilters.has(node.type)) return false;
+      if (timeFilter !== "all") {
+        if (!node.createdAt) return false;
+        const diff = Date.now() - new Date(node.createdAt).getTime();
+        const limit = timeFilter === "7d" ? 7 * 86400000 : 30 * 86400000;
+        if (diff > limit) return false;
+      }
+      if (focusMode && selectedNode && !neighborIds.has(node.id)) return false;
+      return true;
+    });
+    return visible.map(({ id, label, type, createdAt }) => ({ id, label, type, createdAt }));
+  }, [graphStats, typeFilters, timeFilter, focusMode, selectedNode, neighborIds]);
+  const brainLinks = useMemo<BrainLink[]>(() => {
+    const visibleIds = new Set(brainNodes.map(node => node.id));
+    return normalizeBrainLinks(brainNodes, edgesRef.current.filter(link =>
+      visibleIds.has(link.source) && visibleIds.has(link.target)
+    ));
+  }, [brainNodes, graphStats]);
+  const highlightedBrainNodes = useMemo(() => {
+    if (search.trim()) {
+      const query = search.trim().toLowerCase();
+      return new Set(brainNodes.filter(node => node.label.toLowerCase().includes(query)).map(node => node.id));
+    }
+    return selectedNode ? neighborIds : null;
+  }, [search, brainNodes, selectedNode, neighborIds]);
+
   const neighborIdsRef = useRef(neighborIds);
   useEffect(() => { neighborIdsRef.current = neighborIds; }, [neighborIds]);
 
@@ -306,7 +342,7 @@ export default function KnowledgeGraph() {
     const repulsion = nodes.length > 180 ? 280 : 450;
     const attraction = nodes.length > 180 ? 0.028 : 0.015;
     const damping = nodes.length > 120 ? 0.78 : 0.90; // Mais amortecimento em grafos maiores
-    const centerForce = 0.02; 
+    const centerForce = 0.02;
     const periodPull = clusterRef.current ? 0.03 : 0;
     const alpha = alphaRef.current;
 
@@ -342,13 +378,13 @@ export default function KnowledgeGraph() {
       if (!a || !b) continue;
       const dx = b.x - a.x, dy = b.y - a.y;
       const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      
+
       // Distância ideal baseada nos graus: Hubs ficam mais distantes
       const idealLen = 40 + (a.degree + b.degree) * 3;
       const force = (dist - idealLen) * attraction;
       const fx = (dx / dist) * force;
       const fy = (dy / dist) * force;
-      
+
       a.vx += fx; a.vy += fy;
       b.vx -= fx; b.vy -= fy;
     }
@@ -439,19 +475,19 @@ export default function KnowledgeGraph() {
         if (!a || !b) continue;
         if (!isNodeVisible(a) || !isNodeVisible(b)) continue;
         if (focusOn && !(neighbors.has(e.source) && neighbors.has(e.target))) continue;
-        
+
         const isHighlighted = hasSelection && neighbors.has(e.source) && neighbors.has(e.target);
         const isHoveredEdge = hovered && (hovered.id === e.source || hovered.id === e.target);
-        
+
         if (hasSelection && !isHighlighted) {
-          ctx.strokeStyle = "hsla(0,0%,100%,0.05)";
-          ctx.lineWidth = 0.6 / z;
+          ctx.strokeStyle = theme === "LIGHT" ? "hsla(40,10%,14%,0.12)" : "hsla(0,0%,100%,0.05)";
+          ctx.lineWidth = (theme === "LIGHT" ? 0.8 : 0.6) / z;
         } else if (isHighlighted || isHoveredEdge) {
-          ctx.strokeStyle = "hsla(0,0%,100%,0.75)";
-          ctx.lineWidth = 2 / z;
+          ctx.strokeStyle = theme === "LIGHT" ? "hsla(40,10%,14%,0.8)" : "hsla(0,0%,100%,0.75)";
+          ctx.lineWidth = (theme === "LIGHT" ? 2.4 : 2) / z;
         } else {
-          ctx.strokeStyle = "hsla(0,0%,100%,0.28)";
-          ctx.lineWidth = Math.min(1.6, 0.9 + (a.degree + b.degree) * 0.02) / z;
+          ctx.strokeStyle = theme === "LIGHT" ? "hsla(40,10%,14%,0.42)" : "hsla(0,0%,100%,0.28)";
+          ctx.lineWidth = Math.min(theme === "LIGHT" ? 2 : 1.6, (theme === "LIGHT" ? 1.2 : 0.9) + (a.degree + b.degree) * 0.02) / z;
         }
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
@@ -517,12 +553,12 @@ export default function KnowledgeGraph() {
         isHovered || isSelected || isNeighbor || matchesSearch ||
         z > 1.8 || (z > 0.8 && isImportantNode) || (z > 0.4 && n.degree >= 10)
       );
-      
+
       if (labelable) {
         const fontSize = Math.max(10, 11 / z);
         ctx.font = `${isSelected || isHovered ? "500" : "400"} ${fontSize}px Inter, sans-serif`;
         ctx.textAlign = "center";
-        
+
         // Fundo sutil e arredondado para o texto facilitar a leitura nas linhas
         const text = n.label.length > 25 ? n.label.slice(0, 24) + "…" : n.label;
         const textY = n.y + drawRadius + fontSize + 3;
@@ -549,7 +585,7 @@ export default function KnowledgeGraph() {
       }
       ctx.restore();
     }
-  }, [isNodeVisible]);
+  }, [isNodeVisible, theme]);
 
   const tick = useCallback(() => {
     simulate();
@@ -578,9 +614,16 @@ export default function KnowledgeGraph() {
   const loadGraph = useCallback(async () => {
     setLoading(true);
     try {
-      const [graphRes, entitiesRes] = await Promise.all([graphApi.data(), entitiesApi.list()]);
-      const data = graphRes.data;
-      const entities = Array.isArray(entitiesRes.data) ? entitiesRes.data : [];
+      const cached = await queryClient.fetchQuery({
+        queryKey: qk.graph(),
+        queryFn: async () => {
+          const [graphRes, entitiesRes] = await Promise.all([graphApi.data(), entitiesApi.list()]);
+          return { graph: graphRes.data, entities: Array.isArray(entitiesRes.data) ? entitiesRes.data : [] };
+        },
+        staleTime: STALE.list,
+      });
+      const data = cached.graph;
+      const entities = cached.entities as Entity[];
       setAllEntities(entities);
 
       const rawNodes = Array.isArray(data?.nodes) ? data.nodes : [];
@@ -604,9 +647,9 @@ export default function KnowledgeGraph() {
       }
       adjRef.current = adj;
 
-      // Mantemos todas as arestas se possível, Obsidian suporta muitas. 
+      // Mantemos todas as arestas se possível, Obsidian suporta muitas.
       // Mas para performance purista, capamos apenas hubs extremamentes densos (ex: > 30)
-      const MAX_EDGES_PER_NODE = 25; 
+      const MAX_EDGES_PER_NODE = 25;
       const keptCount = new Map<string, number>();
       const sortedEdges = [...(rawEdges as GraphEdge[])].sort((a, b) => {
         const da = (degree.get(a.source) || 0) + (degree.get(a.target) || 0);
@@ -649,7 +692,7 @@ export default function KnowledgeGraph() {
         const periodX = (idx - (monthCount - 1) / 2) * spacingX;
         const periodY = 0;
         const deg = degree.get(n.id) || 0;
-        
+
         return {
           id: n.id,
           label: n.label,
@@ -692,10 +735,10 @@ export default function KnowledgeGraph() {
   useEffect(() => { void loadGraph(); }, [loadGraph]);
 
   useEffect(() => {
-    if (loading || empty) return;
+    if (loading || empty || show3D) return;
     animFrameRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animFrameRef.current);
-  }, [loading, empty, tick]);
+  }, [loading, empty, tick, show3D]);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -710,7 +753,7 @@ export default function KnowledgeGraph() {
   const focusNode = useCallback((node: GraphNode) => {
     setSelectedNode(node);
     const entity = allEntities.find(e => e.id === node.id);
-    
+
     // Use the same entity data as the entity detail page; graph-only metadata
     // is kept separate so the inspector can refresh the canonical entity.
     if (entity) {
@@ -728,7 +771,7 @@ export default function KnowledgeGraph() {
         description: "",
       } as any);
     }
-    
+
     // Aguarda o render do DOM e depois centraliza o node
     requestAnimationFrame(() => {
       const { w, h } = sizeRef.current;
@@ -819,6 +862,10 @@ export default function KnowledgeGraph() {
   };
 
   const handleZoom = (dir: number) => {
+    if (show3D) {
+      brainGraphRef.current?.zoom(dir);
+      return;
+    }
     const { w, h } = sizeRef.current;
     const cx = w / 2, cy = h / 2;
     const oldZ = zoomRef.current;
@@ -838,6 +885,7 @@ export default function KnowledgeGraph() {
     setSelectedNode(null);
     closeInspector();
     alphaRef.current = 0.8; // Reorganiza
+    brainGraphRef.current?.reset();
   };
 
   const handleShowAll = () => {
@@ -981,28 +1029,28 @@ export default function KnowledgeGraph() {
   return (
     <AppLayout>
       <div className="flex flex-col" style={{ height: "calc(100vh - 3.5rem)" }}>
-        <div className="relative flex flex-col flex-1">
+        <div className="relative flex min-h-0 flex-1 flex-col">
           {!empty && (
-            <div className="absolute right-4 top-4 z-30 flex flex-col items-center gap-1 rounded-2xl border border-white/10 bg-black/50 p-1.5 backdrop-blur-sm">
+            <div className="absolute right-4 top-4 z-30 flex flex-col items-center gap-1 rounded-2xl border border-border/10 bg-card/70 p-1.5 backdrop-blur-md">
               <Button
                 type="button"
                 variant="canvasIcon"
                 size="icon"
                 onClick={() => navigate(-1)}
-                className="border-0 bg-transparent hover:bg-white/10"
+                className="border-0 bg-transparent hover:bg-muted"
                 aria-label={t("gr_back")}
               >
                 <ArrowLeft className="h-4 w-4" />
               </Button>
 
-              <div className="my-0.5 h-px w-6 bg-white/10" />
+              <div className="my-0.5 h-px w-6 bg-border/10" />
 
               <Button
                 type="button"
                 variant="canvasIcon"
                 size="icon"
                 onClick={() => handleZoom(1)}
-                className="border-0 bg-transparent hover:bg-white/10"
+                className="border-0 bg-transparent hover:bg-muted"
                 aria-label={t("gr_zoom_in")}
               >
                 <ZoomIn className="h-4 w-4" />
@@ -1012,7 +1060,7 @@ export default function KnowledgeGraph() {
                 variant="canvasIcon"
                 size="icon"
                 onClick={() => handleZoom(-1)}
-                className="border-0 bg-transparent hover:bg-white/10"
+                className="border-0 bg-transparent hover:bg-muted"
                 aria-label={t("gr_zoom_out")}
               >
                 <ZoomOut className="h-4 w-4" />
@@ -1022,21 +1070,37 @@ export default function KnowledgeGraph() {
                 variant="canvasIcon"
                 size="icon"
                 onClick={() => setFocusMode(f => !f)}
-                className={`border-0 bg-transparent hover:bg-white/10 ${focusMode ? "bg-white/15 text-white" : ""}`}
+                className={`border-0 bg-transparent hover:bg-muted ${focusMode ? "bg-muted text-foreground" : ""}`}
                 aria-label={t("gr_toggle_focus")}
                 title={t("gr_focus_mode")}
               >
                 {focusMode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </Button>
+              <Button
+                type="button"
+                variant="canvasIcon"
+                size="icon"
+                onClick={() => setShow3D(value => !value)}
+                className="h-9 w-9 border-0 bg-transparent text-xs font-semibold hover:bg-muted"
+                aria-label={show3D ? t("gr_view_2d") : t("gr_view_3d")}
+                title={show3D ? t("gr_view_2d") : t("gr_view_3d")}
+              >
+                {show3D ? "3D" : "2D"}
+              </Button>
+              {show3D && (
+                <span className="-mt-1 rounded-full border border-border/20 px-1.5 py-0.5 text-[9px] leading-none text-muted-foreground">
+                  (beta)
+                </span>
+              )}
 
-              <div className="my-0.5 h-px w-6 bg-white/10" />
+              <div className="my-0.5 h-px w-6 bg-border/10" />
 
               <Button
                 type="button"
                 variant="canvasIcon"
                 size="icon"
                 onClick={() => setOptionsOpen(true)}
-                className="border-0 bg-transparent hover:bg-white/10"
+                className="border-0 bg-transparent hover:bg-muted"
                 aria-label={t("gr_open_options")}
               >
                 <Settings className="h-4 w-4" />
@@ -1046,12 +1110,12 @@ export default function KnowledgeGraph() {
 
           {optionsOpen && (
             <div
-              className="fixed inset-0 z-50 flex justify-end bg-black/60 animate-in fade-in duration-200"
+              className="fixed inset-0 z-50 flex justify-end bg-background/70 animate-in fade-in duration-200"
               onClick={() => setOptionsOpen(false)}
             >
               <Card
                 onClick={(e) => e.stopPropagation()}
-                className="flex h-full w-full flex-col overflow-y-auto rounded-none border-0 border-l border-white/10 bg-black/95 p-5 shadow-2xl shadow-black/40 animate-in slide-in-from-right duration-200 sm:w-96 sm:rounded-l-3xl"
+                className="flex h-full w-full flex-col overflow-y-auto rounded-none border-0 border-l border-border/10 bg-background/95 p-5 shadow-2xl shadow-black/40 animate-in slide-in-from-right duration-200 sm:w-96 sm:rounded-l-3xl"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -1063,7 +1127,7 @@ export default function KnowledgeGraph() {
                     variant="canvasIcon"
                     size="icon"
                     onClick={() => setOptionsOpen(false)}
-                    className="h-9 w-9 border-0 bg-white/5 hover:bg-white/10"
+                    className="h-9 w-9 border-0 bg-muted/60 hover:bg-muted"
                     aria-label={t("gr_close_options")}
                   >
                     <X className="h-4 w-4" />
@@ -1084,7 +1148,7 @@ export default function KnowledgeGraph() {
                     </div>
                   </div>
 
-                  <Card variant="subtle" className="rounded-3xl border-white/10 bg-background/90 p-3">
+                  <Card variant="subtle" className="rounded-3xl border-border/10 bg-card p-3">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{t("gr_type_filters")}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       <Badge
@@ -1110,7 +1174,7 @@ export default function KnowledgeGraph() {
                       })}
                     </div>
                   </Card>
-                  <Card variant="subtle" className="rounded-3xl border-white/10 bg-background/90 p-3">
+                  <Card variant="subtle" className="rounded-3xl border-border/10 bg-card p-3">
                     <p className="text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{t("gr_time_range")}</p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {(["all", "7d", "30d"] as const).map(tf => (
@@ -1126,9 +1190,9 @@ export default function KnowledgeGraph() {
                     </div>
                   </Card>
 
-                  <Card variant="subtle" className="rounded-3xl border-white/10 bg-background/90 p-1">
+                  <Card variant="subtle" className="rounded-3xl border-border/10 bg-card p-1">
                     <p className="px-2 pt-2 text-[11px] uppercase tracking-[0.24em] text-muted-foreground">{t("gr_display_options")}</p>
-                    <div className="mt-1 divide-y divide-white/5 px-1 pb-1">
+                    <div className="mt-1 divide-y divide-border/10 px-1 pb-1">
                       <OptionSwitch
                         id="opt-edges"
                         checked={showEdges}
@@ -1163,7 +1227,7 @@ export default function KnowledgeGraph() {
                   </Card>
                 </div>
 
-                <div className="mt-4 grid gap-2 border-t border-white/10 pt-4 sm:grid-cols-2">
+                <div className="mt-4 grid gap-2 border-t border-border/10 pt-4 sm:grid-cols-2">
                   <Button variant="outline" size="sm" className="w-full" onClick={() => { handleShowAll(); setOptionsOpen(false); }}>
                     {t("gr_show_all")}
                   </Button>
@@ -1204,8 +1268,8 @@ export default function KnowledgeGraph() {
             {!empty && (
               <canvas
                 ref={canvasRef}
-                className="bg-black select-none" // Obsidian é tradicionalmente escuro
-                style={{ display: "block", touchAction: "none" }}
+                className="select-none"
+                style={{ display: show3D ? "none" : "block", touchAction: "none", backgroundColor: "var(--bg-base)" }}
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
@@ -1218,44 +1282,69 @@ export default function KnowledgeGraph() {
                 onTouchCancel={handleTouchEnd}
               />
             )}
+            {!empty && show3D && (
+              <div className="absolute inset-0">
+                <BrainGraph3D
+                  ref={brainGraphRef}
+                  nodes={brainNodes}
+                  links={brainLinks}
+                  selectedId={selectedNode?.id ?? null}
+                  highlightedIds={highlightedBrainNodes}
+                  showEdges={showEdges}
+                  showLabels={showLabels}
+                  inside={false}
+                  theme={theme}
+                  unavailableText={t("gr_3d_unavailable")}
+                  onSelect={node => {
+                    const graphNode = nodesRef.current.find(item => item.id === node.id);
+                    if (graphNode) focusNode(graphNode);
+                  }}
+                  onOpen={node => navigate(node.type === "NOTE" ? `/notes/${node.id}` : `/entities/${node.id}`)}
+                  onClear={() => {
+                    setSelectedNode(null);
+                    closeInspector();
+                  }}
+                />
+              </div>
+            )}
 
             {legendOpen && (
-              <Card className="absolute left-4 top-4 z-20 rounded-3xl border-white/10 bg-black/80 p-4 text-sm text-white shadow-lg shadow-black/30">
+              <Card className="absolute left-4 top-4 z-20 rounded-3xl border border-border/10 bg-card/85 p-4 text-sm text-foreground backdrop-blur-md shadow-lg shadow-black/30">
                 <p className="mb-3 text-xs uppercase tracking-[0.24em] text-muted-foreground">{t("gr_legend")}</p>
                 <div className="grid gap-2">
                   {availableTypes.map(({ label, color, type }) => (
                     <div key={type} className="flex items-center gap-2">
                       <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                      <span className="text-sm text-white">{label}</span>
+                      <span className="text-sm text-foreground">{label}</span>
                     </div>
                   ))}
                 </div>
               </Card>
             )}
 
-            {hoveredNode && tooltipPos && !selectedNode && (
+            {hoveredNode && tooltipPos && !selectedNode && !show3D && (
               <Card
-                className="absolute z-20 pointer-events-none rounded-md border-white/10 bg-black/90 px-2.5 py-1.5 shadow-lg"
+                className="absolute z-20 pointer-events-none rounded-md border border-border/10 bg-card/95 px-2.5 py-1.5 shadow-lg"
                 style={{
                   left: Math.min(tooltipPos.x + 12, (containerRef.current?.clientWidth || 300) - 180),
                   top: Math.max(8, tooltipPos.y - 40),
                 }}
               >
-                <p className="text-xs font-medium text-white truncate max-w-[160px]">{hoveredNode.label}</p>
+                <p className="text-xs font-medium text-foreground truncate max-w-[160px]">{hoveredNode.label}</p>
                 <p className="text-[10px] text-muted-foreground">
                   {typeLabel(hoveredNode.type)} · {t("gr_link_count", { count: hoveredNode.degree, plural: hoveredNode.degree === 1 ? "" : "s" })}
                 </p>
               </Card>
             )}
           </div>
+          <SideInspector
+            isOpen={inspectorOpen}
+            entity={inspectorEntity}
+            mobileBottomSheet
+            onClose={() => { closeInspector(); setSelectedNode(null); }}
+          />
         </div>
       </div>
-
-      <SideInspector
-        isOpen={inspectorOpen}
-        entity={inspectorEntity}
-        onClose={() => { closeInspector(); setSelectedNode(null); }}
-      />
     </AppLayout>
   );
 }

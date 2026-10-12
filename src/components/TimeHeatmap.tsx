@@ -1,9 +1,12 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect, useRef, useId } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { isAxiosError } from 'axios';
 import { timeTrackingApi } from '@/lib/api';
 import { useTimeTracking, type TimeEntry } from '@/hooks/useTimeTracking';
 import { useTimerGoal } from '@/hooks/useTimerGoal';
 import { useLanguage } from '@/contexts/LanguageContext';
+import SmoothDrawer from '@/components/ui/smooth-drawer';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   /** Optional entityId filter; when omitted, aggregates across user. */
@@ -36,12 +39,127 @@ function fmtHM(s: number) {
 }
 
 const LEVEL_BG = [
-  'bg-white/[0.05]',
-  'bg-white/20',
-  'bg-white/40',
-  'bg-white/65',
-  'bg-white/90',
+  'bg-foreground/[0.05]',
+  'bg-foreground/20',
+  'bg-foreground/40',
+  'bg-foreground/65',
+  'bg-foreground/90',
 ];
+
+const DURATION_WHEEL_ROW_HEIGHT = 48;
+
+function DurationWheel({
+  label,
+  value,
+  max,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  max: number;
+  onChange: (value: number) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const wheelId = useId();
+  const initialValue = useRef(value);
+  const values = useMemo(() => Array.from({ length: max + 1 }, (_, index) => index), [max]);
+
+  useEffect(() => {
+    if (ref.current) ref.current.scrollTop = initialValue.current * DURATION_WHEEL_ROW_HEIGHT;
+  }, []);
+
+  const syncValue = () => {
+    if (!ref.current) return;
+    const next = Math.max(0, Math.min(max, Math.round(ref.current.scrollTop / DURATION_WHEEL_ROW_HEIGHT)));
+    onChange(next);
+  };
+
+  return (
+    <div className="min-w-0 flex-1 text-center">
+      <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+      <div
+        ref={ref}
+        role="listbox"
+        aria-label={label}
+        aria-activedescendant={`${wheelId}-${value}`}
+        onScroll={syncValue}
+        className="h-36 snap-y snap-mandatory overflow-y-auto overscroll-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        <div aria-hidden="true" className="h-12" />
+        {values.map((option) => (
+          <button
+            key={option}
+            id={`${wheelId}-${option}`}
+            type="button"
+            role="option"
+            aria-selected={option === value}
+            onClick={() => ref.current?.scrollTo({ top: option * DURATION_WHEEL_ROW_HEIGHT, behavior: "smooth" })}
+            className={`flex h-12 w-full snap-center items-center justify-center border-y text-2xl tabular-nums transition-colors ${
+              option === value
+                ? "border-foreground/30 font-semibold text-foreground"
+                : "border-transparent text-muted-foreground/50"
+            }`}
+          >
+            {String(option).padStart(2, "0")}
+          </button>
+        ))}
+        <div aria-hidden="true" className="h-12" />
+      </div>
+    </div>
+  );
+}
+
+function DurationInputs({
+  hours,
+  minutes,
+  seconds,
+  maxHours,
+  onHoursChange,
+  onMinutesChange,
+  onSecondsChange,
+  labels,
+}: {
+  hours: number;
+  minutes: number;
+  seconds: number;
+  maxHours: number;
+  onHoursChange: (value: number) => void;
+  onMinutesChange: (value: number) => void;
+  onSecondsChange: (value: number) => void;
+  labels: { hours: string; minutes: string; seconds: string };
+}) {
+  const fields = [
+    { label: labels.hours, value: hours, max: maxHours, onChange: onHoursChange },
+    { label: labels.minutes, value: minutes, max: 59, onChange: onMinutesChange },
+    { label: labels.seconds, value: seconds, max: 59, onChange: onSecondsChange },
+  ];
+
+  return (
+    <div className="hidden grid-cols-3 gap-3 sm:grid">
+      {fields.map(({ label, value, max, onChange }) => (
+        <label key={label} className="space-y-2">
+          <span className="block text-center text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+            {label}
+          </span>
+          <input
+            type="number"
+            min={0}
+            max={max}
+            step={1}
+            inputMode="numeric"
+            value={value}
+            onChange={(event) => {
+              const parsed = Number.parseInt(event.target.value, 10);
+              onChange(Number.isFinite(parsed) ? Math.max(0, Math.min(max, parsed)) : 0);
+            }}
+            aria-label={label}
+            className="h-12 w-full rounded-xl border border-border/15 bg-foreground/[0.03] px-3 text-center text-lg tabular-nums text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </label>
+      ))}
+    </div>
+  );
+}
 
 interface HoverCell {
   key: string;
@@ -67,12 +185,18 @@ export function TimeHeatmap({ entityId, weeks = 52 }: Props) {
   const hoverRef = useRef<HoverCell | null>(null);
   hoverRef.current = hover;
 
-  const { goalMinutes, setGoal } = useTimerGoal(entityId);
+  const { goalMinutes, setGoal, isSaving: isSavingGoal } = useTimerGoal(entityId);
   const [editingGoal, setEditingGoal] = useState(false);
-  const [goalDraft, setGoalDraft] = useState<string>(String(goalMinutes));
+  const [goalHours, setGoalHours] = useState(0);
+  const [goalMins, setGoalMins] = useState(0);
+  const [goalSecs, setGoalSecs] = useState(0);
+  const [goalError, setGoalError] = useState<string | null>(null);
 
   const [adding, setAdding] = useState(false);
-  const [entryMin, setEntryMin] = useState<string>('30');
+  const [entryDate, setEntryDate] = useState<string>(() => dateKey(new Date()));
+  const [entryHours, setEntryHours] = useState(0);
+  const [entryMinutes, setEntryMinutes] = useState(30);
+  const [entrySeconds, setEntrySeconds] = useState(0);
   const [entryError, setEntryError] = useState<string | null>(null);
 
   const goalSeconds = goalMinutes * 60;
@@ -154,32 +278,45 @@ export function TimeHeatmap({ entityId, weeks = 52 }: Props) {
 
   const activeDays = byDay.size;
 
-  const commitGoal = () => {
-    const n = parseInt(goalDraft, 10);
-    if (Number.isFinite(n) && n > 0) setGoal(n);
+  const submitGoal = () => {
+    const totalSeconds = goalHours * 3600 + goalMins * 60 + goalSecs;
+    if (totalSeconds <= 0) {
+      setGoalError(t('tm_duration_must_be_positive'));
+      return;
+    }
+    setGoal(Math.max(1, Math.round(totalSeconds / 60)));
     setEditingGoal(false);
   };
 
   const submitEntry = async () => {
     setEntryError(null);
     if (!entityId) return;
-    const minutes = parseInt(entryMin, 10);
-    if (!Number.isFinite(minutes) || minutes <= 0) {
-      setEntryError(t('tm_enter_positive_minutes'));
+    const durationSeconds = entryHours * 3600 + entryMinutes * 60 + entrySeconds;
+    if (durationSeconds <= 0) {
+      setEntryError(t('tm_duration_must_be_positive'));
+      return;
+    }
+    const maxDate = dateKey(new Date());
+    if (!entryDate || entryDate > maxDate) {
+      setEntryError(t('tm_future_dates_not_allowed'));
       return;
     }
     try {
       await addTimeAsync({
         entityId,
-        date: dateKey(new Date()),
-        durationSeconds: minutes * 60,
+        date: entryDate,
+        durationSeconds,
       });
       await qc.invalidateQueries({ queryKey: ['timeTracking'] });
       setAdding(false);
-      setEntryMin('30');
-    } catch (err: any) {
+      setEntryHours(0);
+      setEntryMinutes(0);
+      setEntrySeconds(0);
+      setEntryDate(dateKey(new Date()));
+    } catch (err: unknown) {
       console.error('Failed to add entry:', err);
-      setEntryError(err?.response?.data?.message || err?.message || t('tm_failed_to_add_entry'));
+      const serverMessage = isAxiosError<{ message?: string }>(err) ? err.response?.data?.message : undefined;
+      setEntryError(serverMessage || (err instanceof Error ? err.message : t('tm_failed_to_add_entry')));
     }
   };
 
@@ -214,90 +351,126 @@ export function TimeHeatmap({ entityId, weeks = 52 }: Props) {
   };
 
   return (
-    <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6 relative">
+    <section className="relative py-5 sm:py-6">
       <div className="flex items-baseline justify-between gap-3 mb-4 flex-wrap">
-        <h3 className="text-xs uppercase tracking-widest text-white/50 font-mono">
+        <h3 className="text-xs uppercase tracking-widest text-muted-foreground font-mono">
           {t('tm_activity_heatmap')}
         </h3>
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-[10px] text-white/40 font-mono">
+          <span className="whitespace-normal text-[10px] text-muted-foreground font-mono">
             {t('tm_active_days_summary', { count: activeDays, time: fmtHM(totalSeconds) })}
           </span>
-          {editingGoal ? (
-            <span className="inline-flex items-center gap-1.5">
-              <input
-                type="number"
-                min={1}
-                value={goalDraft}
-                onChange={(e) => setGoalDraft(e.target.value)}
-                onBlur={commitGoal}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') commitGoal();
-                  if (e.key === 'Escape') {
-                    setGoalDraft(String(goalMinutes));
-                    setEditingGoal(false);
-                  }
-                }}
-                autoFocus
-                className="w-14 px-1.5 py-0.5 text-[10px] font-mono bg-white/[0.04] border border-white/15 rounded text-white text-right focus:outline-none focus:border-white/30"
-              />
-              <span className="text-[10px] text-white/40 font-mono">{t('tm_min_per_day')}</span>
-            </span>
-          ) : (
-            <button
-              onClick={() => {
-                setGoalDraft(String(goalMinutes));
-                setEditingGoal(true);
-              }}
-              className="text-[10px] font-mono text-white/50 hover:text-white border border-white/10 hover:border-white/25 rounded px-1.5 py-0.5 transition"
-              title={t('tm_set_daily_goal')}
-            >
-              {t('tm_goal_label', { time: fmtHM(goalSeconds) })}
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setGoalError(null);
+              setGoalHours(0);
+              setGoalMins(0);
+              setGoalSecs(0);
+              setEditingGoal(true);
+            }}
+            className="whitespace-normal rounded-md bg-secondary px-2 py-1 text-[10px] font-mono text-secondary-foreground/70 transition hover:bg-secondary/75 hover:text-secondary-foreground"
+            title={t('tm_set_daily_goal')}
+          >
+            {t('tm_goal_label', { time: fmtHM(goalSeconds) })}
+          </button>
           {entityId && (
             <button
               onClick={() => {
                 setEntryError(null);
-                setAdding((v) => !v);
+                setEntryDate(dateKey(new Date()));
+                setEntryHours(0);
+                setEntryMinutes(0);
+                setEntrySeconds(0);
+                setAdding(true);
               }}
-              className="text-[10px] font-mono text-white/50 hover:text-white border border-white/10 hover:border-white/25 rounded px-1.5 py-0.5 transition"
+              className="whitespace-normal rounded-md bg-secondary px-2 py-1 text-[10px] font-mono text-secondary-foreground/70 transition hover:bg-secondary/75 hover:text-secondary-foreground"
               title={t('tm_add_manual_entry_title')}
             >
-              {adding ? t('tm_cancel_short') : t('tm_add_entry_short')}
+              {t('tm_add_entry_short')}
             </button>
           )}
         </div>
       </div>
 
-      {adding && entityId && (
-        <div className="mb-4 rounded-lg border border-white/10 bg-white/[0.02] p-2.5">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="px-2 py-1 text-[11px] font-mono text-white/60 border border-white/10 rounded">
-              {t('tm_today_label', { date: dateKey(new Date()) })}
-            </span>
-            <input
-              type="number"
-              min={1}
-              value={entryMin}
-              onChange={(e) => setEntryMin(e.target.value)}
-              placeholder="minutes"
-              className="w-20 px-2 py-1 text-[11px] font-mono bg-white/[0.04] border border-white/15 rounded text-white text-right focus:outline-none focus:border-white/30"
-            />
-            <span className="text-[10px] font-mono text-white/40">{t('tm_min')}</span>
-            <button
-              onClick={submitEntry}
-              disabled={isAdding}
-              className="ml-auto px-2.5 py-1 text-[11px] font-mono bg-white text-black rounded hover:bg-white/90 transition disabled:opacity-50"
-            >
-              {isAdding ? '...' : t('tm_add')}
-            </button>
+      <SmoothDrawer open={adding && !!entityId} onOpenChange={(open) => {
+        setAdding(open);
+        if (!open) setEntryError(null);
+      }} title={t('tm_add_manual_entry_title')}>
+          <div className="space-y-5 px-5 py-5">
+            <label className="block space-y-2">
+              <span className="text-xs font-medium text-muted-foreground">{t('tm_date')}</span>
+              <input
+                type="date"
+                value={entryDate}
+                max={dateKey(new Date())}
+                onChange={(event) => setEntryDate(event.target.value)}
+                aria-label={t('tm_date')}
+                className="h-12 w-full rounded-xl border border-border/15 bg-foreground/[0.03] px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+            </label>
+            <fieldset>
+              <legend className="mb-2 text-xs font-medium text-muted-foreground">{t('tm_duration')}</legend>
+              <div className="flex items-center gap-2 sm:hidden">
+                <DurationWheel label={t('tm_hours_short')} value={entryHours} max={99} onChange={setEntryHours} />
+                <DurationWheel label={t('tm_minutes_short')} value={entryMinutes} max={59} onChange={setEntryMinutes} />
+                <DurationWheel label={t('tm_seconds_short')} value={entrySeconds} max={59} onChange={setEntrySeconds} />
+              </div>
+              <DurationInputs
+                hours={entryHours}
+                minutes={entryMinutes}
+                seconds={entrySeconds}
+                maxHours={99}
+                onHoursChange={setEntryHours}
+                onMinutesChange={setEntryMinutes}
+                onSecondsChange={setEntrySeconds}
+                labels={{
+                  hours: t('tm_hours_short'),
+                  minutes: t('tm_minutes_short'),
+                  seconds: t('tm_seconds_short'),
+                }}
+              />
+            </fieldset>
+            {entryError && <p role="alert" className="text-sm text-destructive">{entryError}</p>}
+            <Button type="button" onClick={submitEntry} disabled={isAdding} className="h-12 w-full rounded-xl">
+              {isAdding ? t('tm_saving_entry') : t('tm_add')}
+            </Button>
           </div>
-          {entryError && (
-            <p className="mt-2 text-[10px] font-mono text-red-400">{entryError}</p>
-          )}
-        </div>
-      )}
+      </SmoothDrawer>
+
+      <SmoothDrawer open={editingGoal} onOpenChange={(open) => {
+        setEditingGoal(open);
+        if (!open) setGoalError(null);
+      }} title={t('tm_set_daily_goal')}>
+          <div className="space-y-5 px-5 py-5">
+            <fieldset>
+              <legend className="mb-2 text-xs font-medium text-muted-foreground">{t('tm_duration')}</legend>
+              <div className="flex items-center gap-2 sm:hidden">
+                <DurationWheel label={t('tm_hours_short')} value={goalHours} max={23} onChange={setGoalHours} />
+                <DurationWheel label={t('tm_minutes_short')} value={goalMins} max={59} onChange={setGoalMins} />
+                <DurationWheel label={t('tm_seconds_short')} value={goalSecs} max={59} onChange={setGoalSecs} />
+              </div>
+              <DurationInputs
+                hours={goalHours}
+                minutes={goalMins}
+                seconds={goalSecs}
+                maxHours={23}
+                onHoursChange={setGoalHours}
+                onMinutesChange={setGoalMins}
+                onSecondsChange={setGoalSecs}
+                labels={{
+                  hours: t('tm_hours_short'),
+                  minutes: t('tm_minutes_short'),
+                  seconds: t('tm_seconds_short'),
+                }}
+              />
+            </fieldset>
+            {goalError && <p role="alert" className="text-sm text-destructive">{goalError}</p>}
+            <Button type="button" onClick={submitGoal} disabled={isSavingGoal} className="h-12 w-full rounded-xl">
+              {isSavingGoal ? t('tm_saving_entry') : t('tm_set_daily_goal')}
+            </Button>
+          </div>
+      </SmoothDrawer>
+
 
       {isLoading ? (
         <div className="h-32" />
@@ -306,10 +479,10 @@ export function TimeHeatmap({ entityId, weeks = 52 }: Props) {
           {yearBlocks.map((block) => (
             <div key={block.year}>
               <div className="mb-2 flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-white/40">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground">
                   {block.year}
                 </span>
-                <span className="h-px flex-1 bg-white/[0.06]" />
+                <span className="h-px flex-1 bg-foreground/[0.06]" />
               </div>
               <div className="overflow-x-auto -mx-1 px-1">
                 <div className="flex gap-[4px] min-w-fit">
@@ -338,8 +511,8 @@ export function TimeHeatmap({ entityId, weeks = 52 }: Props) {
                             className={`w-[14px] h-[14px] sm:w-[13px] sm:h-[13px] rounded-[3px] ${
                               isFuture ? 'bg-transparent' : LEVEL_BG[lvl]
                             } border ${
-                              isToday ? 'border-white/60' : 'border-white/[0.04]'
-                            } ${isFuture ? '' : 'hover:ring-1 hover:ring-white/40 active:scale-110'} transition-transform`}
+                              isToday ? 'border-border/60' : 'border-border/[0.04]'
+                            } ${isFuture ? '' : 'hover:ring-1 hover:ring-ring active:scale-110'} transition-transform`}
                           />
                         );
                       })}
@@ -357,18 +530,18 @@ export function TimeHeatmap({ entityId, weeks = 52 }: Props) {
             const left = Math.max(margin + W / 2, Math.min(vw - margin - W / 2, hover.x));
             return (
               <div
-                className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-md border border-white/15 bg-black/95 px-2.5 py-1.5 shadow-xl backdrop-blur"
+                className="pointer-events-none fixed z-50 -translate-x-1/2 -translate-y-full rounded-md border border-border/15 bg-background/95 px-2.5 py-1.5 shadow-xl backdrop-blur"
                 style={{ left, top: hover.y - 6, width: W }}
               >
-                <p className="text-[10px] font-mono uppercase tracking-wider text-white/50">
+                <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
                   {hover.key}
                   {hover.key === todayKey && ` ${t('tm_today_suffix')}`}
                 </p>
-                <p className="text-xs font-mono text-white mt-0.5">
+                <p className="text-xs font-mono text-foreground mt-0.5">
                   {fmtHM(hover.seconds)} · {t('tm_entry_count', { count: hover.count, word: hover.count === 1 ? t('tm_entry_singular') : t('tm_entry_plural') })}
                 </p>
                 {goalSeconds > 0 && (
-                  <p className="text-[10px] font-mono text-white/40 mt-0.5">
+                  <p className="text-[10px] font-mono text-muted-foreground mt-0.5">
                     {t('tm_percent_of_goal', { pct: Math.min(999, Math.round((hover.seconds / goalSeconds) * 100)) })}
                   </p>
                 )}
@@ -376,7 +549,7 @@ export function TimeHeatmap({ entityId, weeks = 52 }: Props) {
             );
           })()}
 
-          <div className="mt-3 flex items-center gap-1.5 text-[10px] text-white/40 font-mono">
+          <div className="mt-3 flex items-center gap-1.5 text-[10px] text-muted-foreground font-mono">
             <span>{t('tm_less')}</span>
             {LEVEL_BG.map((c, i) => (
               <span key={i} className={`w-[10px] h-[10px] rounded-[2px] ${c}`} />
@@ -385,6 +558,6 @@ export function TimeHeatmap({ entityId, weeks = 52 }: Props) {
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 }

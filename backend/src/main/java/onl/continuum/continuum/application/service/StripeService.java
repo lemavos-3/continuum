@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import onl.continuum.continuum.application.exception.BadRequestException;
+import onl.continuum.continuum.application.exception.StripeConfigurationException;
+import onl.continuum.continuum.application.exception.StripeIntegrationException;
 import onl.continuum.continuum.controller.dto.subscription.CheckoutResponse;
 
 /**
@@ -88,6 +90,9 @@ public class StripeService {
     /* ─────────────────── Checkout ─────────────────── */
 
     public CheckoutResponse createCheckout(String customerId, String userId, String email, String priceOrPlan) {
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new StripeConfigurationException("Stripe checkout is not configured on the server");
+        }
         String priceId = resolvePriceId(priceOrPlan);
         if (priceId == null || priceId.isBlank()) {
             throw new BadRequestException("Invalid Stripe price or plan: " + priceOrPlan);
@@ -120,7 +125,7 @@ public class StripeService {
             return new CheckoutResponse(session.getId(), session.getUrl());
         } catch (StripeException e) {
             log.error("[Stripe] Failed to create Checkout Session: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to create Stripe checkout: " + e.getMessage(), e);
+            throw new StripeIntegrationException("Failed to create Stripe checkout: " + e.getMessage(), e);
         }
     }
 
@@ -239,4 +244,28 @@ public class StripeService {
 
     public String getPriceVisionMonthly() { return priceVisionMonthly; }
     public String getPriceVisionYearly() { return priceVisionYearly; }
+
+    /**
+     * Read-only price info straight from Stripe (base currency + any configured
+     * currency_options such as BRL). Display only; Checkout decides the charge.
+     */
+    public java.util.Map<String, Object> getPriceDisplay(String priceId) {
+        java.util.Map<String, Object> out = new java.util.HashMap<>();
+        if (priceId == null || !priceId.startsWith("price_")) return out;
+        try {
+            com.stripe.model.Price p = com.stripe.model.Price.retrieve(priceId,
+                    com.stripe.param.PriceRetrieveParams.builder().addExpand("currency_options").build(), null);
+            out.put("currency", p.getCurrency());
+            out.put("unitAmount", p.getUnitAmount());
+            java.util.Map<String, Long> opts = new java.util.HashMap<>();
+            if (p.getCurrencyOptions() != null) {
+                p.getCurrencyOptions().forEach((cur, o) -> { if (o.getUnitAmount() != null) opts.put(cur, o.getUnitAmount()); });
+            }
+            out.put("currencyOptions", opts);
+        } catch (Exception e) {
+            org.slf4j.LoggerFactory.getLogger(StripeService.class)
+                    .warn("[Stripe] Could not load price {}: {}", priceId, e.getMessage());
+        }
+        return out;
+    }
 }

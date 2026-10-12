@@ -1,7 +1,10 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { mergeModules } from "@/i18n";
+import { useAuth } from "@/contexts/AuthContext";
+import { useToast } from "@/hooks/use-toast";
+import type { UserLanguage } from "@/types";
 
-export type Language = "en" | "es" | "pt" | "fr";
+export type Language = UserLanguage;
 
 export const AVAILABLE_LANGUAGES: { code: Language; label: string; nativeLabel: string }[] = [
   { code: "en", label: "English", nativeLabel: "English" },
@@ -12,11 +15,15 @@ export const AVAILABLE_LANGUAGES: { code: Language; label: string; nativeLabel: 
 
 interface LanguageContextType {
   language: Language;
-  setLanguage: (lang: Language) => void;
+  setLanguage: (lang: Language) => Promise<void>;
   t: (key: string, vars?: Record<string, string | number>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
+
+function isLanguage(value: unknown): value is Language {
+  return value === "en" || value === "es" || value === "pt" || value === "fr";
+}
 
 // Detect the user's preferred language from browser settings.
 function detectBrowserLanguage(): Language {
@@ -39,11 +46,15 @@ const en = {
   nav_projects: "Projects",
   nav_activities: "Activities",
   nav_graph: "Graph",
+  nav_trash: "Trash",
+  nav_trash_desc: "Restore or permanently delete removed items.",
   nav_profile: "Profile",
   nav_subscription: "Subscription",
   nav_support: "Support",
   nav_logout: "Log out",
   nav_settings: "Settings",
+  nav_editor: "Editor",
+  nav_editorSettings: "Editor settings",
   nav_more: "More",
 
   // Common
@@ -58,6 +69,8 @@ const en = {
   common_close: "Close",
   common_open: "Open",
   common_confirm: "Confirm",
+  account_deleteConfirmPrompt: "Type CONFIRM to schedule account deletion.",
+  account_deleteNowConfirmPrompt: "Type CONFIRM to permanently delete your account now.",
   common_yes: "Yes",
   common_no: "No",
   common_all: "All",
@@ -109,6 +122,7 @@ const en = {
   notes_recent: "Recent",
   notes_favorites: "Favorites",
   notes_dormant: "Dormant",
+  notes_others: "Others",
   notes_types: "Types",
   notes_allTypes: "All types",
   notes_filters: "Filters",
@@ -129,10 +143,10 @@ const en = {
   notes_importBtn: "Import notes",
   notes_limit: "You've reached the notes limit for your plan.",
   notes_remove_one_title: "Remove this entry?",
-  notes_remove_one_desc: "\"{title}\" will be permanently removed from your archive.",
+  notes_remove_one_desc: "\"{title}\" will be moved to Trash. You can find Trash in Settings.",
   notes_remove_many_title: "Remove {n} entries?",
   notes_remove_many_title_one: "Remove {n} entry?",
-  notes_remove_many_desc: "The selected entries will be permanently removed from your archive.",
+  notes_remove_many_desc: "The selected entries will be moved to Trash. You can find Trash in Settings.",
   notes_remove: "Remove",
   notes_removing: "Removing…",
   notes_favorite: "Favorite",
@@ -151,10 +165,10 @@ const en = {
   entities_allAtoms: "All Atoms",
   entities_limit: "You've reached the entities limit for your plan.",
   entities_delete_one_title: "Delete entity?",
-  entities_delete_one_desc: "{title} will be permanently removed.",
+  entities_delete_one_desc: "{title} will be moved to Trash. You can find Trash in Settings.",
   entities_delete_many_title: "Delete {n} entities?",
   entities_delete_many_title_one: "Delete {n} entity?",
-  entities_delete_many_desc: "The selected entities will be permanently removed.",
+  entities_delete_many_desc: "The selected entities will be moved to Trash. You can find Trash in Settings.",
   entities_deleting: "Deleting…",
   entities_atom: "atom",
   entities_atoms: "atoms",
@@ -176,6 +190,14 @@ const en = {
   notes_set_type: "Set type",
   notes_new_type: "New type…",
   notes_new_type_prompt: "New type name",
+  notes_create_type: "Create type",
+  notes_delete_type: "Delete {type}",
+  notes_delete_type_title: "Delete type?",
+  notes_delete_type_desc: "The type “{type}” will be removed from all notes. The notes themselves will not be deleted.",
+  notes_type_created: "Type “{type}” created",
+  notes_type_deleted: "Type “{type}” deleted",
+  notes_type_create_failed: "Could not create type",
+  notes_type_delete_failed: "Could not delete type",
   notes_bulk_type_applied: "Type applied to {n} notes",
   editor_commands: "Editor commands",
   list_showing_entries: "Showing {n} entries",
@@ -187,6 +209,9 @@ const en = {
   list_sort_modification: "Modification",
   list_sort_recent: "Recent",
   list_sort_oldest: "Oldest",
+  list_sort_button: "Sort list",
+  list_sort_az: "A to Z",
+  list_sort_za: "Z to A",
   list_count_entries: "{n} entries",
   list_count_entries_one: "{n} entry",
   rel_today: "today",
@@ -292,7 +317,7 @@ const en = {
   profile_relinking: "Reconnecting…",
   profile_relinkFailed: "Could not reconnect entities",
   profile_relinkFailedDesc: "Please try again in a moment.",
-  profile_dataSync: "Data & Sync",
+  profile_dataSync: "Integrations",
   profile_pending: "{n} pending",
   profile_syncComplete: "{n} changes synced.",
   profile_syncPartial: "{sent} synced, {failed} failed — will retry.",
@@ -310,6 +335,7 @@ const en = {
   profile_sendFeedback: "Send feedback",
   profile_reportBug: "Report a bug",
   profile_planUsage: "Plan Usage & Limits",
+  profile_continuumSubscription: "You Continuum subscription",
   profile_vaultLimit: "Vault Limit",
   profile_uploadMetadata: "Upload Metadata",
   profile_historyDays: "{n} days",
@@ -319,6 +345,11 @@ const en = {
   profile_locked: "Locked",
   profile_language: "Language",
   profile_languageDesc: "Change the interface language.",
+  profile_theme: "Theme",
+  profile_themeDesc: "Choose the app's appearance.",
+  profile_themeClassic: "Classic",
+  profile_themeCharcoal: "Charcoal",
+  profile_themeLight: "Light",
   profile_backupOk: "Backup downloaded successfully",
   profile_backupFailed: "Export failed",
   profile_updated: "Profile updated",
@@ -365,11 +396,15 @@ const es: Dict = {
   nav_projects: "Proyectos",
   nav_activities: "Actividades",
   nav_graph: "Grafo",
+  nav_trash: "Papelera",
+  nav_trash_desc: "Restaura o elimina definitivamente los elementos borrados.",
   nav_profile: "Perfil",
   nav_subscription: "Suscripción",
   nav_support: "Soporte",
   nav_logout: "Cerrar sesión",
   nav_settings: "Ajustes",
+  nav_editor: "Editor",
+  nav_editorSettings: "Configuración del editor",
   nav_more: "Más",
 
   common_save: "Guardar",
@@ -383,6 +418,8 @@ const es: Dict = {
   common_close: "Cerrar",
   common_open: "Abrir",
   common_confirm: "Confirmar",
+  account_deleteConfirmPrompt: "Escribe CONFIRM para programar la eliminación de la cuenta.",
+  account_deleteNowConfirmPrompt: "Escribe CONFIRM para eliminar permanentemente tu cuenta ahora.",
   common_yes: "Sí",
   common_no: "No",
   common_all: "Todos",
@@ -428,6 +465,7 @@ const es: Dict = {
   notes_empty: "Aún no hay notas. Crea la primera.",
   notes_searchPlaceholder: "Buscar notas…",
   notes_subtitle: "Tu espacio de pensamiento.",
+  notes_others: "Otros",
 
   entities_title: "Entidades",
   entities_new: "Nueva entidad",
@@ -526,7 +564,7 @@ const es: Dict = {
   profile_relinking: "Reconectando…",
   profile_relinkFailed: "No se pudieron reconectar las entidades",
   profile_relinkFailedDesc: "Inténtalo de nuevo en unos momentos.",
-  profile_dataSync: "Datos y sincronización",
+  profile_dataSync: "Integraciones",
   profile_pending: "{n} pendientes",
   profile_syncComplete: "{n} cambios sincronizados.",
   profile_syncPartial: "{sent} sincronizados, {failed} fallaron — se reintentará.",
@@ -544,6 +582,7 @@ const es: Dict = {
   profile_sendFeedback: "Enviar comentarios",
   profile_reportBug: "Reportar un error",
   profile_planUsage: "Uso y límites del plan",
+  profile_continuumSubscription: "Tu suscripción de Continuum",
   profile_vaultLimit: "Límite de bóveda",
   profile_uploadMetadata: "Metadatos de subida",
   profile_historyDays: "{n} días",
@@ -553,6 +592,11 @@ const es: Dict = {
   profile_locked: "Bloqueado",
   profile_language: "Idioma",
   profile_languageDesc: "Cambia el idioma de la interfaz.",
+  profile_theme: "Tema",
+  profile_themeDesc: "Elige la apariencia de la app.",
+  profile_themeClassic: "Clásico",
+  profile_themeCharcoal: "Carbón",
+  profile_themeLight: "Claro",
   profile_backupOk: "Respaldo descargado con éxito",
   profile_backupFailed: "Error al exportar",
   profile_updated: "Perfil actualizado",
@@ -595,11 +639,15 @@ const pt: Dict = {
   nav_projects: "Projetos",
   nav_activities: "Atividades",
   nav_graph: "Grafo",
+  nav_trash: "Lixeira",
+  nav_trash_desc: "Restaure ou exclua permanentemente itens removidos.",
   nav_profile: "Perfil",
   nav_subscription: "Assinatura",
   nav_support: "Suporte",
   nav_logout: "Sair",
   nav_settings: "Ajustes",
+  nav_editor: "Editor",
+  nav_editorSettings: "Configurações do editor",
   nav_more: "Mais",
 
   common_save: "Salvar",
@@ -613,6 +661,8 @@ const pt: Dict = {
   common_close: "Fechar",
   common_open: "Abrir",
   common_confirm: "Confirmar",
+  account_deleteConfirmPrompt: "Digite CONFIRM para agendar a exclusão da conta.",
+  account_deleteNowConfirmPrompt: "Digite CONFIRM para excluir permanentemente sua conta agora.",
   common_yes: "Sim",
   common_no: "Não",
   common_all: "Todos",
@@ -661,6 +711,7 @@ const pt: Dict = {
   notes_recent: "Recentes",
   notes_favorites: "Favoritas",
   notes_dormant: "Dormentes",
+  notes_others: "Outros",
   notes_types: "Tipos",
   notes_allTypes: "Todos os tipos",
   notes_filters: "Filtros",
@@ -681,10 +732,10 @@ const pt: Dict = {
   notes_importBtn: "Importar notas",
   notes_limit: "Você atingiu o limite de notas do seu plano.",
   notes_remove_one_title: "Remover esta entrada?",
-  notes_remove_one_desc: "\"{title}\" será removida permanentemente do seu arquivo.",
+  notes_remove_one_desc: "\"{title}\" será movida para a Lixeira. Você pode acessá-la em Ajustes.",
   notes_remove_many_title: "Remover {n} entradas?",
   notes_remove_many_title_one: "Remover {n} entrada?",
-  notes_remove_many_desc: "As entradas selecionadas serão removidas permanentemente do seu arquivo.",
+  notes_remove_many_desc: "As entradas selecionadas serão movidas para a Lixeira. Você pode acessá-la em Ajustes.",
   notes_remove: "Remover",
   notes_removing: "Removendo…",
   notes_favorite: "Favoritar",
@@ -702,10 +753,10 @@ const pt: Dict = {
   entities_allAtoms: "Todos os átomos",
   entities_limit: "Você atingiu o limite de entidades do seu plano.",
   entities_delete_one_title: "Excluir entidade?",
-  entities_delete_one_desc: "{title} será removida permanentemente.",
+  entities_delete_one_desc: "{title} será movida para a Lixeira. Você pode acessá-la em Ajustes.",
   entities_delete_many_title: "Excluir {n} entidades?",
   entities_delete_many_title_one: "Excluir {n} entidade?",
-  entities_delete_many_desc: "As entidades selecionadas serão removidas permanentemente.",
+  entities_delete_many_desc: "As entidades selecionadas serão movidas para a Lixeira. Você pode acessá-la em Ajustes.",
   entities_deleting: "Excluindo…",
   entities_atom: "átomo",
   entities_atoms: "átomos",
@@ -726,6 +777,14 @@ const pt: Dict = {
   notes_set_type: "Definir tipo",
   notes_new_type: "Novo tipo…",
   notes_new_type_prompt: "Nome do novo tipo",
+  notes_create_type: "Criar tipo",
+  notes_delete_type: "Excluir {type}",
+  notes_delete_type_title: "Excluir tipo?",
+  notes_delete_type_desc: "O tipo “{type}” será removido de todas as notas. As notas não serão excluídas.",
+  notes_type_created: "Tipo “{type}” criado",
+  notes_type_deleted: "Tipo “{type}” excluído",
+  notes_type_create_failed: "Não foi possível criar o tipo",
+  notes_type_delete_failed: "Não foi possível excluir o tipo",
   notes_bulk_type_applied: "Tipo aplicado a {n} notas",
   editor_commands: "Comandos do editor",
   list_showing_entries: "Mostrando {n} entradas",
@@ -737,6 +796,9 @@ const pt: Dict = {
   list_sort_modification: "Modificação",
   list_sort_recent: "Recentes",
   list_sort_oldest: "Antigos",
+  list_sort_button: "Ordenar lista",
+  list_sort_az: "A a Z",
+  list_sort_za: "Z a A",
   list_count_entries: "{n} entradas",
   list_count_entries_one: "{n} entrada",
   rel_today: "hoje",
@@ -837,7 +899,7 @@ const pt: Dict = {
   profile_relinking: "Reconectando…",
   profile_relinkFailed: "Não foi possível reconectar as entidades",
   profile_relinkFailedDesc: "Tente novamente em alguns instantes.",
-  profile_dataSync: "Dados e sincronização",
+  profile_dataSync: "Integrações",
   profile_pending: "{n} pendentes",
   profile_syncComplete: "{n} alterações sincronizadas.",
   profile_syncPartial: "{sent} sincronizadas, {failed} falharam — tentará novamente.",
@@ -855,6 +917,7 @@ const pt: Dict = {
   profile_sendFeedback: "Enviar feedback",
   profile_reportBug: "Reportar um bug",
   profile_planUsage: "Uso e limites do plano",
+  profile_continuumSubscription: "Sua assinatura do Continuum",
   profile_vaultLimit: "Limite do vault",
   profile_uploadMetadata: "Metadados de upload",
   profile_historyDays: "{n} dias",
@@ -864,6 +927,11 @@ const pt: Dict = {
   profile_locked: "Bloqueado",
   profile_language: "Idioma",
   profile_languageDesc: "Altere o idioma da interface.",
+  profile_theme: "Tema",
+  profile_themeDesc: "Escolha a aparência do app.",
+  profile_themeClassic: "Clássico",
+  profile_themeCharcoal: "Carvão",
+  profile_themeLight: "Claro",
   profile_backupOk: "Backup baixado com sucesso",
   profile_backupFailed: "Falha ao exportar",
   profile_updated: "Perfil atualizado",
@@ -906,11 +974,15 @@ const fr: Dict = {
   nav_projects: "Projets",
   nav_activities: "Activités",
   nav_graph: "Graphe",
+  nav_trash: "Corbeille",
+  nav_trash_desc: "Restaurez ou supprimez définitivement les éléments retirés.",
   nav_profile: "Profil",
   nav_subscription: "Abonnement",
   nav_support: "Assistance",
   nav_logout: "Déconnexion",
   nav_settings: "Paramètres",
+  nav_editor: "Éditeur",
+  nav_editorSettings: "Réglages de l’éditeur",
   nav_more: "Plus",
 
   common_save: "Enregistrer",
@@ -924,6 +996,8 @@ const fr: Dict = {
   common_close: "Fermer",
   common_open: "Ouvrir",
   common_confirm: "Confirmer",
+  account_deleteConfirmPrompt: "Saisissez CONFIRM pour programmer la suppression du compte.",
+  account_deleteNowConfirmPrompt: "Saisissez CONFIRM pour supprimer définitivement votre compte maintenant.",
   common_yes: "Oui",
   common_no: "Non",
   common_all: "Tous",
@@ -969,6 +1043,7 @@ const fr: Dict = {
   notes_empty: "Aucune note pour l'instant. Créez la première.",
   notes_searchPlaceholder: "Rechercher des notes…",
   notes_subtitle: "Votre espace de réflexion.",
+  notes_others: "Autres",
 
   entities_title: "Entités",
   entities_new: "Nouvelle entité",
@@ -1067,7 +1142,7 @@ const fr: Dict = {
   profile_relinking: "Reconnexion…",
   profile_relinkFailed: "Impossible de reconnecter les entités",
   profile_relinkFailedDesc: "Veuillez réessayer dans quelques instants.",
-  profile_dataSync: "Données et synchronisation",
+  profile_dataSync: "Intégrations",
   profile_pending: "{n} en attente",
   profile_syncComplete: "{n} modifications synchronisées.",
   profile_syncPartial: "{sent} synchronisées, {failed} échouées — nouvelle tentative prévue.",
@@ -1085,6 +1160,7 @@ const fr: Dict = {
   profile_sendFeedback: "Envoyer un retour",
   profile_reportBug: "Signaler un bug",
   profile_planUsage: "Utilisation et limites du plan",
+  profile_continuumSubscription: "Votre abonnement Continuum",
   profile_vaultLimit: "Limite du coffre",
   profile_uploadMetadata: "Métadonnées d'envoi",
   profile_historyDays: "{n} jours",
@@ -1094,6 +1170,11 @@ const fr: Dict = {
   profile_locked: "Verrouillé",
   profile_language: "Langue",
   profile_languageDesc: "Changer la langue de l'interface.",
+  profile_theme: "Thème",
+  profile_themeDesc: "Choisissez l'apparence de l'app.",
+  profile_themeClassic: "Classique",
+  profile_themeCharcoal: "Charbon",
+  profile_themeLight: "Clair",
   profile_backupOk: "Sauvegarde téléchargée avec succès",
   profile_backupFailed: "Échec de l'export",
   profile_updated: "Profil mis à jour",
@@ -1146,10 +1227,30 @@ function interpolate(str: string, vars?: Record<string, string | number>): strin
 }
 
 export const LanguageProvider = ({ children }: { children: ReactNode }) => {
+  const { user, updatePreferences } = useAuth();
+  const { toast } = useToast();
   const [language, setLanguageState] = useState<Language>(() => {
     if (typeof window === "undefined") return "en";
-    const saved = localStorage.getItem("language") as Language | null;
-    if (saved && ["en", "es", "pt", "fr"].includes(saved)) return saved;
+    let cachedUserLanguage: unknown;
+    try {
+      const cachedUser = localStorage.getItem("auth_user");
+      if (cachedUser) {
+        const parsed: unknown = JSON.parse(cachedUser);
+        if (typeof parsed === "object" && parsed !== null && "language" in parsed) {
+          cachedUserLanguage = parsed.language;
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to read cached user language", error);
+    }
+    if (isLanguage(cachedUserLanguage)) return cachedUserLanguage;
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem("language");
+    } catch (error) {
+      console.warn("Failed to read cached interface language", error);
+    }
+    if (isLanguage(saved)) return saved;
     return detectBrowserLanguage();
   });
 
@@ -1159,11 +1260,40 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [language]);
 
-  const setLanguage = (lang: Language) => {
+  useEffect(() => {
+    if (!user?.language) return;
+    setLanguageState(user.language);
+    try {
+      localStorage.setItem("language", user.language);
+    } catch (error) {
+      console.warn("Failed to sync cached interface language", error);
+    }
+  }, [user?.id, user?.language]);
+
+  const setLanguage = async (lang: Language) => {
+    const previousLanguage = language;
     setLanguageState(lang);
     try {
       localStorage.setItem("language", lang);
-    } catch {}
+    } catch (error) {
+      console.warn("Failed to cache interface language", error);
+    }
+    if (!user) return;
+    try {
+      await updatePreferences({ language: lang });
+    } catch {
+      setLanguageState(previousLanguage);
+      try {
+        localStorage.setItem("language", previousLanguage);
+      } catch (error) {
+        console.warn("Failed to restore cached interface language", error);
+      }
+      toast({
+        title: t("profile_updateFailed"),
+        description: t("common_tryAgain"),
+        variant: "destructive",
+      });
+    }
   };
 
   const t = (key: string, vars?: Record<string, string | number>): string => {
@@ -1174,7 +1304,6 @@ export const LanguageProvider = ({ children }: { children: ReactNode }) => {
     if (value === undefined) {
       if (import.meta.env.DEV && !missingWarned.has(key)) {
         missingWarned.add(key);
-        // eslint-disable-next-line no-console
         console.warn(`[i18n] Missing translation key: "${key}"`);
       }
       return key;

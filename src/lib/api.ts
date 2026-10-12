@@ -20,7 +20,7 @@ const getAPIBaseURL = () => {
   return "http://localhost:8080";
 };
 
-const API_BASE_URL = getAPIBaseURL();
+export const API_BASE_URL = getAPIBaseURL();
 
 export const ACCESS_TOKEN_KEY = "access_token";
 export const REFRESH_TOKEN_KEY = "refresh_token";
@@ -238,7 +238,13 @@ class RefreshTokenManager {
         console.log("[RefreshTokenManager] Token renovado com sucesso");
         
         // Atualiza tokens (pode vir novo refresh token por rotation)
-        setAuthTokens(data.accessToken, data.refreshToken);
+        // O endpoint pode não rotacionar o refresh token. Nesse caso, preserve
+        // o token atual em vez de apagá-lo ao salvar apenas o novo access token.
+        if (data.refreshToken) {
+          setAuthTokens(data.accessToken, data.refreshToken);
+        } else {
+          setAuthTokens(data.accessToken);
+        }
 
         // Processa fila de requisições
         this.processQueue(data.accessToken);
@@ -371,7 +377,11 @@ export const authApi = {
 
   logout: () => api.post("/api/auth/logout", {}),
   me: () => api.get("/api/auth/me"),
-  updateMe: (data: Record<string, string>) => api.patch("/api/account/me", data),
+  updateMe: (data: {
+    username?: string;
+    theme?: "CLASSIC" | "CHARCOAL" | "LIGHT";
+    language?: "en" | "es" | "pt" | "fr";
+  }) => api.patch("/api/account/me", data),
   changePassword: (currentPassword: string, newPassword: string) =>
     api.post("/api/account/password/change", { currentPassword, newPassword }),
   forgotPassword: (email: string) =>
@@ -383,6 +393,10 @@ export const authApi = {
   resendVerification: (email: string) =>
     api.post("/api/auth/resend-verification", { email }),
   exportData: () => api.get("/api/account/export"),
+  scheduleDeletion: () => api.delete("/api/account/me"),
+  deleteScheduledAccountNow: () => api.delete("/api/account/me/now"),
+  deletionStatus: () => api.get("/api/account/deletion"),
+  cancelDeletion: () => api.post("/api/account/deletion/cancel"),
   exportVaultZip: () => api.get("/api/account/export/zip", { responseType: "blob" }),
 };
 
@@ -412,8 +426,24 @@ export const notesApi = {
   delete: (id: string) => api.delete(`/api/notes/${id}`),
   toggleFavorite: (id: string) => api.patch(`/api/notes/${id}/favorite`),
   getBacklinks: (id: string) => api.get(`/api/notes/${id}/backlinks`),
+  getForwardLinks: (id: string) => api.get(`/api/notes/${id}/forward-links`),
+  getBacklinkCount: (id: string) => api.get(`/api/notes/${id}/backlink-count`),
   getTypes: () => api.get("/api/notes/types"),
 };
+
+export const noteTypesApi = {
+  list: () => api.get<string[]>("/api/note-types"),
+  create: (name: string) => api.post<{ name: string }>("/api/note-types", { name }),
+  delete: (name: string) => api.delete("/api/note-types", { params: { name } }),
+};
+
+export async function getAllNoteTypes() {
+  const [assigned, saved] = await Promise.all([notesApi.getTypes(), noteTypesApi.list()]);
+  return [...new Set([
+    ...(Array.isArray(assigned.data) ? assigned.data : []),
+    ...(Array.isArray(saved.data) ? saved.data : []),
+  ])].sort((a, b) => a.localeCompare(b));
+}
 
 export const foldersApi = {
   list: () => api.get("/api/folders"),
@@ -425,29 +455,69 @@ export const foldersApi = {
 };
 
 export const entitiesApi = {
-  list: (params?: { page?: number; size?: number }) =>
-    // The backend pages at 20 by default, which silently hid most entities in
-    // the list pages — ask for a large page unless the caller says otherwise.
-    api.get("/api/entities", { params: { page: 0, size: 500, ...(params || {}) } }).then((response) => {
-      if (Array.isArray(response.data)) return response;
-      const pageData = response.data as Record<string, unknown> | null;
-      if (pageData && Array.isArray(pageData.content)) {
-        response.data = pageData.content;
-      } else {
-        response.data = [];
+  list: async (params?: { page?: number; size?: number }) => {
+    const size = params?.size ?? 500;
+    const firstPage = params?.page ?? 0;
+    const entities: unknown[] = [];
+    const seenPages = new Set<string>();
+    let page = firstPage;
+    let response;
+    let hasMore = true;
+
+    while (hasMore) {
+      response = await api.get("/api/entities", {
+        params: { ...(params || {}), page, size },
+      });
+
+      if (Array.isArray(response.data)) {
+        const signature = JSON.stringify(response.data.map((entity) =>
+          entity && typeof entity === "object" && "id" in entity ? entity.id : entity
+        ));
+        if (response.data.length >= size && seenPages.has(signature)) {
+          throw new Error(`Entity pagination repeated page ${page}`);
+        }
+        seenPages.add(signature);
+        entities.push(...response.data);
+        hasMore = response.data.length >= size;
+        if (hasMore) page += 1;
+        continue;
       }
-      return response;
-    }),
+
+      const pageData = response.data as Record<string, unknown> | null;
+      const content = pageData && Array.isArray(pageData.content) ? pageData.content : [];
+      const signature = JSON.stringify(content.map((entity) =>
+        entity && typeof entity === "object" && "id" in entity ? entity.id : entity
+      ));
+      if (content.length >= size && seenPages.has(signature)) {
+        throw new Error(`Entity pagination repeated page ${page}`);
+      }
+      seenPages.add(signature);
+      entities.push(...content);
+
+      const totalPages = typeof pageData?.totalPages === "number" ? pageData.totalPages : undefined;
+      if (totalPages !== undefined) {
+        page += 1;
+        hasMore = page < totalPages;
+      } else {
+        hasMore = content.length >= size;
+        if (hasMore) page += 1;
+      }
+    }
+
+    response.data = entities;
+    return response;
+  },
   get: (id: string) => api.get(`/api/entities/${id}`),
   create: (title: string, type: string, description?: string) =>
     api.post("/api/entities", { title, type, description }),
   update: (id: string, data: { title?: string; type?: string; description?: string }) =>
     api.put(`/api/entities/${id}`, data),
   delete: (id: string) => api.delete(`/api/entities/${id}`),
+  toggleFavorite: (id: string) => api.patch(`/api/entities/${id}/favorite`),
   getNotes: (id: string) => api.get(`/api/entities/${id}/notes`),
   getConnections: (id: string) => api.get(`/api/entities/${id}/connections`),
   getContext: (id: string) => api.get(`/api/entities/${id}/context`),
-  track: (entityId: string) => api.post(`/api/entities/${entityId}/track-activity`),
+  track: (entityId: string, date?: string) => api.post(`/api/entities/${entityId}/track-activity`, null, date ? { params: { date } } : undefined),
   untrack: (entityId: string, date: string) =>
     api.delete(`/api/entities/${entityId}/track`, { params: { date } }),
   stats: (entityId: string) => api.get(`/api/entities/${entityId}/stats`),
@@ -571,3 +641,9 @@ export const importApi = {
 };
 
 export default api;
+export const trashApi = {
+  list: () => api.get("/api/trash"),
+  restore: (id: string) => api.post(`/api/trash/${encodeURIComponent(id)}/restore`),
+  purge: (id: string) => api.delete(`/api/trash/${encodeURIComponent(id)}`),
+  empty: () => api.delete("/api/trash"),
+};

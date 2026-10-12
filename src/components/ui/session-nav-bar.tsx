@@ -35,6 +35,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useTheme } from "@/contexts/ThemeContext";
 // dropdown-menu not used here anymore
 
 const sidebarVariants = {
@@ -122,6 +123,7 @@ export function SessionNavBar() {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
   const { t } = useLanguage();
+  const { theme } = useTheme();
 
   const initial = (user?.username || user?.email || "U").trim().charAt(0).toUpperCase();
   const display = user?.username || user?.email?.split("@")[0] || "Guest";
@@ -130,7 +132,7 @@ export function SessionNavBar() {
     <motion.aside
       className={cn(
         "fixed inset-y-0 left-0 z-30 hidden h-full shrink-0 lg:flex",
-        "border-r border-sidebar-border bg-sidebar/85 backdrop-blur-xl",
+        "border-r border-sidebar-border/10 bg-sidebar/85 backdrop-blur-xl",
       )}
       initial={false}
       animate={isCollapsed ? "closed" : "open"}
@@ -141,14 +143,14 @@ export function SessionNavBar() {
     >
       <div className="relative z-40 flex h-full w-full flex-col text-sidebar-foreground">
         {/* Brand / search trigger */}
-        <div className="flex h-[54px] w-full shrink-0 items-center border-b border-sidebar-border px-2">
+        <div className="flex h-[54px] w-full shrink-0 items-center border-b border-sidebar-border/10 px-2">
           <button
             type="button"
             onClick={() => navigate("/")}
             className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-sidebar-accent"
           >
             <img
-              src="/favicon.ico"
+              src={theme === "LIGHT" ? "/icon-light.png" : "/icon-transparent.png"}
               alt="Continuum"
               className="h-6 w-6 shrink-0 rounded object-contain"
             />
@@ -181,25 +183,25 @@ export function SessionNavBar() {
                 </motion.span>
                 <motion.span
                   variants={labelVariants}
-                  className="ml-auto rounded border border-sidebar-border px-1.5 py-0.5 font-mono text-[10px] text-sidebar-foreground/70"
+                  className="ml-auto rounded border border-sidebar-border/10 px-1.5 py-0.5 font-mono text-[10px] text-sidebar-foreground/70"
                 >
                   {!isCollapsed && "Ctrl+K"}
                 </motion.span>
               </button>
 
-              <Separator className="my-2 bg-sidebar-border" />
+              <Separator className="my-2 bg-sidebar-border/10" />
 
               {primaryNav.map((it) => (
                 <SidebarLink key={it.to} item={it} collapsed={isCollapsed} pathname={pathname} />
               ))}
 
-              <Separator className="my-2 bg-sidebar-border" />
+              <Separator className="my-2 bg-sidebar-border/10" />
 
               {trackingNav.map((it) => (
                 <SidebarLink key={it.to} item={it} collapsed={isCollapsed} pathname={pathname} />
               ))}
 
-              <Separator className="my-2 bg-sidebar-border" />
+              <Separator className="my-2 bg-sidebar-border/10" />
 
               {exploreNav.map((it) => (
                 <SidebarLink key={it.to} item={it} collapsed={isCollapsed} pathname={pathname} />
@@ -208,7 +210,7 @@ export function SessionNavBar() {
           </ScrollArea>
 
           {/* Footer */}
-          <div className="flex flex-col gap-1 border-t border-sidebar-border p-2">
+          <div className="flex flex-col gap-1 border-t border-sidebar-border/10 p-2">
             <div className="flex items-center gap-2">
               <button
                 type="button"

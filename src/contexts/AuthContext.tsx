@@ -1,6 +1,14 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useRef, ReactNode } from "react";
+import axios from "axios";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import { authApi } from "@/lib/api";
-import type { Plan, User as AppUser } from "@/types";
+import {
+  DEFAULT_APP_THEME,
+  isAppTheme,
+} from "@/lib/app-theme";
+import { resetAllCaches } from "@/lib/query-client";
+import type { User as AppUser, UserLanguage } from "@/types";
 
 // Lê em tempo de execução, não de build
 const getAPIBaseURL = () => {
@@ -17,32 +25,52 @@ interface AuthContextType {
   loginWithGoogle: () => Promise<void>;
   register: (username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-  setTokens: (accessToken: string, refreshToken: string) => void;
+  setTokens: (accessToken: string, refreshToken?: string) => void;
   refreshUser: () => Promise<void>;
+  updatePreferences: (preferences: Partial<Pick<AppUser, "theme" | "language">>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
+const isUserLanguage = (value: unknown): value is UserLanguage =>
+  value === "en" || value === "es" || value === "pt" || value === "fr";
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(() => {
-    try {
-      const storedAccessToken = typeof window !== "undefined"
-        ? sessionStorage.getItem("access_token") ?? localStorage.getItem("access_token")
-        : null;
+function cacheUser(user: AppUser) {
+  try {
+    localStorage.setItem("auth_user", JSON.stringify(user));
+  } catch (error) {
+    console.warn("Failed to cache user profile", error);
+  }
+}
 
-      if (!storedAccessToken) {
+function getInitialAuthState(): { user: AppUser | null; loading: boolean } {
+  try {
+    const storedAccessToken = typeof window !== "undefined"
+      ? sessionStorage.getItem("access_token") ?? localStorage.getItem("access_token")
+      : null;
+
+    if (!storedAccessToken) {
+      if (typeof window !== "undefined") {
         sessionStorage.removeItem("access_token");
         localStorage.removeItem("access_token");
         localStorage.removeItem("auth_user");
-        return null;
       }
-      const cached = localStorage.getItem("auth_user");
-      return cached ? JSON.parse(cached) : null;
-    } catch {
-      return null;
+      return { user: null, loading: false };
     }
-  });
-  const [loading, setLoading] = useState(true);
+
+    const cached = localStorage.getItem("auth_user");
+    const user = cached ? JSON.parse(cached) as AppUser : null;
+    // A cached session can render immediately while /me revalidates in the effect.
+    return { user, loading: !user };
+  } catch {
+    return { user: null, loading: false };
+  }
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [initialAuth] = useState(getInitialAuthState);
+  const [user, setUser] = useState<AppUser | null>(initialAuth.user);
+  const [loading, setLoading] = useState(initialAuth.loading);
+  const preferencesWriteQueue = useRef<Promise<void>>(Promise.resolve());
 
   const fetchUser = async (opts: { silent?: boolean } = {}) => {
     try {
@@ -54,6 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: data.id ?? data.userId,
           username: data.username ?? data.name ?? data.displayName ?? emailLocal ?? "",
           email: data.email ?? "",
+          theme: isAppTheme(data.theme) ? data.theme : DEFAULT_APP_THEME,
+          language: isUserLanguage(data.language) ? data.language : undefined,
           plan: data.plan ?? data.effectivePlan ?? "FREE",
           emailVerified: data.emailVerified ?? true,
           createdAt: data.createdAt ?? data.created_at ?? data.memberSince,
@@ -67,10 +97,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           calendarSync: Boolean(data.calendarSync),
         };
         setUser(next);
-        try { localStorage.setItem("auth_user", JSON.stringify(next)); } catch {}
       }
     } catch (error: unknown) {
-      const status = (error as any)?.response?.status;
+      const status = axios.isAxiosError(error) ? error.response?.status : undefined;
       // Only 401 means the session is truly invalid. 403 = business rule (plan limits etc).
       // Network errors / 5xx / 403 must NOT clear the session — keep cached user.
       if (status === 401) {
@@ -83,6 +112,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const updatePreferences = async (preferences: Partial<Pick<AppUser, "theme" | "language">>) => {
+    if (!user) throw new Error("You must be signed in to update this preference.");
+    const previousUser = user;
+    const nextUser = { ...user, ...preferences };
+    setUser(nextUser);
+
+    const request = preferencesWriteQueue.current
+      .catch(() => undefined)
+      .then(() => authApi.updateMe(preferences))
+      .then(() => undefined);
+    preferencesWriteQueue.current = request.catch(() => undefined);
+
+    try {
+      await request;
+    } catch (error) {
+      setUser((current) => {
+        if (!current || current.id !== previousUser.id) return current;
+        const rollback = { ...current };
+        if (preferences.theme !== undefined && current.theme === preferences.theme) {
+          rollback.theme = previousUser.theme;
+        }
+        if (preferences.language !== undefined && current.language === preferences.language) {
+          rollback.language = previousUser.language;
+        }
+        return rollback;
+      });
+      throw error;
     }
   };
 
@@ -99,13 +158,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("auth_user");
+      void resetAllCaches();
       setUser(null);
     };
     window.addEventListener("auth:logout", onLogout);
     return () => window.removeEventListener("auth:logout", onLogout);
   }, []);
 
-  const setTokens = (accessToken: string, _refreshToken: string) => {
+  useEffect(() => {
+    if (user) cacheUser(user);
+  }, [user]);
+
+  const setTokens = (accessToken: string, _refreshToken?: string) => {
     sessionStorage.setItem("access_token", accessToken);
     localStorage.setItem("access_token", accessToken);
 
@@ -113,8 +177,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // mesmo quando o backend não usa cookie HttpOnly.
     if (_refreshToken) {
       localStorage.setItem("refresh_token", _refreshToken);
-    } else {
-      localStorage.removeItem("refresh_token");
     }
   };
 
@@ -126,7 +188,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loginWithGoogle = async () => {
     const { data } = await authApi.googleStart();
-    window.location.href = data.authorizationUrl;
+    if (Capacitor.isNativePlatform()) {
+      await Browser.open({ url: data.authorizationUrl });
+    } else {
+      window.location.href = data.authorizationUrl;
+    }
   };
 
   const register = async (username: string, email: string, password: string) => {
@@ -151,10 +217,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("auth_user");
     setUser(null);
+    void resetAllCaches().catch((error: unknown) => {
+      console.error("Failed to clear cached data during logout", error);
+    });
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, setTokens, refreshUser: fetchUser }}>
+    <AuthContext.Provider value={{ user, loading, login, loginWithGoogle, register, logout, setTokens, refreshUser: fetchUser, updatePreferences }}>
       {children}
     </AuthContext.Provider>
   );

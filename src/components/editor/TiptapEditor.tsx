@@ -6,7 +6,7 @@ import Placeholder from "@tiptap/extension-placeholder";
 import LinkExtension from "@tiptap/extension-link";
 import Mention from "@tiptap/extension-mention";
 import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
+import { ClickableTaskItem } from "./extensions/ClickableTaskItem";
 import { Table } from "@tiptap/extension-table";
 import TableRow from "@tiptap/extension-table-row";
 import TableCell from "@tiptap/extension-table-cell";
@@ -255,9 +255,38 @@ const buildSuggestion = (variant: "entity" | "note", currentNoteId?: string) => 
           interactive: true,
           trigger: "manual",
           placement: "bottom-start",
+          theme: "transparent",
+          maxWidth: 360,
+          offset: [0, 10],
+          duration: 0,
+          hideOnClick: false,
+          zIndex: 80,
+          popperOptions: {
+            strategy: "fixed",
+            modifiers: [
+              { name: "flip", options: { fallbackPlacements: ["top-start", "bottom-start"], padding: 8 } },
+              { name: "preventOverflow", options: { padding: 8 } },
+            ],
+          },
           onHidden: () => teardown(),
         })[0] ?? null;
-        if (popup) activeMentionPopups.add(popup);
+        if (popup) {
+          activeMentionPopups.add(popup);
+          const box = popup.popper?.querySelector(".tippy-box") as HTMLElement | null;
+          const content = popup.popper?.querySelector(".tippy-content") as HTMLElement | null;
+          if (box) {
+            box.style.background = "transparent";
+            box.style.border = "none";
+            box.style.boxShadow = "none";
+            box.style.padding = "0";
+            box.style.maxWidth = "none";
+            box.style.zIndex = "80";
+          }
+          if (content) {
+            content.style.padding = "0";
+            content.style.background = "transparent";
+          }
+        }
       },
       onUpdate(props: SuggestionProps<MentionItem>) {
         component?.updateProps({ ...props, query: props.query, variant });
@@ -288,13 +317,14 @@ interface Props {
   editable?: boolean;
   className?: string;
   currentNoteId?: string;
+  onNoteLinkClick?: (noteId: string) => void;
   onSave?: () => void;
   foldedHeadings?: number[];
   onFoldedHeadingsChange?: (indices: number[]) => void;
 }
 
 export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
-  ({ content, onChange, editable = true, className, currentNoteId, onSave, foldedHeadings, onFoldedHeadingsChange }, ref) => {
+  ({ content, onChange, editable = true, className, currentNoteId, onNoteLinkClick, onSave, foldedHeadings, onFoldedHeadingsChange }, ref) => {
     const onFoldChangeRef = useRef(onFoldedHeadingsChange);
     onFoldChangeRef.current = onFoldedHeadingsChange;
     const onChangeRef = useRef(onChange);
@@ -356,13 +386,9 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
         VaultPdf,
         VaultAudio,
         TaskList,
-        TaskItem.configure({
-          nested: true,
-          // The current document position is resolved by the change listener
-          // below. Returning true prevents Tiptap from reverting the native
-          // checkbox while the editor is read-only.
-          onReadOnlyChecked: () => true,
-        }),
+        // Custom node view: toggles via a real ProseMirror transaction, so it
+        // works in read-only mode too and triggers onUpdate/auto-save.
+        ClickableTaskItem.configure({ nested: true }),
         HeadingFold.configure({
           onFoldChange: (indices) => onFoldChangeRef.current?.(indices),
         }),
@@ -406,17 +432,6 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
       editorProps: {
         attributes: {
           class: `continuum-editor max-w-none focus:outline-none min-h-[60vh] ${editable ? "" : "is-readonly"} ${className || ""}`,
-        },
-        handleClickOn: (_view, _pos, node, _nodePos, event) => {
-          const name = node.type.name;
-          if (name !== "mention" && name !== "noteMention") return false;
-          const id = (node.attrs as any)?.id;
-          if (!id) return false;
-          if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return false;
-          event.preventDefault();
-          if (name === "noteMention") navigate(`/notes/${id}`);
-          else navigate(`/entities/${id}`);
-          return true;
         },
         handlePaste: (view, event) => {
           const items = event.clipboardData?.items;
@@ -597,35 +612,8 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
       dom?.classList.toggle("is-readonly", !editable);
     }, [editor, editable]);
 
-    // Tiptap's read-only callback receives the node captured when its node view
-    // was created. After the first toggle that object is stale, so subsequent
-    // clicks can fail. Resolve the live task node from the clicked DOM element
-    // on every change instead.
-    useEffect(() => {
-      if (!editor || editable) return;
-      const dom = editor.view.dom;
-
-      const toggleReadOnlyTask = (event: Event) => {
-        const checkbox = event.target instanceof HTMLInputElement ? event.target : null;
-        if (!checkbox || checkbox.type !== "checkbox") return;
-        const taskItem = checkbox.closest<HTMLElement>('li[data-type="taskItem"]');
-        if (!taskItem || !dom.contains(taskItem)) return;
-
-        const position = editor.view.posAtDOM(taskItem, 0);
-        const node = editor.state.doc.nodeAt(position);
-        if (!node || node.type.name !== "taskItem") return;
-
-        editor.view.dispatch(
-          editor.state.tr.setNodeMarkup(position, undefined, {
-            ...node.attrs,
-            checked: checkbox.checked,
-          })
-        );
-      };
-
-      dom.addEventListener("change", toggleReadOnlyTask);
-      return () => dom.removeEventListener("change", toggleReadOnlyTask);
-    }, [editor, editable]);
+    // Checklist toggling (including read-only mode) is handled by the
+    // ClickableTaskItem node view, which dispatches a real transaction.
 
     // "/" command + toolbar upload entry point
     useEffect(() => {
@@ -676,31 +664,31 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
             <BubbleMenu
               editor={editor}
               options={{ placement: "top" }}
-              className="flex items-center gap-0.5 rounded-xl border border-white/10 bg-black/90 backdrop-blur-xl shadow-2xl px-1.5 py-1.5"
+              className="flex items-center gap-0.5 rounded-xl border border-border/10 bg-background/90 backdrop-blur-xl shadow-2xl px-1.5 py-1.5"
             >
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleBold().run()} active={editor.isActive("bold")} icon={Bold} label="Bold" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleItalic().run()} active={editor.isActive("italic")} icon={Italic} label="Italic" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleStrike().run()} active={editor.isActive("strike")} icon={Strikethrough} label="Strike" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleCode().run()} active={editor.isActive("code")} icon={Code} label="Code" />
-              <div className="w-[1px] h-4 bg-white/10 mx-1" />
+              <div className="w-[1px] h-4 bg-foreground/10 mx-1" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleHeading({ level: 1 }).run()} active={editor.isActive("heading", { level: 1 })} icon={Heading1} label="H1" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleHeading({ level: 2 }).run()} active={editor.isActive("heading", { level: 2 })} icon={Heading2} label="H2" />
               <button
                 type="button"
                 title="H3"
                 onMouseDown={(ev) => { ev.preventDefault(); editor.chain().focus().toggleHeading({ level: 3 }).run(); }}
-                className={`px-1.5 h-7 text-[11px] font-semibold rounded-lg transition-colors ${editor.isActive("heading", { level: 3 }) ? "bg-primary/20 text-primary" : "text-neutral-400 hover:bg-white/10 hover:text-white"}`}
+                className={`px-1.5 h-7 text-[11px] font-semibold rounded-lg transition-colors ${editor.isActive("heading", { level: 3 }) ? "bg-primary/20 text-primary" : "text-neutral-400 hover:bg-foreground/10 hover:text-foreground"}`}
               >H3</button>
               <button
                 type="button"
                 title="Highlight"
                 onMouseDown={(ev) => { ev.preventDefault(); editor.chain().focus().toggleHighlight().run(); }}
-                className={`px-1.5 h-7 text-[11px] rounded-lg transition-colors ${editor.isActive("highlight") ? "bg-yellow-300/30 text-yellow-200" : "text-neutral-400 hover:bg-white/10 hover:text-white"}`}
+                className={`px-1.5 h-7 text-[11px] rounded-lg transition-colors ${editor.isActive("highlight") ? "bg-yellow-300/30 text-yellow-200" : "text-neutral-400 hover:bg-foreground/10 hover:text-foreground"}`}
               >==</button>
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")} icon={Quote} label="Quote" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleBulletList().run()} active={editor.isActive("bulletList")} icon={List} label="Bullets" />
               <ToolbarBtn editor={editor} action={(e) => e.chain().focus().toggleOrderedList().run()} active={editor.isActive("orderedList")} icon={ListOrdered} label="Numbered" />
-              <div className="w-[1px] h-4 bg-white/10 mx-1" />
+              <div className="w-[1px] h-4 bg-foreground/10 mx-1" />
               <ToolbarBtn
                 editor={editor}
                 action={(e) => {
@@ -729,18 +717,18 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
             </BubbleMenu>
 
             {inTable && editable && (
-              <div className="fixed bottom-28 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] flex max-w-[94vw] items-center gap-1 overflow-x-auto rounded-xl border border-white/10 bg-black/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2">
+              <div className="fixed bottom-28 sm:bottom-6 left-1/2 -translate-x-1/2 z-[70] flex max-w-[94vw] items-center gap-1 overflow-x-auto rounded-xl border border-border/10 bg-background/90 px-2 py-1.5 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2">
                 <span className="px-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Table</span>
                 <TableBtn onClick={() => editor.chain().focus().addColumnBefore().run()}>← Col</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().addColumnAfter().run()}>Col →</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().addRowBefore().run()}>↑ Row</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().addRowAfter().run()}>Row ↓</TableBtn>
-                <div className="mx-1 h-4 w-[1px] bg-white/10" />
+                <div className="mx-1 h-4 w-[1px] bg-foreground/10" />
                 <TableBtn onClick={() => editor.chain().focus().toggleHeaderRow().run()}>Header</TableBtn>
                 <TableBtn onClick={() => resizeCurrentColumn(editor, -40)}>Width −</TableBtn>
                 <TableBtn onClick={() => resizeCurrentColumn(editor, 40)}>Width +</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().mergeOrSplit().run()}>Merge</TableBtn>
-                <div className="mx-1 h-4 w-[1px] bg-white/10" />
+                <div className="mx-1 h-4 w-[1px] bg-foreground/10" />
                 <TableBtn onClick={() => editor.chain().focus().deleteColumn().run()}>− Col</TableBtn>
                 <TableBtn onClick={() => editor.chain().focus().deleteRow().run()}>− Row</TableBtn>
                 <button type="button" className="flex items-center rounded px-3 text-xs h-7 text-red-400 transition-colors hover:bg-red-500/20" onPointerDown={(ev) => { ev.preventDefault(); editor.chain().focus().deleteTable().run(); }}>
@@ -766,7 +754,7 @@ export const TiptapEditor = forwardRef<TiptapEditorHandle, Props>(
               if (!mentionId) return;
               e.preventDefault();
               if (mentionTarget.classList.contains("continuum-note-mention")) {
-                navigate(`/notes/${mentionId}`);
+                onNoteLinkClick?.(mentionId);
               } else {
                 navigate(`/entities/${mentionId}`);
               }
@@ -820,7 +808,7 @@ function ToolbarBtn({
           ? "cursor-not-allowed opacity-40" 
           : active 
             ? "bg-primary/20 text-primary" 
-            : "text-neutral-400 hover:bg-white/10 hover:text-white"
+            : "text-neutral-400 hover:bg-foreground/10 hover:text-foreground"
       }`}
     >
       <Icon className="w-3.5 h-3.5" />
@@ -842,7 +830,7 @@ function TableBtn({ onClick, children }: { onClick: () => void; children: React.
     <button
       type="button"
       onPointerDown={(e) => { e.preventDefault(); onClick(); }}
-      className="h-7 shrink-0 whitespace-nowrap rounded px-2.5 text-xs text-neutral-300 transition-colors hover:bg-white/10 hover:text-white"
+      className="h-7 shrink-0 whitespace-nowrap rounded px-2.5 text-xs text-neutral-300 transition-colors hover:bg-foreground/10 hover:text-foreground"
     >
       {children}
     </button>

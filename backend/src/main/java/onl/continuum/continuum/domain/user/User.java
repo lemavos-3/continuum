@@ -30,7 +30,7 @@ public class User {
     @NotBlank @Email
     private String email;
 
-    @NotBlank @Size(min = 6, max = 100)
+    @Size(max = 100)
     private String password;
 
     @Builder.Default
@@ -60,6 +60,11 @@ public class User {
     private PlanType plan = PlanType.FREE;
 
     @Builder.Default
+    private String theme = "CLASSIC";
+
+    private String language;
+
+    @Builder.Default
     private int entityCount = 0;
 
     @Builder.Default
@@ -75,6 +80,9 @@ public class User {
     private Instant updatedAt = Instant.now();
 
     private Instant lastLogoutAt;
+
+    /** When set, the account is scheduled for permanent deletion 7 days later. */
+    private Instant deletionRequestedAt;
 
     // Getters
     public String getId() {
@@ -131,6 +139,15 @@ public class User {
 
     public PlanType getPlan() {
         return plan;
+    }
+
+    public String getTheme() {
+        if (theme == null || "AMOLED".equals(theme)) return "CLASSIC";
+        return theme;
+    }
+
+    public String getLanguage() {
+        return language;
     }
 
     public int getEntityCount() {
@@ -214,6 +231,14 @@ public class User {
         this.plan = plan;
     }
 
+    public void setTheme(String theme) {
+        this.theme = theme;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
     public void setEntityCount(int entityCount) {
         this.entityCount = entityCount;
     }
@@ -273,4 +298,7 @@ public class User {
         this.updatedAt = Instant.now();
     }
 
+
+    public Instant getDeletionRequestedAt() { return deletionRequestedAt; }
+    public void setDeletionRequestedAt(Instant deletionRequestedAt) { this.deletionRequestedAt = deletionRequestedAt; }
 }

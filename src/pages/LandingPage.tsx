@@ -2,6 +2,7 @@
  * CONTINUUM — Landing Page
  * Powered by the ScrollGlobe scroll-driven story.
  * Copy is localized automatically from the visitor's browser language.
+ * File size: ~4.5 KB
  */
 import { useState, useEffect, useMemo } from "react";
 import Navbar from "@/components/landing/Navbar";
@@ -10,8 +11,8 @@ import AuthDialog from "@/components/auth/AuthDialog";
 import PwaInstallListener from "@/components/pwa/PwaInstallListener";
 import { ScrollGlobe } from "@/components/ui/landing-page";
 import { useLanguage } from "@/contexts/LanguageContext";
-import landingNotes from "@/assets/landing-notes.jpg";
-import landingEditor from "@/assets/landing-editor.jpg";
+import { toast } from "@/hooks/use-toast";
+import landingEditor from "@/assets/landing-editor.png";
 import landingGraph from "@/assets/landing-graph.jpg";
 import landingInsights from "@/assets/landing-insights.jpg";
 
@@ -20,6 +21,20 @@ const SITE_URL = "https://continuum.onl/";
 export default function LandingPage() {
   const [authOpen, setAuthOpen] = useState(false);
   const { t, language } = useLanguage();
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("continuum.account-deleted") !== "true") return;
+      sessionStorage.removeItem("continuum.account-deleted");
+      toast({
+        title: t("lp_accountDeletedTitle"),
+        description: t("lp_accountDeletedDescription"),
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error("Could not display account deletion notice", error);
+    }
+  }, [t]);
 
   const openAuth = () => setAuthOpen(true);
 
@@ -97,7 +112,6 @@ export default function LandingPage() {
       description: t("lp_connect_description"),
       align: "center" as const,
       screenshots: [
-        { src: landingNotes, alt: t("lp_connect_shot1_alt"), caption: t("lp_connect_shot1_caption") },
         { src: landingEditor, alt: t("lp_connect_shot2_alt"), caption: t("lp_connect_shot2_caption") },
       ],
     },
@@ -109,13 +123,12 @@ export default function LandingPage() {
       description: t("lp_discover_description"),
       align: "left" as const,
       features: [
-        { title: t("lp_discover_f1_title"), description: t("lp_discover_f1_desc") },
+        { title: t("lp_discover_f1_title"), description: t("lp_discover_f1_desc"), image: landingInsights },
         { title: t("lp_discover_f2_title"), description: t("lp_discover_f2_desc") },
         { title: t("lp_discover_f3_title"), description: t("lp_discover_f3_desc") },
       ],
       screenshots: [
         { src: landingGraph, alt: t("lp_discover_shot1_alt"), caption: t("lp_discover_shot1_caption") },
-        { src: landingInsights, alt: t("lp_discover_shot2_alt"), caption: t("lp_discover_shot2_caption") },
       ],
     },
     {

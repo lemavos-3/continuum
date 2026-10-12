@@ -20,6 +20,7 @@ export const dict: Module = {
     ed_saved: "Saved",
     ed_ready: "Ready",
     ed_save: "Save",
+    common_update: "Update",
     ed_attach_media: "Attach Media",
     ed_properties: "Properties",
     ed_properties_desc: "Manage note metadata and settings.",
@@ -95,6 +96,7 @@ export const dict: Module = {
     ed_cmd_table: "Table",
     ed_cmd_file: "File",
     ed_cmd_upload: "Upload file",
+    ed_cmd_vault: "From vault",
     ed_prompt_url: "URL",
     ed_prompt_image_url: "Image URL",
 
@@ -131,6 +133,8 @@ export const dict: Module = {
     ed_always_on: "Always on",
     ed_slash_upload_title: "Upload file",
     ed_slash_upload_desc: "Image, PDF or audio from your device",
+    ed_slash_vault_title: "From vault",
+    ed_slash_vault_desc: "Insert a file already in your vault",
 
     ed_searching_query: 'Searching "{query}"',
     ed_link_a_note: "Link a note",
@@ -217,6 +221,7 @@ export const dict: Module = {
     ed_saved: "Guardado",
     ed_ready: "Listo",
     ed_save: "Guardar",
+    common_update: "Actualizar",
     ed_attach_media: "Adjuntar medio",
     ed_properties: "Propiedades",
     ed_properties_desc: "Gestiona los metadatos y ajustes de la nota.",
@@ -292,6 +297,7 @@ export const dict: Module = {
     ed_cmd_table: "Tabla",
     ed_cmd_file: "Archivo",
     ed_cmd_upload: "Subir archivo",
+    ed_cmd_vault: "Desde el cofre",
     ed_prompt_url: "URL",
     ed_prompt_image_url: "URL de la imagen",
 
@@ -328,6 +334,8 @@ export const dict: Module = {
     ed_always_on: "Siempre activo",
     ed_slash_upload_title: "Subir archivo",
     ed_slash_upload_desc: "Imagen, PDF o audio desde tu dispositivo",
+    ed_slash_vault_title: "Desde el cofre",
+    ed_slash_vault_desc: "Insertar un archivo del cofre",
 
     ed_searching_query: 'Buscando "{query}"',
     ed_link_a_note: "Vincular una nota",
@@ -414,6 +422,7 @@ export const dict: Module = {
     ed_saved: "Salvo",
     ed_ready: "Pronto",
     ed_save: "Salvar",
+    common_update: "Atualizar",
     ed_attach_media: "Anexar mídia",
     ed_properties: "Propriedades",
     ed_properties_desc: "Gerencie os metadados e configurações da nota.",
@@ -489,6 +498,7 @@ export const dict: Module = {
     ed_cmd_table: "Tabela",
     ed_cmd_file: "Arquivo",
     ed_cmd_upload: "Enviar arquivo",
+    ed_cmd_vault: "Do cofre",
     ed_prompt_url: "URL",
     ed_prompt_image_url: "URL da imagem",
 
@@ -525,6 +535,8 @@ export const dict: Module = {
     ed_always_on: "Sempre ativo",
     ed_slash_upload_title: "Enviar arquivo",
     ed_slash_upload_desc: "Imagem, PDF ou áudio do seu dispositivo",
+    ed_slash_vault_title: "Do cofre",
+    ed_slash_vault_desc: "Inserir um arquivo que já está no cofre",
 
     ed_searching_query: 'Buscando "{query}"',
     ed_link_a_note: "Vincular uma nota",
@@ -611,6 +623,7 @@ export const dict: Module = {
     ed_saved: "Enregistré",
     ed_ready: "Prêt",
     ed_save: "Enregistrer",
+    common_update: "Mettre à jour",
     ed_attach_media: "Joindre un média",
     ed_properties: "Propriétés",
     ed_properties_desc: "Gérez les métadonnées et paramètres de la note.",
@@ -686,6 +699,7 @@ export const dict: Module = {
     ed_cmd_table: "Tableau",
     ed_cmd_file: "Fichier",
     ed_cmd_upload: "Téléverser un fichier",
+    ed_cmd_vault: "Depuis le coffre",
     ed_prompt_url: "URL",
     ed_prompt_image_url: "URL de l'image",
 
@@ -722,6 +736,8 @@ export const dict: Module = {
     ed_always_on: "Toujours actif",
     ed_slash_upload_title: "Téléverser un fichier",
     ed_slash_upload_desc: "Image, PDF ou audio depuis votre appareil",
+    ed_slash_vault_title: "Depuis le coffre",
+    ed_slash_vault_desc: "Insérer un fichier du coffre",
 
     ed_searching_query: 'Recherche de "{query}"',
     ed_link_a_note: "Lier une note",

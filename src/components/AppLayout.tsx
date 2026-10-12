@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   StickyNote,
   Tag,
-  User as UserIcon,
+  Settings as SettingsIcon,
   Menu,
   GlobeAlt,
   Clock,
@@ -32,17 +32,9 @@ import {
 
 import { SessionNavBar } from "@/components/ui/session-nav-bar";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { VaultPicker } from "@/components/AccountExtras";
 import { OfflineStatus } from "@/components/offline/OfflineStatus";
-
-const mobileItems = [
-  { to: "/notes", icon: StickyNote, key: "nav_notes" },
-  { to: "/entities", icon: Tag, key: "nav_entities" },
-  { to: "/insights", icon: BarChart3, key: "nav_insights" },
-  { to: "/vault", icon: Lock, key: "nav_vault" },
-  { to: "/projects", icon: FolderOpen, key: "nav_projects" },
-  { to: "/activities", icon: Clock, key: "nav_activities" },
-  { to: "/graph", icon: GlobeAlt, key: "nav_graph" },
-];
+import { PrefetchProgressLine } from "@/components/offline/PrefetchProgressLine";
 
 // Primary tabs shown in the bottom navigation bar on mobile.
 const mobileTabs = [
@@ -62,20 +54,21 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <CommandPalette />
-
+      <VaultPicker />
+      <PrefetchProgressLine />
       {/* Desktop hover-expand sidebar */}
       <SessionNavBar />
 
-      <main className="min-w-0 flex-1 overflow-auto bg-background lg:ml-[3.25rem]">
+      <main className="min-w-0 flex-1 overflow-visible bg-background lg:ml-[3.25rem] lg:overflow-auto">
         {children}
         {/* Spacer so content isn't hidden behind the floating mobile bottom nav */}
-        {!isNoteEditor && <div className="h-[calc(5.5rem+env(safe-area-inset-bottom))] lg:hidden" />}
+        {!isNoteEditor && <div className="h-[calc(5.5rem+var(--safe-area-inset-bottom,env(safe-area-inset-bottom,0px)))] lg:hidden" />}
       </main>
 
 
       {/* Desktop offline / sync indicator — floating top-right pill */}
       <div className="pointer-events-none fixed right-4 top-4 z-40 hidden lg:block">
-        <div className="pointer-events-auto rounded-full border border-border bg-background/80 px-1 py-0.5 shadow-sm backdrop-blur">
+        <div className="pointer-events-auto rounded-full border border-border/10 bg-background/80 px-1 py-0.5 shadow-sm backdrop-blur">
           <OfflineStatus compact />
         </div>
       </div>
@@ -85,12 +78,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <nav
           className="fixed inset-x-3 z-40 lg:hidden"
           style={{
-            bottom: "calc(env(safe-area-inset-bottom) + 0.75rem)",
+            bottom: "calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 0.75rem)",
             width: "calc(100% - 20%)",
             left: "10%",
           }}
         >
-          <div className="flex items-center justify-around gap-0.5 rounded-2xl border border-white/10 bg-muted/60 px-1 py-1 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-[6px] supports-[backdrop-filter]:bg-muted/60">
+          <div className="flex items-center justify-around gap-0.5 rounded-2xl border border-border/10 bg-muted/60 px-1 py-1 shadow-[0_10px_30px_rgba(0,0,0,0.35)] backdrop-blur-[6px] supports-[backdrop-filter]:bg-muted/60">
             {mobileTabs.map((it) => (
               <NavLink
                 key={it.to}
@@ -98,7 +91,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 className={({ isActive }) =>
                   cn(
                     "flex flex-1 items-center justify-center rounded-xl px-1 py-1.5 transition-all active:scale-95",
-                    isActive ? "bg-white/8 text-foreground" : "text-muted-foreground",
+                    isActive ? "bg-foreground/8 text-foreground" : "text-muted-foreground",
                   )
                 }
               >
@@ -119,7 +112,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <button
                   type="button"
-                  className="flex flex-1 items-center justify-center rounded-xl px-1 py-1.5 text-muted-foreground transition-all active:scale-95 data-[state=open]:bg-white/8 data-[state=open]:text-foreground"
+                  className="flex flex-1 items-center justify-center rounded-xl px-1 py-1.5 text-muted-foreground transition-all active:scale-95 data-[state=open]:bg-foreground/8 data-[state=open]:text-foreground"
                   aria-label={t("nav_more")}
                 >
                   <span className="grid h-7 w-7 place-items-center rounded-lg">
@@ -143,7 +136,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel className="text-xs text-muted-foreground">{user?.email}</DropdownMenuLabel>
                 <DropdownMenuItem onSelect={() => navigate("/settings")}>
-                  <UserIcon className="mr-2 h-4 w-4" /> {t("nav_settings")}
+                  <SettingsIcon className="mr-2 h-4 w-4" /> {t("nav_settings")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

@@ -60,6 +60,7 @@ class TimerManager {
   private listeners = new Set<() => void>();
   private snapshotCache: ReadonlyMap<string, PersistedTimer> = new Map();
   private swReady = false;
+  private timerWorker: ServiceWorker | null = null;
 
   static getInstance(): TimerManager {
     if (!TimerManager.instance) TimerManager.instance = new TimerManager();
@@ -70,6 +71,13 @@ class TimerManager {
     if (typeof window === 'undefined') return;
     this.hydrate();
     this.initServiceWorker();
+    navigator.serviceWorker?.addEventListener('controllerchange', () => {
+      this.timerWorker = navigator.serviceWorker.controller;
+      this.swReady = this.timerWorker !== null;
+      if (this.swReady) {
+        this.timers.forEach((timer) => this.swSend('START_TIMER', timer));
+      }
+    });
 
     // Recompute / re-broadcast when tab becomes visible or window focuses again.
     const refresh = () => this.notify();
@@ -129,29 +137,19 @@ class TimerManager {
   private async initServiceWorker() {
     if (!('serviceWorker' in navigator)) return;
 
-    const currentController = navigator.serviceWorker.controller;
-    if (
-      currentController &&
-      !currentController.scriptURL.endsWith('/timer-service-worker.js')
-    ) {
-      // A different SW already controls the page (likely the PWA main worker).
-      // Don't try to register the timer SW on the same root scope again.
-      return;
-    }
-
     try {
-      await navigator.serviceWorker.register('/timer-service-worker.js');
-      this.swReady = true;
-      // Re-arm SW for any persisted timers.
+      const registration = await navigator.serviceWorker.ready;
+      this.timerWorker = navigator.serviceWorker.controller ?? registration.active;
+      this.swReady = this.timerWorker !== null;
       this.timers.forEach((t) => this.swSend('START_TIMER', t));
     } catch (err) {
-      console.warn('Timer service worker registration failed:', err);
+      console.warn('Timer service worker initialization failed:', err);
     }
   }
 
   private swSend(type: string, data: unknown) {
     if (!this.swReady) return;
-    navigator.serviceWorker.controller?.postMessage({ type, data });
+    (navigator.serviceWorker.controller ?? this.timerWorker)?.postMessage({ type, data });
   }
 
   // ─── tick ──────────────────────────────────────────────────────────────────
@@ -182,7 +180,7 @@ class TimerManager {
   }
 
   // ─── public ops ────────────────────────────────────────────────────────────
-  startTimer(timerId: string, entityId: string, initialElapsed = 0) {
+  startTimer(timerId: string, entityId: string, initialElapsed = 0, syncWorker = true) {
     // Replace any existing timer for this entity
     const record: PersistedTimer = {
       timerId,
@@ -192,8 +190,30 @@ class TimerManager {
     };
     this.timers.set(entityId, record);
     this.persist();
-    this.swSend('START_TIMER', record);
+    if (syncWorker) this.swSend('START_TIMER', record);
     this.ensureTick();
+    this.notify();
+  }
+
+  confirmTimerStart(entityId: string, optimisticTimerId: string, timerId: string, initialElapsed = 0) {
+    const timer = this.timers.get(entityId);
+    if (!timer || timer.timerId !== optimisticTimerId) return;
+
+    timer.timerId = timerId;
+    timer.startTime = Date.now();
+    timer.initialElapsed = initialElapsed;
+    this.timers.set(entityId, timer);
+    this.persist();
+    this.swSend('START_TIMER', timer);
+    this.notify();
+  }
+
+  rollbackTimerStart(entityId: string, optimisticTimerId: string) {
+    const timer = this.timers.get(entityId);
+    if (!timer || timer.timerId !== optimisticTimerId) return;
+
+    this.timers.delete(entityId);
+    this.persist();
     this.notify();
   }
 
@@ -324,12 +344,24 @@ export const useTimeTracking = () => {
   const startTimerMutation = useMutation({
     mutationFn: (entityId: string) =>
       timeTrackingApi.startTimer(entityId).then((r) => r.data as TimerSession),
-    onSuccess: (data, entityId) => {
+    onMutate: (entityId) => {
+      const optimisticTimerId = `optimistic-${entityId}-${Date.now()}`;
+      timerManager.startTimer(optimisticTimerId, entityId, 0, false);
+      return { entityId, optimisticTimerId };
+    },
+    onSuccess: (data, _entityId, context) => {
       const initialElapsed = Math.floor(data.elapsedSeconds || 0);
-      timerManager.startTimer(data.id, entityId, initialElapsed);
+      if (context) {
+        timerManager.confirmTimerStart(context.entityId, context.optimisticTimerId, data.id, initialElapsed);
+      }
       queryClient.invalidateQueries({ queryKey: ['timeTracking'] });
     },
-    onError: (e) => console.error('Failed to start timer:', e),
+    onError: (e, _entityId, context) => {
+      if (context) {
+        timerManager.rollbackTimerStart(context.entityId, context.optimisticTimerId);
+      }
+      console.error('Failed to start timer:', e);
+    },
   });
 
   const stopTimerMutation = useMutation({
@@ -373,7 +405,7 @@ export const useTimeTracking = () => {
     getAllSummaries,
     getActiveTimer,
 
-    startTimer: startTimerMutation.mutate,
+    startTimer: startTimerMutation.mutateAsync,
     startTimerAsync: startTimerMutation.mutateAsync,
     stopTimer: stopTimerMutation.mutate,
     stopTimerAsync: stopTimerMutation.mutateAsync,
@@ -404,4 +436,3 @@ export const useTimeTracking = () => {
     formatSeconds,
   };
 };
-
