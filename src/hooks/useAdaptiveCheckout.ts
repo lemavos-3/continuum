@@ -202,10 +202,10 @@ export function useAdaptiveCheckout(enabled = true) {
   }, [language]);
 
   const openCheckout = useCallback(() => {
-    setOpen(true);
-    // Reuse the session prepared in the background; only rebuild after a failure.
-    if (error) retry();
+    const hasExistingCheckout = hasOpenedCheckout.current;
     hasOpenedCheckout.current = true;
+    setOpen(true);
+    if (error || hasExistingCheckout) retry();
   }, [error, retry]);
 
   return {
