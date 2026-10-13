@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   checkoutEmbedded: vi.fn(),
   loadStripe: vi.fn(),
+  toast: vi.fn(),
 }));
 
 vi.mock("@stripe/stripe-js", () => ({ loadStripe: mocks.loadStripe }));
@@ -13,7 +14,7 @@ vi.mock("@/lib/api", () => ({
     checkoutEmbedded: mocks.checkoutEmbedded,
   },
 }));
-vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: vi.fn() }) }));
+vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast: mocks.toast }) }));
 vi.mock("@/contexts/LanguageContext", () => ({
   useLanguage: () => ({ language: "en", t: (key: string) => key }),
 }));
