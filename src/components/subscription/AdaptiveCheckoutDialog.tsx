@@ -60,11 +60,12 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
       }
     };
 
-    const mountTimer = window.setTimeout(mountElements, 350);
+    // Mount on the next frame instead of a fixed delay.
+    const mountFrame = window.requestAnimationFrame(mountElements);
 
     return () => {
       active = false;
-      window.clearTimeout(mountTimer);
+      window.cancelAnimationFrame(mountFrame);
       window.clearTimeout(readinessTimeout);
       paymentElement?.destroy();
       currencySelectorElement?.destroy();
