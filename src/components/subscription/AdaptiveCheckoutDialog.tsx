@@ -8,6 +8,18 @@ import SmoothDrawer from "@/components/ui/smooth-drawer";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 
 type CheckoutState = ReturnType<typeof useAdaptiveCheckout>;
+type CheckoutSdk = NonNullable<CheckoutState["checkout"]>;
+
+interface CheckoutElements {
+  checkout: CheckoutSdk;
+  payment: ReturnType<CheckoutSdk["createPaymentElement"]>;
+  currencySelector: ReturnType<CheckoutSdk["createCurrencySelectorElement"]>;
+}
+
+interface ActiveCheckoutMount {
+  elements: CheckoutElements;
+  readinessTimeout?: number;
+}
 
 function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => void }) {
   const { toast } = useToast();
@@ -18,6 +30,8 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
   const isOpen = state.open;
   const paymentRef = useRef<HTMLDivElement>(null);
   const currencySelectorRef = useRef<HTMLDivElement>(null);
+  const elementsRef = useRef<CheckoutElements | null>(null);
+  const activeMountRef = useRef<ActiveCheckoutMount | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [paymentReady, setPaymentReady] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
@@ -29,32 +43,58 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
 
     let active = true;
     let readinessTimeout: number | undefined;
-    let paymentElement: ReturnType<typeof checkout.createPaymentElement> | null = null;
-    let currencySelectorElement: ReturnType<typeof checkout.createCurrencySelectorElement> | null = null;
-    setPaymentReady(false);
+    let elements: CheckoutElements | null = null;
     setPaymentError(null);
 
     const mountElements = () => {
       if (!active || !paymentRef.current || !currencySelectorRef.current) return;
       try {
-        paymentElement = checkout.createPaymentElement({ layout: "tabs" });
-        readinessTimeout = window.setTimeout(() => {
-          if (active) setPaymentError(translateRef.current("bill_payment_fields_error"));
-        }, 12000);
-        paymentElement.on("ready", () => {
-          if (!active) return;
-          window.clearTimeout(readinessTimeout);
-          setPaymentReady(true);
-        });
-        paymentElement.on("loaderror", ({ error }) => {
-          if (!active) return;
-          window.clearTimeout(readinessTimeout);
-          setPaymentError(error.message);
-        });
-        paymentElement.mount(paymentRef.current);
+        elements = elementsRef.current;
+        if (!elements || elements.checkout !== checkout) {
+          elements?.payment.destroy();
+          elements?.currencySelector.destroy();
 
-        currencySelectorElement = checkout.createCurrencySelectorElement();
-        currencySelectorElement.mount(currencySelectorRef.current);
+          const payment = checkout.createPaymentElement({ layout: "tabs" });
+          let currencySelector: ReturnType<CheckoutSdk["createCurrencySelectorElement"]>;
+          try {
+            currencySelector = checkout.createCurrencySelectorElement();
+          } catch (cause) {
+            payment.destroy();
+            throw cause;
+          }
+
+          elements = { checkout, payment, currencySelector };
+          elementsRef.current = elements;
+          setPaymentReady(false);
+
+          payment.on("ready", () => {
+            const currentMount = activeMountRef.current;
+            if (currentMount?.elements !== elements) return;
+            window.clearTimeout(currentMount.readinessTimeout);
+            setPaymentReady(true);
+          });
+          payment.on("loaderror", ({ error }) => {
+            const currentMount = activeMountRef.current;
+            if (currentMount?.elements !== elements) return;
+            window.clearTimeout(currentMount.readinessTimeout);
+            setPaymentError(error.message);
+          });
+        }
+
+        const mountedElements = elements;
+        const currentMount: ActiveCheckoutMount = { elements: mountedElements };
+        activeMountRef.current = currentMount;
+        if (!paymentReady) {
+          readinessTimeout = window.setTimeout(() => {
+            if (activeMountRef.current === currentMount) {
+              setPaymentError(translateRef.current("bill_payment_fields_error"));
+            }
+          }, 12000);
+          currentMount.readinessTimeout = readinessTimeout;
+        }
+
+        mountedElements.payment.mount(paymentRef.current);
+        mountedElements.currencySelector.mount(currencySelectorRef.current);
       } catch (cause) {
         setPaymentError(cause instanceof Error ? cause.message : translateRef.current("bill_payment_fields_error"));
       }
@@ -67,10 +107,28 @@ function PaymentForm({ state, onClose }: { state: CheckoutState; onClose: () => 
       active = false;
       window.cancelAnimationFrame(mountFrame);
       window.clearTimeout(readinessTimeout);
-      paymentElement?.destroy();
-      currencySelectorElement?.destroy();
+      if (elements && activeMountRef.current?.elements === elements) {
+        activeMountRef.current = null;
+        elements.payment.unmount();
+        elements.currencySelector.unmount();
+      }
     };
   }, [checkout, isOpen]);
+
+  useEffect(() => () => {
+    const elements = elementsRef.current;
+    if (!elements) return;
+    const activeMount = activeMountRef.current;
+    if (activeMount?.elements === elements) {
+      window.clearTimeout(activeMount.readinessTimeout);
+      activeMountRef.current = null;
+      elements.payment.unmount();
+      elements.currencySelector.unmount();
+    }
+    elements.payment.destroy();
+    elements.currencySelector.destroy();
+    elementsRef.current = null;
+  }, []);
 
   const confirmPayment = async () => {
     if (!state.actions) return;
