@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useState } from "react";
 
@@ -82,7 +82,7 @@ describe("AdaptiveCheckoutDialog", () => {
     fireEvent.click(screen.getByText("Open checkout"));
     expect(paymentElement.mount).toHaveBeenCalledTimes(1);
     expect(currencySelectorElement.mount).toHaveBeenCalledTimes(1);
-    listeners.get("ready")?.();
+    act(() => listeners.get("ready")?.());
 
     fireEvent.click(screen.getByLabelText("close checkout"));
     expect(paymentElement.unmount).toHaveBeenCalledTimes(1);
