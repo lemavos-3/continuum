@@ -49,7 +49,7 @@ const SECTION_TITLES: Record<
   legal: { pt: "Sobre e Legal", en: "About & Legal", es: "Acerca de y legal", fr: "À propos et mentions légales" },
   actions: { pt: "Ações da Conta", en: "Account Actions", es: "Acciones de la cuenta", fr: "Actions du compte" },
 };
-const GITHUB_URL = "https://github.com/continuumnodes/continuum";
+const GITHUB_URL = "https://github.com/continuum.onl/continuum";
 
 /* ------------------------------------------------------------------ */
 /* UI helpers                                                          */

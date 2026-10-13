@@ -51,7 +51,7 @@ fi
 set -euo pipefail
 
 REPO_NAME="continuum"
-MAIN_OWNER="continuumnodes"
+MAIN_OWNER="continuum.onl"
 
 # VERSION: 1.0
 
