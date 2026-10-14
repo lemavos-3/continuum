@@ -98,21 +98,34 @@ export function TimeTrackingList({
   const placeholder = filterType === 'PROJECT' ? t('tm_search_projects') : filterType === 'ACTIVITY' ? t('tm_search_activities') : t('tm_search_entities');
 
 
-  const handleQuickComplete = async (entity: Entity) => {
+  const handleQuickToggle = async (entity: Entity, currentlyDone: boolean) => {
     const key = qk.entities();
     const previous = queryClient.getQueryData<Entity[]>(key);
     const today = todayKey();
-    // Optimistic: mark as done instantly, roll back on failure.
+    // Optimistic: toggle done instantly, roll back on failure.
     queryClient.setQueryData<Entity[]>(key, (old) =>
-      old?.map((e) => (e.id === entity.id ? { ...e, trackingDates: [...(e.trackingDates ?? []), today] } : e)),
+      old?.map((e) =>
+        e.id === entity.id
+          ? {
+              ...e,
+              trackingDates: currentlyDone
+                ? (e.trackingDates ?? []).filter((d) => d.split('T')[0] !== today)
+                : [...(e.trackingDates ?? []), today],
+            }
+          : e,
+      ),
     );
-    toast({ title: t('tm_marked_done_title'), description: entity.title || t('tm_activity') });
+    toast({
+      title: currentlyDone ? t('tm_unmarked_title') : t('tm_marked_done_title'),
+      description: entity.title || t('tm_activity'),
+    });
     try {
-      await entitiesApi.track(entity.id);
+      if (currentlyDone) await entitiesApi.untrack(entity.id, today);
+      else await entitiesApi.track(entity.id);
       void queryClient.invalidateQueries({ queryKey: ['entities'] });
     } catch {
       queryClient.setQueryData(key, previous);
-      toast({ title: t('tm_could_not_mark_title'), variant: 'destructive' });
+      toast({ title: currentlyDone ? t('tm_could_not_unmark_title') : t('tm_could_not_mark_title'), variant: 'destructive' });
     }
   };
 
@@ -186,12 +199,13 @@ export function TimeTrackingList({
                   {/* Quick action: complete today for activities */}
                   {!isProject && (
                     <button
-                      onClick={() => !doneToday && handleQuickComplete(entity)}
-                      disabled={doneToday || marking}
+                      onClick={() => handleQuickToggle(entity, doneToday)}
+                      disabled={marking}
+                      title={doneToday ? t('tm_unmark_done') : t('tm_complete')}
                       className={cn(
                         'inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors',
                         doneToday
-                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+                          ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300 hover:bg-red-500/10 hover:border-red-500/30 hover:text-red-300'
                           : 'border-border/15 text-muted-foreground hover:border-border/40 hover:bg-foreground/[0.06]',
                       )}
                     >
