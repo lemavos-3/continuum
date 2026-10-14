@@ -1,4 +1,6 @@
 # Brain-shaped 3D graph
+- [x] Keep interaction quality stable and add smoother, gently pulsing graph nodes; isolated desktop/mobile browser checks confirmed constant DPR, advancing pulse and reduced-motion support.
+- [ ] Verify graph changes with a signed-in account (blocked: no authenticated session available); geometry suite has a pre-existing surface-bound assertion failure (-2.958 vs -3).
 - [ ] Enable Adaptive Pricing for Checkout Elements in Stripe Dashboard and verify localized subscription prices match the embedded checkout across supported countries.
 - [x] Restyle account emails with flat app colors/fonts and favicon; welcome trigger confirmed, 7 isolated tests passed and browser rendering verified (live delivery not tested; full Maven suite blocked by unrelated stale tests).
 - [x] Convert mobile Notes filters to SmoothDrawer and open graph details compactly with drag-to-expand (3 tests passed, build OK; authenticated gesture verification unavailable).
