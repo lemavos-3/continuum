@@ -346,7 +346,7 @@ export default function Entities() {
 
             {/* Selection action bar */}
             {selectMode && (
-              <div className="fixed inset-x-0 top-0 z-50 flex flex-col items-stretch gap-3 rounded-b-3xl border border-border/10 bg-background/95 px-6 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] shadow-2xl backdrop-blur-xl lg:sticky lg:inset-auto lg:top-[7.5rem] lg:z-20 lg:mb-6 lg:flex-row lg:items-center lg:justify-between lg:rounded-sm lg:bg-background/80 lg:px-3 lg:py-2.5 lg:shadow-none">
+              <div className="fixed inset-x-0 top-0 z-50 flex flex-col items-stretch gap-3 rounded-b-3xl border border-t-0 border-border/10 bg-background/95 px-6 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] shadow-2xl backdrop-blur-xl lg:sticky lg:inset-auto lg:top-[7.5rem] lg:z-20 lg:mb-6 lg:flex-row lg:items-center lg:justify-between lg:rounded-sm lg:bg-background/80 lg:px-3 lg:py-2.5 lg:shadow-none">
                 <span className="text-sm text-muted-foreground">{t("select_selected", { n: selectedIds.size })}</span>
                 <div className="grid w-full min-w-0 grid-cols-2 gap-2 lg:flex lg:w-auto lg:flex-wrap">
                   <Button
