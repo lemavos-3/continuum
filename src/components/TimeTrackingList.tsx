@@ -38,7 +38,11 @@ export function TimeTrackingList({
   onCreateOpenChange,
   onCreated,
   onCountChange,
+  sortMode = 'recent',
+  quickFilter = 'all',
 }: {
+  sortMode?: 'recent' | 'oldest' | 'az' | 'za';
+  quickFilter?: 'all' | 'yes' | 'no';
   filterType?: string;
   search?: string;
   sortBy?: "createdAt" | "updatedAt";
@@ -85,11 +89,27 @@ export function TimeTrackingList({
     return entities.filter((entity) => entity.type === 'PROJECT' || entity.type === 'ACTIVITY');
   }, [filterType, trackableEntities]);
   const visible = useMemo(() => {
-    if (!lower) return all;
-    return all.filter((e) =>
-      [e.title, e.description, e.type].filter(Boolean).some((v) => String(v).toLowerCase().includes(lower)),
-    );
-  }, [lower, all]);
+    let list = lower
+      ? all.filter((e) => [e.title, e.description, e.type].filter(Boolean).some((v) => String(v).toLowerCase().includes(lower)))
+      : [...all];
+    if (quickFilter !== 'all') {
+      list = list.filter((e) => {
+        const hit = e.type === 'PROJECT'
+          ? (summaries?.find((s: TimeEntitySummary) => s.entityId === e.id)?.entriesCount ?? 0) > 0
+          : isTrackedToday(e.trackingDates);
+        return quickFilter === 'yes' ? hit : !hit;
+      });
+    }
+    return list.sort((a, b) => {
+      if (sortMode === 'az' || sortMode === 'za') {
+        const o = (a.title ?? '').localeCompare(b.title ?? '');
+        return sortMode === 'az' ? o : -o;
+      }
+      const da = new Date((a as any).updatedAt ?? (a as any).createdAt ?? 0).getTime();
+      const db = new Date((b as any).updatedAt ?? (b as any).createdAt ?? 0).getTime();
+      return sortMode === 'recent' ? db - da : da - db;
+    });
+  }, [lower, all, quickFilter, sortMode, summaries]);
 
   useEffect(() => {
     onCountChange?.(all.length, visible.length);
@@ -146,18 +166,22 @@ export function TimeTrackingList({
       )}
 
       {isLoading ? (
-        <div className="flex justify-center py-24">
-          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+        <div className="divide-y divide-border/10">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 py-4">
+              <div className="h-9 w-9 animate-pulse rounded-xl bg-muted" />
+              <div className="h-4 flex-1 animate-pulse rounded bg-muted" />
+            </div>
+          ))}
         </div>
       ) : visible.length === 0 ? (
-        <div className="border border-dashed border-border/10 rounded-md py-16 text-center">
-          <FolderOpen className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-sm text-muted-foreground">
+        <div className="py-20 text-center">
+          <p className="font-serif text-2xl italic text-muted-foreground">
             {filterType === 'PROJECT' ? t('tm_no_projects_yet') : filterType === 'ACTIVITY' ? t('tm_no_activities_yet') : t('tm_no_entities_yet')}
           </p>
         </div>
       ) : (
-        <ul className="space-y-3">
+        <ul className="divide-y divide-border/10 border-y border-border/10">
           {visible.map((entity) => {
             const summary = getSummaryForEntity(entity.id);
             const isOpen = openId === entity.id;
@@ -168,10 +192,10 @@ export function TimeTrackingList({
             return (
               <li
                 key={entity.id}
-                className="overflow-hidden rounded-2xl border border-border/10 bg-foreground/[0.02] transition-colors hover:border-border/20"
+                className="overflow-hidden transition-colors hover:bg-foreground/[0.02]"
               >
                 {/* Row header */}
-                <div className="flex items-center gap-3 p-3 sm:p-4">
+                <div className="flex items-center gap-3 px-1 py-3 sm:py-4">
                   <button
                     onClick={() => setOpenId(isOpen ? null : entity.id)}
                     className="flex min-w-0 flex-1 items-center gap-3 text-left"
@@ -221,7 +245,7 @@ export function TimeTrackingList({
 
                 {/* Expanded detail */}
                 {isOpen && (
-                  <div className="border-t border-border/[0.06] bg-background/30 p-4 sm:p-6">
+                  <div className="mb-3 rounded-2xl bg-card/40 p-4 sm:p-6">
                     <div className="grid gap-4">
                       {isProject ? (
                         <div className="grid grid-cols-2 gap-3 max-w-md">
