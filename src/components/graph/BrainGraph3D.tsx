@@ -17,9 +17,7 @@ interface Props {
   theme: string;
   unavailableText: string;
   scaffoldCount?: number;
-  highlightAnatomy?: boolean;
   backgroundColor?: string;
-  viewDirection?: Point3;
   onSelect: (node: BrainNode) => void;
   onOpen: (node: BrainNode) => void;
   onClear: () => void;
@@ -33,50 +31,17 @@ const NODE_APPEARANCE = { widthSegments: 24, heightSegments: 16, pulseAmplitude:
 
 // The brain outline (a real cortex surface resampled in brain-layout.ts): one Points draw call + one LineSegments draw call, built
 // once and cached in the layout module (no per-instance matrices, no O(n^2) work).
-function Scaffold({ palette, inside, count, highlightAnatomy }: { palette: Palette; inside: boolean; count: number; highlightAnatomy: boolean }) {
-  const scaffold = useMemo(() => createBrainScaffold(count), [count]);
-  const { points, lines } = useMemo(() => scaffoldBuffers(scaffold), [scaffold]);
-  const anatomy = useMemo(() => {
-    if (!highlightAnatomy) return null;
-    const cerebellum = (point: Point3) => point[1] < -1.3 && point[2] < -1.5;
-    const brainstem = (point: Point3) => point[1] < -2.1 && point[2] > -1.5 && point[2] < 0.8;
-    const collect = (predicate: (point: Point3) => boolean) => {
-      const selected = scaffold.points.map(predicate);
-      const regionPoints = scaffold.points.filter(predicate).flatMap(point => point);
-      const regionLines = scaffold.links
-        .filter(([a, b]) => selected[a] && selected[b])
-        .flatMap(([a, b]) => [...scaffold.points[a], ...scaffold.points[b]]);
-      return { points: Float32Array.from(regionPoints), lines: Float32Array.from(regionLines) };
-    };
-    return { cerebellum: collect(cerebellum), brainstem: collect(brainstem) };
-  }, [highlightAnatomy, scaffold]);
+function Scaffold({ palette, inside, count }: { palette: Palette; inside: boolean; count: number }) {
+  const { points, lines } = useMemo(() => scaffoldBuffers(createBrainScaffold(count)), [count]);
   return <group>
     <points raycast={() => null} frustumCulled={false}>
       <bufferGeometry><bufferAttribute attach="attributes-position" args={[points, 3]} /></bufferGeometry>
-      <pointsMaterial color={palette.node} size={inside ? 0.028 : highlightAnatomy ? 0.045 : 0.04} sizeAttenuation transparent opacity={inside ? 0.18 : highlightAnatomy ? 0.28 : 0.45} depthWrite={false} />
+      <pointsMaterial color={palette.node} size={inside ? 0.028 : 0.04} sizeAttenuation transparent opacity={inside ? 0.18 : 0.45} depthWrite={false} />
     </points>
     <lineSegments raycast={() => null} frustumCulled={false}>
       <bufferGeometry><bufferAttribute attach="attributes-position" args={[lines, 3]} /></bufferGeometry>
       <lineBasicMaterial color={palette.node} transparent opacity={inside ? 0.04 : 0.12} depthWrite={false} />
     </lineSegments>
-    {anatomy && <>
-      <points raycast={() => null} frustumCulled={false}>
-        <bufferGeometry><bufferAttribute attach="attributes-position" args={[anatomy.cerebellum.points, 3]} /></bufferGeometry>
-        <pointsMaterial color="#78d7cc" size={0.075} sizeAttenuation transparent opacity={0.95} depthWrite={false} />
-      </points>
-      <lineSegments raycast={() => null} frustumCulled={false}>
-        <bufferGeometry><bufferAttribute attach="attributes-position" args={[anatomy.cerebellum.lines, 3]} /></bufferGeometry>
-        <lineBasicMaterial color="#78d7cc" transparent opacity={0.72} depthWrite={false} />
-      </lineSegments>
-      <points raycast={() => null} frustumCulled={false}>
-        <bufferGeometry><bufferAttribute attach="attributes-position" args={[anatomy.brainstem.points, 3]} /></bufferGeometry>
-        <pointsMaterial color="#f0cfa3" size={0.085} sizeAttenuation transparent opacity={0.98} depthWrite={false} />
-      </points>
-      <lineSegments raycast={() => null} frustumCulled={false}>
-        <bufferGeometry><bufferAttribute attach="attributes-position" args={[anatomy.brainstem.lines, 3]} /></bufferGeometry>
-        <lineBasicMaterial color="#f0cfa3" transparent opacity={0.8} depthWrite={false} />
-      </lineSegments>
-    </>}
   </group>;
 }
 
@@ -207,7 +172,7 @@ function Network({ positions, palette, ...props }: Props & { positions: Map<stri
   </>;
 }
 
-const CameraRig = forwardRef<BrainGraphHandle, { inside: boolean; viewDirection: Point3 }>(function CameraRig({ inside, viewDirection }, ref) {
+const CameraRig = forwardRef<BrainGraphHandle, { inside: boolean }>(function CameraRig({ inside }, ref) {
   const { camera, invalidate, size } = useThree();
   const controls = useRef<OrbitControlsImpl>(null);
   const reset = () => {
@@ -215,7 +180,7 @@ const CameraRig = forwardRef<BrainGraphHandle, { inside: boolean; viewDirection:
     const fov = THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov);
     const aspect = size.width / Math.max(1, size.height);
     const distance = THREE.MathUtils.clamp(7.2 / (2 * Math.tan(fov / 2) * Math.min(aspect, 1.5)), 9.5, 28);
-    camera.position.set(...viewDirection).normalize().multiplyScalar(distance).add(VIEW_TARGET);
+    camera.position.copy(VIEW_DIRECTION).multiplyScalar(distance).add(VIEW_TARGET);
     controls.current?.target.copy(VIEW_TARGET);
     controls.current?.update(); invalidate();
   };
@@ -224,7 +189,7 @@ const CameraRig = forwardRef<BrainGraphHandle, { inside: boolean; viewDirection:
     controls.current?.target.set(0, 0.3, -0.6);
     controls.current?.update(); invalidate();
   };
-  useEffect(() => { if (inside) enter(); else reset(); }, [inside, size.width, size.height, viewDirection]);
+  useEffect(() => { if (inside) enter(); else reset(); }, [inside, size.width, size.height]);
   useImperativeHandle(ref, () => ({
     reset, enter,
     zoom(direction) {
@@ -248,7 +213,6 @@ class SceneBoundary extends Component<{ children: ReactNode; fallback: ReactNode
 export const BrainGraph3D = forwardRef<BrainGraphHandle, Props>(function BrainGraph3D(props, ref) {
   const [palette, setPalette] = useState<Palette | null>(null);
   const positions = useMemo(() => layoutBrainNodes(props.nodes, props.links), [props.nodes, props.links]);
-  const viewDirection = props.viewDirection ?? VIEW_DIRECTION;
   useEffect(() => {
     const css = getComputedStyle(document.documentElement);
     setPalette({
@@ -268,9 +232,9 @@ export const BrainGraph3D = forwardRef<BrainGraphHandle, Props>(function BrainGr
       <ambientLight intensity={1.6} />
       <directionalLight position={[5, 8, 6]} intensity={2.2} />
       <directionalLight position={[-6, -3, -5]} intensity={0.6} />
-      <Scaffold palette={palette} inside={props.inside} count={props.scaffoldCount ?? 2800} highlightAnatomy={props.highlightAnatomy ?? false} />
+      <Scaffold palette={palette} inside={props.inside} count={props.scaffoldCount ?? 2800} />
       {props.nodes.length > 0 && <Network {...props} positions={positions} palette={palette} />}
-      <CameraRig ref={ref} inside={props.inside} viewDirection={viewDirection} />
+      <CameraRig ref={ref} inside={props.inside} />
     </Canvas>
   </SceneBoundary>;
 });

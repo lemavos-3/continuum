@@ -3,7 +3,6 @@ import { BrainGraph3D } from "@/components/graph/BrainGraph3D";
 import type { BrainLink, BrainNode } from "@/lib/brain-layout";
 
 const MOCK_NODE_COUNT = 34;
-const REAR_LATERAL_VIEW: [number, number, number] = [0, 0.08, -1];
 
 function createMockGraph() {
   const nodes: BrainNode[] = Array.from({ length: MOCK_NODE_COUNT }, (_, index) => ({
@@ -34,10 +33,8 @@ export default function LandingGraphPreview() {
         inside={false}
         theme="landing-preview"
         unavailableText="Interactive graph preview is unavailable."
-        scaffoldCount={1200}
-        highlightAnatomy
+        scaffoldCount={420}
         backgroundColor="#090d0e"
-        viewDirection={REAR_LATERAL_VIEW}
         onSelect={(node) => setSelectedId((current) => current === node.id ? null : node.id)}
         onOpen={() => undefined}
         onClear={() => setSelectedId(null)}
