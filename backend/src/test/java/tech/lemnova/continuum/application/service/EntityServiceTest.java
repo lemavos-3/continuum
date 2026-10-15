@@ -124,6 +124,25 @@ class EntityServiceTest {
     }
 
     @Test
+    @DisplayName("togglePinned: toggles pin independently from favorite")
+    void togglePinned_togglesAndSavesEntity() {
+        Entity entity = new Entity();
+        entity.setId("e1");
+        entity.setUserId("user1");
+        entity.setVaultId("vault1");
+        entity.setFavorite(true);
+
+        when(entityRepo.findById("e1")).thenReturn(Optional.of(entity));
+        when(entityRepo.save(any(Entity.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Entity result = entityService.togglePinned("e1");
+
+        assertThat(result.isPinned()).isTrue();
+        assertThat(result.isFavorite()).isTrue();
+        verify(entityRepo).save(entity);
+    }
+
+    @Test
     @DisplayName("getNotesForEntity: retrieves all notes linked to entity")
     void getNotesForEntity_returnsNotes() {
         String userId = "user1";

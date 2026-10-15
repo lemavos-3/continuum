@@ -522,6 +522,7 @@ export const entitiesApi = {
     api.put(`/api/entities/${id}`, data),
   delete: (id: string) => api.delete(`/api/entities/${id}`),
   toggleFavorite: (id: string) => api.patch(`/api/entities/${id}/favorite`),
+  togglePinned: (id: string) => api.patch(`/api/entities/${id}/pin`),
   getNotes: (id: string) => api.get(`/api/entities/${id}/notes`),
   getConnections: (id: string) => api.get(`/api/entities/${id}/connections`),
   getContext: (id: string) => api.get(`/api/entities/${id}/context`),

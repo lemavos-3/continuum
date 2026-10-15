@@ -173,6 +173,12 @@ public class EntityService {
         entity.setFavorite(!entity.isFavorite());
         return entityRepo.save(entity);
     }
+
+    public Entity togglePinned(String entityId) {
+        Entity entity = validateOwnership(getCurrentUserId(), getCurrentVaultId(), entityId);
+        entity.setPinned(!entity.isPinned());
+        return entityRepo.save(entity);
+    }
     
     /**
      * @deprecated Use getEntity(userId, vaultId, entityId) para validações mais robustas

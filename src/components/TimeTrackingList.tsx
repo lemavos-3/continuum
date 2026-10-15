@@ -5,14 +5,18 @@ import { entitiesApi } from '@/lib/api';
 import { useTimeTracking, type TimeEntitySummary } from '@/hooks/useTimeTracking';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Plus, ChevronDown, FolderOpen, Loader2, Check } from "@/lib/heroicons";
+import { Plus, ChevronDown, Loader2, Check, MapPin, Trash2 } from "@/lib/heroicons";
 import { CreateEntityDialog } from '@/components/CreateEntityDialog';
 import { ListRowContent } from '@/components/ui/list-row-content';
 import { EntityTypeIcon } from '@/components/ui/entity-type-icon';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ActivityCompletionCalendar } from '@/components/ActivityCompletionCalendar';
+import { InsightSignalBadge } from '@/components/InsightSignal';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Button } from '@/components/ui/button';
 import type { Entity } from '@/types';
 import { qk, STALE } from '@/lib/queries';
+import { usePlanGate } from '@/hooks/usePlanGate';
 
 const todayKey = () => {
   const d = new Date();
@@ -57,10 +61,12 @@ export function TimeTrackingList({
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { refresh: refreshUsage, applyUsageDelta } = usePlanGate();
   const [internalCreateOpen, setInternalCreateOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const [markingId, setMarkingId] = useState<string | null>(null);
+  const [pendingDeleteEntity, setPendingDeleteEntity] = useState<Entity | null>(null);
   const createDialogOpen = onCreateOpenChange ? createOpen ?? false : internalCreateOpen;
   const setCreateDialogOpen = onCreateOpenChange ? onCreateOpenChange : setInternalCreateOpen;
   const { getAllSummaries } = useTimeTracking();
@@ -101,6 +107,9 @@ export function TimeTrackingList({
       });
     }
     return list.sort((a, b) => {
+      if (filterType === 'PROJECT' && !!a.pinned !== !!b.pinned) {
+        return a.pinned ? -1 : 1;
+      }
       if (sortMode === 'az' || sortMode === 'za') {
         const o = (a.title ?? '').localeCompare(b.title ?? '');
         return sortMode === 'az' ? o : -o;
@@ -109,7 +118,7 @@ export function TimeTrackingList({
       const db = new Date((b as any).updatedAt ?? (b as any).createdAt ?? 0).getTime();
       return sortMode === 'recent' ? db - da : da - db;
     });
-  }, [lower, all, quickFilter, sortMode, summaries]);
+  }, [lower, all, quickFilter, sortMode, summaries, filterType]);
 
   useEffect(() => {
     onCountChange?.(all.length, visible.length);
@@ -146,6 +155,55 @@ export function TimeTrackingList({
     } catch {
       queryClient.setQueryData(key, previous);
       toast({ title: currentlyDone ? t('tm_could_not_unmark_title') : t('tm_could_not_mark_title'), variant: 'destructive' });
+    }
+  };
+
+  const togglePinned = async (entity: Entity, event: React.MouseEvent) => {
+    event.stopPropagation();
+    event.preventDefault();
+    const previousPinned = !!entity.pinned;
+    const updatePinned = (entities: Entity[] | undefined) =>
+      entities?.map((item) =>
+        item.id === entity.id ? { ...item, pinned: !previousPinned } : item,
+      );
+    queryClient.setQueryData<Entity[]>(qk.entities(), updatePinned);
+    try {
+      const { data } = await entitiesApi.togglePinned(entity.id);
+      queryClient.setQueryData<Entity[]>(qk.entities(), (entities) =>
+        entities?.map((item) =>
+          item.id === entity.id ? { ...item, pinned: !!data.pinned } : item,
+        ),
+      );
+    } catch {
+      queryClient.setQueryData<Entity[]>(qk.entities(), (entities) =>
+        entities?.map((item) =>
+          item.id === entity.id ? { ...item, pinned: previousPinned } : item,
+        ),
+      );
+      toast({ title: t('ls_entities_error_pin'), variant: 'destructive' });
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteEntity) return;
+    const deletedEntity = pendingDeleteEntity;
+    const previousEntities = queryClient.getQueryData<Entity[]>(qk.entities());
+    queryClient.setQueryData<Entity[]>(qk.entities(), (entities) =>
+      entities?.filter((entity) => entity.id !== deletedEntity.id),
+    );
+    try {
+      await entitiesApi.delete(deletedEntity.id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: qk.entities() }),
+        queryClient.invalidateQueries({ queryKey: ['trash'] }),
+      ]);
+      applyUsageDelta({ entitiesCount: -1 });
+      void refreshUsage();
+    } catch {
+      if (previousEntities) queryClient.setQueryData(qk.entities(), previousEntities);
+      toast({ title: t('ls_entities_error_deleting'), variant: 'destructive' });
+    } finally {
+      setPendingDeleteEntity(null);
     }
   };
 
@@ -246,6 +304,48 @@ export function TimeTrackingList({
                     />
                   </button>
 
+                  {isProject && (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="flex h-5 w-5 items-center justify-center">
+                        <InsightSignalBadge kind="entity" id={entity.id} className="h-5 w-5" />
+                      </span>
+                      <span className="flex h-5 w-5 items-center justify-center">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="iconSm"
+                          className={cn(
+                            'h-5 w-5 rounded-full p-0 opacity-70 transition-colors hover:opacity-100',
+                            entity.pinned && 'text-foreground opacity-100',
+                          )}
+                          onClick={(event) => void togglePinned(entity, event)}
+                          aria-label={entity.pinned ? t('ls_project_unpin') : t('ls_project_pin')}
+                          title={entity.pinned ? t('ls_project_unpin') : t('ls_project_pin')}
+                          aria-pressed={!!entity.pinned}
+                        >
+                          <MapPin className={cn('h-3 w-3', entity.pinned && 'fill-current')} />
+                        </Button>
+                      </span>
+                      <span className="flex h-5 w-5 items-center justify-center">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="iconSm"
+                          className="h-5 w-5 rounded-full p-0 text-foreground opacity-70 transition hover:opacity-100"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            event.preventDefault();
+                            setPendingDeleteEntity(entity);
+                          }}
+                          aria-label={t('common_delete')}
+                          title={t('common_delete')}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </span>
+                    </div>
+                  )}
+
                   {/* Ação rápida apenas para atividades */}
                   {!isProject && (
                     <button
@@ -301,6 +401,19 @@ export function TimeTrackingList({
           queryClient.setQueryData(qk.entity(createdEntity.id), createdEntity);
           navigate(`/entities/${createdEntity.id}`);
         }}
+      />
+      <ConfirmDialog
+        open={!!pendingDeleteEntity}
+        onOpenChange={(open) => !open && setPendingDeleteEntity(null)}
+        title={t('entities_delete_one_title')}
+        description={
+          pendingDeleteEntity
+            ? t('entities_delete_one_desc', { title: pendingDeleteEntity.title || t('notes_untitled') })
+            : ''
+        }
+        confirmText={t('common_delete')}
+        destructive
+        onConfirm={confirmDelete}
       />
     </>
   );

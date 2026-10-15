@@ -82,6 +82,7 @@ import {
   MagnifyingGlassMinusIcon,
   EyeIcon,
   EyeSlashIcon,
+  MapPinIcon,
 } from "@heroicons/react/24/outline";
 import { BookmarkIcon as BookmarkSolidIcon } from "@heroicons/react/24/solid";
 
@@ -193,6 +194,7 @@ export {
   MagnifyingGlassMinusIcon as ZoomOut,
   EyeIcon as Eye,
   EyeSlashIcon as EyeOff,
+  MapPinIcon as MapPin,
   ShareIcon as Share2,
   CloudIcon as Cloud,
   SignalSlashIcon as CloudOff,
