@@ -1026,17 +1026,6 @@ export default function Notes() {
                                     className="absolute left-0 top-1/2 h-8 w-px -translate-x-3 -translate-y-1/2 bg-foreground opacity-0 transition-opacity group-hover:opacity-100"
                                   />
 
-                                  {selectMode && (
-                                    <span
-                                      className={cn(
-                                        "mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-sm border transition-colors",
-                                        selected ? "border-border/10 bg-foreground text-background" : "border-border/30 text-transparent"
-                                      )}
-                                    >
-                                      <Check className="h-3.5 w-3.5" />
-                                    </span>
-                                  )}
-
                                   <ListRowContent
                                     icon={<StickyNote className="h-5 w-5" />}
                                     title={note.title || t("notes_untitled")}
@@ -1056,51 +1045,62 @@ export default function Notes() {
                                     )}
                                   />
 
-                                  {!selectMode && (
-                                    <div className="flex shrink-0 items-center gap-2 pt-1">
-                                      <span className="flex h-5 w-5 items-center justify-center">
-                                        <InsightSignalBadge kind="note" id={note.id} className="h-5 w-5" />
+                                  <div className="flex w-[76px] shrink-0 items-center justify-end gap-2 pt-1">
+                                    {selectMode ? (
+                                      <span
+                                        className={cn(
+                                          "grid h-5 w-5 place-items-center rounded-sm border transition-colors",
+                                          selected ? "border-border/10 bg-foreground text-background" : "border-border/30 text-transparent"
+                                        )}
+                                      >
+                                        <Check className="h-3.5 w-3.5" />
                                       </span>
-                                      <span className="flex h-5 w-5 items-center justify-center">
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="iconSm"
-                                          className={cn(
-                                            "h-5 w-5 rounded-full p-0 opacity-70 transition-colors hover:opacity-100",
-                                            note.favorite ? "text-foreground" : "text-foreground"
-                                          )}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            toggleFavorite(note.id, e);
-                                          }}
-                                          aria-label={note.favorite ? t("notes_unfavorite") : t("notes_favorite")}
-                                        >
-                                          {note.favorite ? (
-                                            <BookmarkCheck className="h-3 w-3 fill-current" />
-                                          ) : (
-                                            <Bookmark className="h-3 w-3" />
-                                          )}
-                                        </Button>
-                                      </span>
-                                      <span className="flex h-5 w-5 items-center justify-center">
-                                        <Button
-                                          type="button"
-                                          variant="ghost"
-                                          size="iconSm"
-                                          className="h-5 w-5 rounded-full p-0 text-foreground opacity-70 transition hover:opacity-100"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            e.preventDefault();
-                                            setPendingDelete(note);
-                                          }}
-                                          aria-label={t("common_delete")}
-                                        >
-                                          <Trash2 className="h-3 w-3" />
-                                        </Button>
-                                      </span>
-                                    </div>
-                                  )}
+                                    ) : (
+                                      <>
+                                        <span className="flex h-5 w-5 items-center justify-center">
+                                          <InsightSignalBadge kind="note" id={note.id} className="h-5 w-5" />
+                                        </span>
+                                        <span className="flex h-5 w-5 items-center justify-center">
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="iconSm"
+                                            className={cn(
+                                              "h-5 w-5 rounded-full p-0 opacity-70 transition-colors hover:opacity-100",
+                                              note.favorite ? "text-foreground" : "text-foreground"
+                                            )}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              toggleFavorite(note.id, e);
+                                            }}
+                                            aria-label={note.favorite ? t("notes_unfavorite") : t("notes_favorite")}
+                                          >
+                                            {note.favorite ? (
+                                              <BookmarkCheck className="h-3 w-3 fill-current" />
+                                            ) : (
+                                              <Bookmark className="h-3 w-3" />
+                                            )}
+                                          </Button>
+                                        </span>
+                                        <span className="flex h-5 w-5 items-center justify-center">
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="iconSm"
+                                            className="h-5 w-5 rounded-full p-0 text-foreground opacity-70 transition hover:opacity-100"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              e.preventDefault();
+                                              setPendingDelete(note);
+                                            }}
+                                            aria-label={t("common_delete")}
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        </span>
+                                      </>
+                                    )}
+                                  </div>
                               </NoteRow>
                             );
                           })}

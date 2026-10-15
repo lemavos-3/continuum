@@ -418,17 +418,6 @@ export default function Entities() {
                         selectMode ? toggleSelect(entity.id) : navigate(`/entities/${entity.id}`)
                       }
                     >
-                      {selectMode && (
-                        <span
-                          className={cn(
-                            "mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-sm border transition-colors",
-                            selected ? "border-border/10 bg-foreground text-background" : "border-border/30 text-transparent"
-                          )}
-                        >
-                          <Check className="h-3.5 w-3.5" />
-                        </span>
-                      )}
-
                       <ListRowContent
                         icon={<EntityTypeIcon type={entity.type} className="h-5 w-5" />}
                         title={entity.title || t("notes_untitled")}
@@ -443,48 +432,59 @@ export default function Entities() {
                       />
 
 
-                      {!selectMode && (
-                        <div className="flex shrink-0 items-center gap-2 pt-1">
-                          <span className="flex h-5 w-5 items-center justify-center">
-                            <InsightSignalBadge kind="entity" id={entity.id} className="h-5 w-5" />
+                      <div className="flex w-[76px] shrink-0 items-center justify-end gap-2 pt-1">
+                        {selectMode ? (
+                          <span
+                            className={cn(
+                              "grid h-5 w-5 place-items-center rounded-sm border transition-colors",
+                              selected ? "border-border/10 bg-foreground text-background" : "border-border/30 text-transparent"
+                            )}
+                          >
+                            <Check className="h-3.5 w-3.5" />
                           </span>
-                          <span className="flex h-5 w-5 items-center justify-center">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="iconSm"
-                              className={cn(
-                                "h-5 w-5 rounded-full p-0 opacity-70 transition-colors hover:opacity-100",
-                                entity.favorite ? "text-foreground" : "text-foreground"
-                              )}
-                              onClick={(e) => void toggleFavorite(entity, e)}
-                              aria-label={entity.favorite ? t("notes_unfavorite") : t("notes_favorite")}
-                            >
-                              {entity.favorite ? (
-                                <BookmarkCheck className="h-3 w-3 fill-current" />
-                              ) : (
-                                <Bookmark className="h-3 w-3" />
-                              )}
-                            </Button>
-                          </span>
-                          <span className="flex h-5 w-5 items-center justify-center">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="iconSm"
-                              className="h-5 w-5 rounded-full p-0 text-foreground opacity-70 transition hover:opacity-100"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                handleDelete(e, entity);
-                              }}
-                              aria-label={t("common_delete")}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </span>
-                        </div>
-                      )}
+                        ) : (
+                          <>
+                            <span className="flex h-5 w-5 items-center justify-center">
+                              <InsightSignalBadge kind="entity" id={entity.id} className="h-5 w-5" />
+                            </span>
+                            <span className="flex h-5 w-5 items-center justify-center">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="iconSm"
+                                className={cn(
+                                  "h-5 w-5 rounded-full p-0 opacity-70 transition-colors hover:opacity-100",
+                                  entity.favorite ? "text-foreground" : "text-foreground"
+                                )}
+                                onClick={(e) => void toggleFavorite(entity, e)}
+                                aria-label={entity.favorite ? t("notes_unfavorite") : t("notes_favorite")}
+                              >
+                                {entity.favorite ? (
+                                  <BookmarkCheck className="h-3 w-3 fill-current" />
+                                ) : (
+                                  <Bookmark className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </span>
+                            <span className="flex h-5 w-5 items-center justify-center">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="iconSm"
+                                className="h-5 w-5 rounded-full p-0 text-foreground opacity-70 transition hover:opacity-100"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  handleDelete(e, entity);
+                                }}
+                                aria-label={t("common_delete")}
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </EntityRow>
                   );
                 })}
