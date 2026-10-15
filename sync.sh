@@ -648,6 +648,7 @@ case "$FLOW_CHOICE" in
   *)
     echo "Opção inválida: '$FLOW_CHOICE'. Use de 1 a 5." >&2
     exit 1
+    
     ;;
 esac
 
