@@ -16,6 +16,8 @@ interface Props {
   inside: boolean;
   theme: string;
   unavailableText: string;
+  scaffoldCount?: number;
+  backgroundColor?: string;
   onSelect: (node: BrainNode) => void;
   onOpen: (node: BrainNode) => void;
   onClear: () => void;
@@ -29,8 +31,8 @@ const NODE_APPEARANCE = { widthSegments: 24, heightSegments: 16, pulseAmplitude:
 
 // The brain outline (a real cortex surface resampled in brain-layout.ts): one Points draw call + one LineSegments draw call, built
 // once and cached in the layout module (no per-instance matrices, no O(n^2) work).
-function Scaffold({ palette, inside }: { palette: Palette; inside: boolean }) {
-  const { points, lines } = useMemo(() => scaffoldBuffers(createBrainScaffold()), []);
+function Scaffold({ palette, inside, count }: { palette: Palette; inside: boolean; count: number }) {
+  const { points, lines } = useMemo(() => scaffoldBuffers(createBrainScaffold(count)), [count]);
   return <group>
     <points raycast={() => null} frustumCulled={false}>
       <bufferGeometry><bufferAttribute attach="attributes-position" args={[points, 3]} /></bufferGeometry>
@@ -213,8 +215,12 @@ export const BrainGraph3D = forwardRef<BrainGraphHandle, Props>(function BrainGr
   const positions = useMemo(() => layoutBrainNodes(props.nodes, props.links), [props.nodes, props.links]);
   useEffect(() => {
     const css = getComputedStyle(document.documentElement);
-    setPalette({ node: css.getPropertyValue('--graph-node').trim(), muted: css.getPropertyValue('--graph-muted').trim(), background: css.getPropertyValue('--bg-base').trim() });
-  }, [props.theme]);
+    setPalette({
+      node: css.getPropertyValue('--graph-node').trim(),
+      muted: css.getPropertyValue('--graph-muted').trim(),
+      background: props.backgroundColor ?? css.getPropertyValue('--bg-base').trim(),
+    });
+  }, [props.backgroundColor, props.theme]);
   const fallback = <div className="absolute inset-0 flex items-center justify-center p-8 text-center text-sm text-muted-foreground">{props.unavailableText}</div>;
   if (!palette) return null;
   return <SceneBoundary fallback={fallback}>
@@ -226,7 +232,7 @@ export const BrainGraph3D = forwardRef<BrainGraphHandle, Props>(function BrainGr
       <ambientLight intensity={1.6} />
       <directionalLight position={[5, 8, 6]} intensity={2.2} />
       <directionalLight position={[-6, -3, -5]} intensity={0.6} />
-      <Scaffold palette={palette} inside={props.inside} />
+      <Scaffold palette={palette} inside={props.inside} count={props.scaffoldCount ?? 2800} />
       {props.nodes.length > 0 && <Network {...props} positions={positions} palette={palette} />}
       <CameraRig ref={ref} inside={props.inside} />
     </Canvas>
