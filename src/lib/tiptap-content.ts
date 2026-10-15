@@ -9,6 +9,12 @@ export interface TiptapNode extends JsonRecord {
   content?: TiptapNode[];
 }
 
+export type MentionTargetType = "note" | "entity";
+
+export function resolveMentionTargetType(...types: Array<string | null | undefined>): MentionTargetType {
+  return types.some((type) => type?.toLowerCase() === "note") ? "note" : "entity";
+}
+
 const MAX_PARSE_DEPTH = 6;
 
 const isRecord = (value: unknown): value is JsonRecord =>

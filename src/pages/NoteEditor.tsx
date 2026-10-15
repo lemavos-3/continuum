@@ -78,6 +78,8 @@ export default function NoteEditor() {
   const isMobile = useIsMobile();
   const isRestoring = useIsRestoring();
   const editorRef = useRef<TiptapEditorHandle>(null);
+  const editorRootRef = useRef<HTMLDivElement>(null);
+  const editorCanvasRef = useRef<HTMLDivElement>(null);
   const [keyboardInset, setKeyboardInset] = useState(0);
   const tempId = searchParams.get("tempId");
   const isOptimistic = searchParams.get("optimistic") === "true";
@@ -140,6 +142,59 @@ export default function NoteEditor() {
       document.documentElement.style.setProperty("--mobile-keyboard-offset", "0px");
     };
   }, [isMobile]);
+
+  useEffect(() => {
+    const canvas = editorCanvasRef.current;
+    if (!canvas || !isMobile) return;
+
+    let startY: number | null = null;
+    let startScrollTop = 0;
+    let isDragging = false;
+    const onTouchStart = (event: TouchEvent) => {
+      const target = event.target;
+      const activeElement = document.activeElement;
+      const editorHasFocus =
+        activeElement instanceof HTMLElement &&
+        editorRootRef.current?.contains(activeElement) &&
+        (activeElement.matches("input, textarea") || activeElement.isContentEditable);
+      if (keyboardInset <= 120 && !editorHasFocus) {
+        startY = null;
+        return;
+      }
+      if (target instanceof Element && target.closest("input, textarea, select, button, a, [data-tippy-root]")) {
+        startY = null;
+        return;
+      }
+      startY = event.touches[0]?.clientY ?? null;
+      startScrollTop = canvas.scrollTop;
+      isDragging = false;
+    };
+    const onTouchMove = (event: TouchEvent) => {
+      const touch = event.touches[0];
+      if (startY === null || !touch) return;
+      const delta = startY - touch.clientY;
+      if (!isDragging && Math.abs(delta) < 8) return;
+      isDragging = true;
+      if (canvas.scrollHeight <= canvas.clientHeight) return;
+      event.preventDefault();
+      canvas.scrollTop = startScrollTop + delta;
+    };
+    const clearTouch = () => {
+      startY = null;
+      isDragging = false;
+    };
+
+    canvas.addEventListener("touchstart", onTouchStart, { passive: true, capture: true });
+    canvas.addEventListener("touchmove", onTouchMove, { passive: false, capture: true });
+    canvas.addEventListener("touchend", clearTouch, true);
+    canvas.addEventListener("touchcancel", clearTouch, true);
+    return () => {
+      canvas.removeEventListener("touchstart", onTouchStart, true);
+      canvas.removeEventListener("touchmove", onTouchMove, true);
+      canvas.removeEventListener("touchend", clearTouch, true);
+      canvas.removeEventListener("touchcancel", clearTouch, true);
+    };
+  }, [isMobile, keyboardInset]);
 
   useEffect(() => {
     void loadEditorReadOnly().then((v) => setReadOnly(v));
@@ -542,9 +597,11 @@ export default function NoteEditor() {
     }
   }, [doSave, id]);
 
-  const handleNoteLinkClick = useCallback(async (noteId: string) => {
-    if (!noteId || noteId === id) return;
-    if (await flushSave()) navigate(`/notes/${noteId}`);
+  const handleMentionClick = useCallback(async (targetId: string, targetType: "note" | "entity") => {
+    if (!targetId || (targetType === "note" && targetId === id)) return;
+    if (await flushSave()) {
+      navigate(targetType === "note" ? `/notes/${targetId}` : `/entities/${targetId}`);
+    }
   }, [flushSave, id, navigate]);
 
   useEffect(() => {
@@ -609,7 +666,7 @@ export default function NoteEditor() {
 
   return (
     <AppLayout>
-      <div className="relative flex h-dvh min-h-0 overflow-hidden bg-background">
+      <div ref={editorRootRef} className="relative flex h-dvh min-h-0 overflow-hidden bg-background">
         {/* Wallpaper layer (global, per-user) - covers entire editor area including sidebar */}
         {wallpaperUrl && (
           <div
@@ -675,7 +732,7 @@ export default function NoteEditor() {
           </header>
 
           {/* Editor Canvas */}
-          <div className="relative z-10 min-h-0 flex-1 overflow-y-auto overscroll-contain scroll-smooth">
+          <div ref={editorCanvasRef} className="relative z-10 min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain">
             <div
               className="mx-auto w-full max-w-[750px] px-6 pt-12 lg:px-12"
               style={{
@@ -700,7 +757,7 @@ export default function NoteEditor() {
                     onChange={handleEditorChange}
                     editable={!readOnly}
                     currentNoteId={id}
-                    onNoteLinkClick={handleNoteLinkClick}
+                    onMentionClick={handleMentionClick}
                     onSave={flushSave}
                     foldedHeadings={foldedHeadings}
                     onFoldedHeadingsChange={handleFoldChange}

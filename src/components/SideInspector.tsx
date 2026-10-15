@@ -557,7 +557,7 @@ export const SideInspector = memo(function SideInspector({ isOpen, entity, onClo
 
   if (drawerMode) {
     return (
-      <SmoothDrawer key={entity?.id} expandable open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }} hideHeader title={entity?.title ?? ""}>
+      <SmoothDrawer key={entity?.id} expandable dragFromContent open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }} hideHeader title={entity?.title ?? ""}>
         {panel}
       </SmoothDrawer>
     );
