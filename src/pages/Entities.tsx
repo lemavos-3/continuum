@@ -346,7 +346,7 @@ export default function Entities() {
 
             {/* Selection action bar */}
             {selectMode && (
-              <div className="sticky -top-5 z-30 -mx-6 -mt-5 mb-5 flex flex-col items-stretch gap-3 border-y border-border/15 bg-background/95 px-6 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] backdrop-blur-xl lg:top-[7.5rem] lg:z-20 lg:mx-0 lg:mt-0 lg:mb-6 lg:flex-row lg:items-center lg:justify-between lg:rounded-sm lg:border lg:bg-background/80 lg:px-3 lg:py-2.5">
+              <div className="fixed inset-x-0 top-0 z-50 flex flex-col items-stretch gap-3 border-b border-border/15 bg-background px-6 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] shadow-xl backdrop-blur-xl lg:sticky lg:inset-auto lg:top-[7.5rem] lg:z-20 lg:mb-6 lg:flex-row lg:items-center lg:justify-between lg:rounded-sm lg:border lg:bg-background/80 lg:px-3 lg:py-2.5 lg:shadow-none">
                 <span className="text-sm text-muted-foreground">{t("select_selected", { n: selectedIds.size })}</span>
                 <div className="grid w-full min-w-0 grid-cols-2 gap-2 lg:flex lg:w-auto lg:flex-wrap">
                   <Button
@@ -384,6 +384,7 @@ export default function Entities() {
                 </div>
               </div>
             )}
+            {selectMode && <div aria-hidden="true" className="h-[calc(9rem+env(safe-area-inset-top))] lg:hidden" />}
 
             {/* Listagem Contínua */}
 
