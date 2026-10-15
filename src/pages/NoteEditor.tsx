@@ -48,6 +48,19 @@ interface NoteData {
   updatedAt: string;
 }
 
+function isNoteData(value: unknown, id: string): value is NoteData {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    value.id === id &&
+    "title" in value &&
+    typeof value.title === "string" &&
+    "content" in value &&
+    value.content !== undefined
+  );
+}
+
 const typeLabels: Record<string, string> = {
   PERSON: "Person",
   PROJECT: "Project",
@@ -69,7 +82,8 @@ export default function NoteEditor() {
   const tempId = searchParams.get("tempId");
   const isOptimistic = searchParams.get("optimistic") === "true";
   const optimisticKey = tempId ? `optimistic-note:${tempId}` : null;
-  const cachedNote = id ? queryClient.getQueryData<NoteData>(qk.note(id)) ?? null : null;
+  const cachedValue = id ? queryClient.getQueryData<unknown>(qk.note(id)) : undefined;
+  const cachedNote = id && isNoteData(cachedValue, id) ? cachedValue : null;
 
   const [note, setNote] = useState<NoteData | null>(cachedNote);
   const [title, setTitle] = useState(cachedNote?.title ?? "");
@@ -77,6 +91,8 @@ export default function NoteEditor() {
   const [availableTypes, setAvailableTypes] = useState<string[]>([]);
   const [allEntities, setAllEntities] = useState<any[]>([]);
   const [loading, setLoading] = useState(!cachedNote);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "creating">("idle");
   const [showBacklinks, setShowBacklinks] = useState(false);
   // The last mode the user left the editor in (view or edit) is restored.
@@ -255,6 +271,7 @@ export default function NoteEditor() {
     if (!id) return;
     let cancelled = false;
     const optimistic = searchParams.get("optimistic") === "true";
+    setLoadError(false);
 
     if (optimistic) {
       setLoading(true);
@@ -296,7 +313,8 @@ export default function NoteEditor() {
           /* ignore fetch details for optimistic placeholder */
         });
     } else {
-      const cached = queryClient.getQueryData<NoteData>(qk.note(id));
+      const cachedValue = queryClient.getQueryData<unknown>(qk.note(id));
+      const cached = isNoteData(cachedValue, id) ? cachedValue : null;
       if (cached) {
         const parsedContent = parseTiptapContent(cached.content);
         const cachedNoteData = { ...cached, content: parsedContent };
@@ -309,6 +327,9 @@ export default function NoteEditor() {
         lastSavedJSON.current = JSON.stringify(parsedContent);
         setLoading(false);
       } else {
+        if (cachedValue !== undefined) {
+          queryClient.removeQueries({ queryKey: qk.note(id), exact: true });
+        }
         setNote(null);
         setTitle("");
         setType("");
@@ -318,17 +339,14 @@ export default function NoteEditor() {
 
       // Paint from cache instantly (even if stale); revalidate in the background.
       const swr = <T,>(queryKey: readonly unknown[], queryFn: () => Promise<T>, staleTime: number) => {
-        const cached = queryClient.getQueryData<T>(queryKey);
-        if (cached !== undefined) {
-          void queryClient.fetchQuery({ queryKey, queryFn, staleTime }).catch((error) => {
-            console.warn("[note editor] Cached data refresh failed", error);
-          });
-          return Promise.resolve(cached);
-        }
         return queryClient.fetchQuery({ queryKey, queryFn, staleTime });
       };
       Promise.allSettled([
-        swr(qk.note(id), () => notesApi.get(id).then((response) => response.data as NoteData), STALE.detail),
+        swr(qk.note(id), async () => {
+          const { data } = await notesApi.get(id);
+          if (!isNoteData(data, id)) throw new Error("Note response is incomplete");
+          return data;
+        }, 0),
         swr(qk.entities(), () => entitiesApi.list().then((response) => response.data), STALE.list),
         swr(qk.noteTypes(), getAllNoteTypes, STALE.list),
       ])
@@ -336,7 +354,7 @@ export default function NoteEditor() {
           if (noteResult.status !== "fulfilled") throw noteResult.reason;
           if (cancelled) return;
 
-          const data = noteResult.value as NoteData;
+          const data = noteResult.value;
           const parsedContent = parseTiptapContent(data.content);
           const userEntities =
             entitiesResult.status === "fulfilled" && Array.isArray(entitiesResult.value)
@@ -401,8 +419,8 @@ export default function NoteEditor() {
           if (cached) {
             console.warn(`[note editor] Could not refresh note ${id}; retaining cached content`);
           } else {
-            toast({ title: t("ed_note_not_found"), variant: "destructive" });
-            navigate("/notes");
+            toast({ title: t("ed_note_load_failed"), variant: "destructive" });
+            setLoadError(true);
           }
         })
         .finally(() => {
@@ -414,7 +432,7 @@ export default function NoteEditor() {
       cancelled = true;
       if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
     };
-  }, [id, isRestoring, navigate, searchParams, toast]);
+  }, [id, isRestoring, loadAttempt, navigate, searchParams, toast]);
 
   const doSave = useCallback(async (nextTitle: string, json: any, newType: string) => {
     if (!id) return false;
@@ -546,11 +564,44 @@ export default function NoteEditor() {
   }, [flushSave]);
 
 
-  if (loading) {
+  const handleBack = () => {
+    if (window.history.state?.idx > 0) navigate(-1);
+    else navigate("/notes", { replace: true });
+  };
+
+  if (loading || loadError) {
     return (
       <AppLayout>
-        <div className="flex justify-center items-center h-full">
-          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        <div className="flex min-h-[60dvh] flex-col items-center justify-center gap-5 px-6">
+          {loading ? (
+            <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          ) : (
+            <>
+              <p className="text-center text-sm text-muted-foreground">{t("ed_note_load_failed")}</p>
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" onClick={handleBack}>
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  {t("common_back")}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setLoadError(false);
+                    setLoading(true);
+                    queryClient.removeQueries({ queryKey: qk.note(id), exact: true });
+                    setLoadAttempt((attempt) => attempt + 1);
+                  }}
+                >
+                  {t("ed_retry")}
+                </Button>
+              </div>
+            </>
+          )}
+          {loading && (
+            <Button variant="ghost" onClick={handleBack}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {t("common_back")}
+            </Button>
+          )}
         </div>
       </AppLayout>
     );
@@ -581,7 +632,7 @@ export default function NoteEditor() {
           {/* Top Toolbar */}
           <header className="relative z-10 flex shrink-0 items-center justify-between border-b border-border/5 bg-background/70 px-4 pb-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] backdrop-blur-md lg:pt-3">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/notes"))} className="text-muted-foreground hover:text-foreground w-8 h-8">
+              <Button variant="ghost" size="icon" onClick={handleBack} aria-label={t("common_back")} className="text-muted-foreground hover:text-foreground w-8 h-8">
                 <ArrowLeft className="w-4 h-4" />
               </Button>
               <div className="h-4 w-[1px] bg-border/10 mx-2" />

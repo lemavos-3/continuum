@@ -5,7 +5,7 @@ import { entitiesApi } from '@/lib/api';
 import { useTimeTracking, type TimeEntitySummary } from '@/hooks/useTimeTracking';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Plus, ChevronDown, Loader2, Check, MapPin, Trash2 } from "@/lib/heroicons";
+import { Plus, ChevronDown, Loader2, Check, Trash2, Pin } from "@/lib/heroicons";
 import { CreateEntityDialog } from '@/components/CreateEntityDialog';
 import { ListRowContent } from '@/components/ui/list-row-content';
 import { EntityTypeIcon } from '@/components/ui/entity-type-icon';
@@ -323,7 +323,7 @@ export function TimeTrackingList({
                           title={entity.pinned ? t('ls_project_unpin') : t('ls_project_pin')}
                           aria-pressed={!!entity.pinned}
                         >
-                          <MapPin className={cn('h-3 w-3', entity.pinned && 'fill-current')} />
+                          <Pin className={cn('h-3 w-3', entity.pinned && 'fill-current')} />
                         </Button>
                       </span>
                       <span className="flex h-5 w-5 items-center justify-center">

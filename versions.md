@@ -4,7 +4,20 @@ Every notable change to Continuum, from the first release to the latest version.
 
 ---
 
-v1.3.3 — Oct XX, 2026
+v1.3.4  Oct XX, 2026
+
+- Projects: Added persistent pinning, insight badges, and confirmed deletion to the project list.
+- Notes: Fixed stale or invalid cached note data preventing the editor from loading; added retry and back navigation when loading fails.
+- Mobile: Restored device back-button navigation from the note editor.
+- Time Tracking: Added an API endpoint to edit existing entry durations.
+- Time Tracking: Added inline duration editing in entity history and the ability to mark or unmark dates from the activity calendar.
+- Projects & Activities: Unified their list pages with shared search, sorting, quick filters, and responsive create controls.
+- Projects & Activities: Improved entity detail history and calendar interactions for tracking past activity.
+- 3D Graph: Improved node rendering and interaction stability with GPU-animated pulses that respect reduced-motion settings.
+
+---
+
+v1.3.3 — Oct 13, 2026
 
 - Prefetch: Add prefetch progress line.
 - UI: Padronize /notes, /entities UI in desktop to look like mobile.

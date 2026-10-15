@@ -27,11 +27,11 @@ async function loadCache(kind: Kind): Promise<CacheEntry> {
   if (existing && Date.now() - existing.fetchedAt < CACHE_TTL_MS) return existing;
   if (pending[kind]) return pending[kind]!;
 
-  pending[kind] = (async () => {
+  const request = (async () => {
     const [hot, forgotten] = await Promise.all(
       kind === "note"
         ? [insightsApi.hotNotes(50), insightsApi.forgottenNotes(50)]
-        : [insightsApi.hotEntities(50), insightsApi.forgottenEntities(50)]
+        : [insightsApi.hotEntities(500), insightsApi.forgottenEntities(500)]
     );
     const byId = new Map<string, { badge: string; score: number; category: "hot" | "forgotten" }>();
     (hot.data || []).forEach((it: any) => {
@@ -48,7 +48,13 @@ async function loadCache(kind: Kind): Promise<CacheEntry> {
     pending[kind] = null;
     return entry;
   })();
-  return pending[kind]!;
+  pending[kind] = request;
+  try {
+    return await request;
+  } catch (error) {
+    pending[kind] = null;
+    throw error;
+  }
 }
 
 export function useInsightSignal(kind: Kind, id?: string) {
