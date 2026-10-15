@@ -19,7 +19,7 @@ v1.3.4  Oct XX, 2026
 - Mobile: Removed the top border from the Notes and Entities selection header.
 - Insights: Reduced the mobile top spacing to bring the page content closer to the top.
 - Graph: Removed excess scrolling from the 2D and 3D graph views.
-- Landing Page: Replaced the static graph screenshot with a lightweight, interactive 3D mock graph without real user data or node details.
+- Landing Page: Replaced the static graph screenshot with a lightweight, interactive mock using the shared 3D graph viewer, without real user data or node details.
 - Navigation: Reset the page scroll to the top when changing routes.
 
 ---
