@@ -787,7 +787,7 @@ export default function Notes() {
             </header>
 
             {/* Mobile: search + view chips */}
-            <div className="mb-5 space-y-3">
+            <div className={selectMode ? "hidden lg:mb-5 lg:block lg:space-y-3" : "mb-5 space-y-3"}>
                 <div className="flex items-center gap-2">
                   <div className="relative z-0 flex-1">
                     <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -843,16 +843,16 @@ export default function Notes() {
 
             {/* Selection action bar */}
             {selectMode && (
-              <div className="sticky top-[7.5rem] z-20 mb-6 flex flex-col items-stretch gap-3 rounded-sm border border-border/15 bg-background/80 px-3 py-2.5 backdrop-blur-xl md:flex-row md:items-center md:justify-between">
+              <div className="sticky top-0 z-30 -mx-6 mb-5 flex flex-col items-stretch gap-3 border-y border-border/15 bg-background/95 px-6 py-3 backdrop-blur-xl lg:top-[7.5rem] lg:z-20 lg:mx-0 lg:mb-6 lg:flex-row lg:items-center lg:justify-between lg:rounded-sm lg:border lg:bg-background/80 lg:px-3 lg:py-2.5">
                 <span className="text-sm text-muted-foreground">
                   {t("select_selected", { n: selectedIds.size })}
                 </span>
-                <div className="grid w-full min-w-0 grid-cols-2 gap-2 md:flex md:w-auto md:flex-wrap">
+                <div className="grid w-full min-w-0 grid-cols-2 gap-2 lg:flex lg:w-auto lg:flex-wrap">
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="w-full justify-center normal-case px-3 py-1.5 text-xs text-muted-foreground hover:border-border/40 hover:text-foreground md:w-auto"
+                    className="w-full justify-center normal-case px-3 py-1.5 text-xs text-muted-foreground hover:border-border/40 hover:text-foreground lg:w-auto"
                     onClick={() => {
                       const allIds = filtered.map((n) => n.id);
                       const allSelected = allIds.every((id) => selectedIds.has(id));
@@ -868,7 +868,7 @@ export default function Notes() {
                         variant="outline"
                         size="sm"
                         disabled={selectedIds.size === 0 || bulkTypeApplying}
-                        className="w-full justify-center normal-case inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground md:w-auto"
+                        className="w-full justify-center normal-case inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-muted-foreground lg:w-auto"
                       >
                         {bulkTypeApplying ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Tag className="h-3.5 w-3.5" />} {t("notes_set_type") || "Set type"}
                       </Button>
@@ -894,7 +894,7 @@ export default function Notes() {
                     type="button"
                     variant="destructive"
                     size="sm"
-                    className="w-full justify-center normal-case inline-flex items-center gap-1.5 px-3 py-1.5 text-xs md:w-auto"
+                    className="w-full justify-center normal-case inline-flex items-center gap-1.5 px-3 py-1.5 text-xs lg:w-auto"
                     onClick={() => setBulkDeleteOpen(true)}
                     disabled={selectedIds.size === 0}
                   >
@@ -904,7 +904,7 @@ export default function Notes() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="w-full justify-center normal-case inline-flex items-center gap-1.5 px-3 py-1.5 text-xs md:w-auto"
+                    className="w-full justify-center normal-case inline-flex items-center gap-1.5 px-3 py-1.5 text-xs lg:w-auto"
                     onClick={exitSelectMode}
                   >
                     <X className="h-3.5 w-3.5" /> {t("select_done")}
