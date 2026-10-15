@@ -469,7 +469,22 @@ export default function EntityDetail() {
 
         {isHabit && (
           <div className="mb-7">
-            <ActivityAnalyticsCalendar trackingDates={entity.trackingDates} />
+            <ActivityAnalyticsCalendar
+              trackingDates={entity.trackingDates}
+              onToggleDate={async (date, done) => {
+                setEntity((prev) => prev ? { ...prev, trackingDates: done ? (prev.trackingDates || []).filter((d) => d.split("T")[0] !== date) : [...(prev.trackingDates || []), date] } : prev);
+                try {
+                  if (done) await entitiesApi.untrack(id!, date); else await entitiesApi.track(id!, date);
+                  const eRes = await entitiesApi.get(id!);
+                  setEntity(eRes.data);
+                  toast({ title: t(done ? "tm_day_unmarked" : "tm_day_marked") });
+                } catch {
+                  const eRes = await entitiesApi.get(id!).catch(() => null);
+                  if (eRes) setEntity(eRes.data);
+                  toast({ title: t("ent_error"), variant: "destructive" });
+                }
+              }}
+            />
           </div>
         )}
 

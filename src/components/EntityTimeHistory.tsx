@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { timeTrackingApi } from '@/lib/api';
 import { useTimeTracking, type TimeEntry } from '@/hooks/useTimeTracking';
-import { X, Loader2 } from '@/lib/heroicons';
+import { X, Loader2, Edit as Pencil, Check } from '@/lib/heroicons';
+import { toast } from '@/hooks/use-toast';
 import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
@@ -33,7 +34,15 @@ function fmtClock(s: number) {
  */
 export function EntityTimeHistory({ entityId }: Props) {
   const { t } = useLanguage();
-  const { deleteEntry } = useTimeTracking();
+  const { deleteEntry, updateEntry } = useTimeTracking();
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editMin, setEditMin] = useState('');
+  const saveEdit = async (id: string) => {
+    const secs = Math.round(parseFloat(editMin) * 60);
+    if (!secs || secs <= 0) return;
+    try { await updateEntry({ entryId: id, durationSeconds: secs }); toast({ title: t('tm_duration_updated') }); setEditingId(null); }
+    catch { toast({ title: t('ent_error'), variant: 'destructive' }); }
+  };
   const [page, setPage] = useState(1);
   const PAGE = 8;
 
@@ -91,11 +100,34 @@ export function EntityTimeHistory({ entityId }: Props) {
           {pageEntries.map((e) => (
             <li key={e.id} className="flex items-center gap-3 py-2">
               <span className="text-xs text-muted-foreground font-mono w-24 shrink-0">{e.date}</span>
-              <span className="text-sm font-mono text-muted-foreground w-24 shrink-0">
-                {fmtClock(e.durationSeconds || 0)}
-              </span>
+              {editingId === e.id ? (
+                <input
+                  type="number" min={1} step={1} autoFocus value={editMin}
+                  aria-label={t('tm_edit_duration')} title={t('tm_edit_duration')}
+                  onChange={(ev) => setEditMin(ev.target.value)}
+                  onKeyDown={(ev) => { if (ev.key === 'Enter') saveEdit(e.id); if (ev.key === 'Escape') setEditingId(null); }}
+                  className="w-24 shrink-0 rounded-sm border border-border/20 bg-background px-2 py-0.5 text-sm font-mono text-foreground outline-none"
+                />
+              ) : (
+                <span className="text-sm font-mono text-muted-foreground w-24 shrink-0">
+                  {fmtClock(e.durationSeconds || 0)}
+                </span>
+              )}
               <span className="text-xs text-muted-foreground truncate flex-1">{e.note || '—'}</span>
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{e.source}</span>
+              {editingId === e.id ? (
+                <button onClick={() => saveEdit(e.id)} className="text-muted-foreground hover:text-foreground transition" title={t('tm_save')}>
+                  <Check className="w-3.5 h-3.5" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => { setEditingId(e.id); setEditMin(String(Math.max(1, Math.round((e.durationSeconds || 0) / 60)))); }}
+                  className="text-muted-foreground hover:text-foreground transition"
+                  title={t('tm_edit_duration')}
+                >
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+              )}
               <button
                 onClick={() => deleteEntry(e.id)}
                 className="text-muted-foreground hover:text-red-400 transition"

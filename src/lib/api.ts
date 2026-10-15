@@ -624,6 +624,8 @@ export const timeTrackingApi = {
   getAllInRange: (from: string, to: string) =>
     api.get("/api/time-tracking/all/range", { params: { from, to } }),
   deleteEntry: (entryId: string) => api.delete(`/api/time-tracking/${entryId}`),
+  updateEntry: (entryId: string, durationSeconds: number) =>
+    api.patch(`/api/time-tracking/${entryId}`, { durationSeconds }),
   recoverSession: (entityId: string) => api.post(`/api/time-tracking/${entityId}/recover`),
 };
 
