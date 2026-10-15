@@ -194,6 +194,17 @@ function NativeBackButton() {
   return null;
 }
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  React.useLayoutEffect(() => {
+    window.scrollTo(0, 0);
+    document.querySelector("main")?.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 function RouteFallback() {
   return (
     <div className="min-h-screen bg-background">
@@ -311,6 +322,7 @@ const App = () => {
         <BrowserRouter>
           <NativeGoogleAuthRedirect />
           <NativeBackButton />
+          <ScrollToTop />
           <AuthProvider>
             <ThemeProvider>
               <LanguageProvider>

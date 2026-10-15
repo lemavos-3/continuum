@@ -1028,7 +1028,7 @@ export default function KnowledgeGraph() {
 
   return (
     <AppLayout>
-      <div className="flex flex-col" style={{ height: "calc(100vh - 3.5rem)" }}>
+      <div className="flex h-dvh flex-col overflow-hidden">
         <div className="relative flex min-h-0 flex-1 flex-col">
           {!empty && (
             <div className="absolute right-4 top-4 z-30 flex flex-col items-center gap-1 rounded-2xl border border-border/10 bg-card/70 p-1.5 backdrop-blur-md">

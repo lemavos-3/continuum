@@ -15,6 +15,11 @@ v1.3.4  Oct XX, 2026
 - Projects & Activities: Improved entity detail history and calendar interactions for tracking past activity.
 - 3D Graph: Improved node rendering and interaction stability with GPU-animated pulses that respect reduced-motion settings.
 - Mobile: Replaced the Notes and Entities selection action box with a sticky header that takes over the search and filters.
+- Notes & Entities: Kept row content aligned between normal and selection modes by moving the selection checkbox to the right-hand actions area.
+- Mobile: Removed the top border from the Notes and Entities selection header.
+- Insights: Reduced the mobile top spacing to bring the page content closer to the top.
+- Graph: Removed excess scrolling from the 2D and 3D graph views.
+- Navigation: Reset the page scroll to the top when changing routes.
 
 ---
 
