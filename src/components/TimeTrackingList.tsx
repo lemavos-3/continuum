@@ -194,12 +194,18 @@ export function TimeTrackingList({
                 key={entity.id}
                 className="overflow-hidden transition-colors hover:bg-foreground/[0.02]"
               >
-                {/* Row header */}
+                {/* Linha principal */}
                 <div className="flex items-center gap-3 px-1 py-3 sm:py-4">
                   <button
-                    onClick={() => setOpenId(isOpen ? null : entity.id)}
+                    onClick={() => {
+                      if (isProject) {
+                        navigate(`/entities/${entity.id}`);
+                      } else {
+                        setOpenId(isOpen ? null : entity.id);
+                      }
+                    }}
                     className="flex min-w-0 flex-1 items-center gap-3 text-left"
-                    aria-expanded={isOpen}
+                    aria-expanded={isProject ? undefined : isOpen}
                   >
                     <ListRowContent
                       icon={<EntityTypeIcon type={entity.type} className="h-5 w-5" />}
@@ -208,19 +214,39 @@ export function TimeTrackingList({
                         <>
                           {typeLabels[entity.type] ?? entity.type}
                           {' · '}
-                          {isProject
-                            ? summary?.formattedTotal || '00:00:00'
-                            : t('tm_done_count', { count: entity.trackingDates?.length ?? 0 })}
+                          {isProject ? (
+                            <>
+                              <span className="font-mono">{summary?.formattedTotal || '00:00:00'}</span>
+                              {' · '}
+                              <span>
+                                {summary?.entriesCount ?? 0} {t('tm_sessions').toLowerCase()}
+                              </span>
+                            </>
+                          ) : (
+                            t('tm_done_count', { count: entity.trackingDates?.length ?? 0 })
+                          )}
                         </>
                       }
                       trailing={
-                        <ChevronDown className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', isOpen && 'rotate-180')} />
+                        isProject ? (
+                          <div className="hidden sm:flex items-center gap-2">
+                            <span className="font-mono text-xs rounded-lg bg-accent px-2.5 py-1 text-foreground">
+                              {summary?.formattedTotal || '00:00:00'}
+                            </span>
+                          </div>
+                        ) : (
+                          <ChevronDown
+                            className={cn(
+                              'h-4 w-4 shrink-0 text-muted-foreground transition-transform',
+                              isOpen && 'rotate-180',
+                            )}
+                          />
+                        )
                       }
                     />
                   </button>
 
-
-                  {/* Quick action: complete today for activities */}
+                  {/* Ação rápida apenas para atividades */}
                   {!isProject && (
                     <button
                       onClick={() => handleQuickToggle(entity, doneToday)}
@@ -243,39 +269,16 @@ export function TimeTrackingList({
                   )}
                 </div>
 
-                {/* Expanded detail */}
-                {isOpen && (
+                {/* Gaveta apenas para atividades */}
+                {!isProject && isOpen && (
                   <div className="mb-3 rounded-2xl bg-card/40 p-4 sm:p-6">
                     <div className="grid gap-4">
-                      {isProject ? (
-                        <div className="grid grid-cols-2 gap-3 max-w-md">
-                          <div className="rounded-xl border border-border/10 bg-foreground/5 p-4">
-                            <p className="label-caps text-muted-foreground">{t('tm_total_time')}</p>
-                            <p className="mt-2 font-mono text-muted-foreground">{summary?.formattedTotal || '00:00:00'}</p>
-                          </div>
-                          <div className="rounded-xl border border-border/10 bg-foreground/5 p-4">
-                            <p className="label-caps text-muted-foreground">{t('tm_sessions_cap')}</p>
-                            <p className="mt-2 text-muted-foreground">{summary?.entriesCount ?? 0}</p>
-                          </div>
-                        </div>
-                      ) : (
-                        <ActivityCompletionCalendar
-                          entityId={entity.id}
-                          trackingDates={entity.trackingDates}
-                          onMarkComplete={() => queryClient.invalidateQueries({ queryKey: ['entities'] })}
-                          onOpenDetail={() => navigate(`/entities/${entity.id}`)}
-                        />
-                      )}
-                      {entity.type !== 'ACTIVITY' && (
-                        <div>
-                          <button
-                            onClick={() => navigate(`/entities/${entity.id}`)}
-                            className="text-xs px-3 py-1.5 rounded-md border border-border/10 text-muted-foreground hover:text-foreground hover:border-border/30 transition-colors"
-                          >
-                            {t('tm_open_detail')}
-                          </button>
-                        </div>
-                      )}
+                      <ActivityCompletionCalendar
+                        entityId={entity.id}
+                        trackingDates={entity.trackingDates}
+                        onMarkComplete={() => queryClient.invalidateQueries({ queryKey: ['entities'] })}
+                        onOpenDetail={() => navigate(`/entities/${entity.id}`)}
+                      />
                     </div>
                   </div>
                 )}
