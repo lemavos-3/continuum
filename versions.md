@@ -14,6 +14,7 @@ v1.3.4  Oct XX, 2026
 - Projects & Activities: Unified their list pages with shared search, sorting, quick filters, and responsive create controls.
 - Projects & Activities: Improved entity detail history and calendar interactions for tracking past activity.
 - 3D Graph: Improved node rendering and interaction stability with GPU-animated pulses that respect reduced-motion settings.
+- Mobile: Replaced the Notes and Entities selection action box with a sticky header that takes over the search and filters.
 
 ---
 

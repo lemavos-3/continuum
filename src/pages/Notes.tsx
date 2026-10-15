@@ -78,13 +78,27 @@ function extractPreview(content: unknown): string {
     return content.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
   }
   const out: string[] = [];
-  const walk = (n: any) => {
+  const walk = (n: unknown) => {
     if (!n || typeof n !== "object") return;
-    if (typeof n.text === "string") out.push(n.text);
-    if (Array.isArray(n.content)) n.content.forEach(walk);
+    if ("text" in n && typeof n.text === "string") out.push(n.text);
+    if ("content" in n && Array.isArray(n.content)) n.content.forEach(walk);
   };
   walk(content);
   return out.join(" ").replace(/\s+/g, " ").trim();
+}
+
+function getErrorMessage(error: unknown): string | undefined {
+  if (error && typeof error === "object" && "response" in error) {
+    const response = error.response;
+    if (response && typeof response === "object" && "data" in response) {
+      const data = response.data;
+      if (data && typeof data === "object") {
+        if ("message" in data && typeof data.message === "string") return data.message;
+        if ("error" in data && typeof data.error === "string") return data.error;
+      }
+    }
+  }
+  return error instanceof Error ? error.message : undefined;
 }
 
 function extractSearchSnippet(content: unknown, query: string): string {
@@ -477,7 +491,7 @@ export default function Notes() {
     } catch (e) {
       console.error("[Notes] bulk type error", e);
       setNotes(previousNotes);
-      const details = (e as any)?.response?.data?.message || (e as any)?.response?.data?.error || (e as Error)?.message;
+      const details = getErrorMessage(e);
       toast({ title: t("ls_notes_error_updating_type"), description: details || t("ls_notes_error_updating_type_desc"), variant: "destructive" });
       void fetchData();
     } finally {
@@ -843,7 +857,7 @@ export default function Notes() {
 
             {/* Selection action bar */}
             {selectMode && (
-              <div className="sticky top-0 z-30 -mx-6 mb-5 flex flex-col items-stretch gap-3 border-y border-border/15 bg-background/95 px-6 py-3 backdrop-blur-xl lg:top-[7.5rem] lg:z-20 lg:mx-0 lg:mb-6 lg:flex-row lg:items-center lg:justify-between lg:rounded-sm lg:border lg:bg-background/80 lg:px-3 lg:py-2.5">
+              <div className="sticky -top-5 z-30 -mx-6 -mt-5 mb-5 flex flex-col items-stretch gap-3 border-y border-border/15 bg-background/95 px-6 pb-4 pt-[calc(env(safe-area-inset-top)+1rem)] backdrop-blur-xl lg:top-[7.5rem] lg:z-20 lg:mx-0 lg:mt-0 lg:mb-6 lg:flex-row lg:items-center lg:justify-between lg:rounded-sm lg:border lg:bg-background/80 lg:px-3 lg:py-2.5">
                 <span className="text-sm text-muted-foreground">
                   {t("select_selected", { n: selectedIds.size })}
                 </span>
