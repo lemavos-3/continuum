@@ -6,6 +6,11 @@ Every notable change to Continuum, from the first release to the latest version.
 
 v1.3.4  Oct XX, 2026
 
+- Quick Capture: Added a floating button and Ctrl+Shift+N shortcut to save a note instantly without opening the editor.
+- Weekly Review: Added a 7-day summary (new notes, habit check-ins, active projects, forgotten topics) via button or Ctrl+Shift+Y.
+- Graph: Focus mode now supports 1st- or 2nd-degree connection depth.
+- Export: The full .zip export now includes Vault media organized into folders by type.
+- UI: Standardized Trash, Vault, entity details, graph inspector, plans, upgrade, day details, command palette and timer with rounder corners and shared tokens.
 - Projects: Added persistent pinning, insight badges, and confirmed deletion to the project list.
 - Notes: Fixed stale or invalid cached note data preventing the editor from loading; added retry and back navigation when loading fails.
 - Mobile: Restored device back-button navigation from the note editor.

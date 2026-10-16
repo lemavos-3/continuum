@@ -93,14 +93,15 @@ function WeeklyReview({ c, onClose, onOpen }: { c: typeof COPY.en; onClose: () =
   const notes = useCachedResource<any[]>(qk.notes(), async () => (await notesApi.list()).data as any[]);
   const entities = useCachedResource<any[]>(qk.entities(), async () => {
     const { entitiesApi } = await import("@/lib/api");
-    return (await entitiesApi.list()).data as any[];
+    const d: any = (await entitiesApi.list()).data;
+    return Array.isArray(d) ? d : (d?.content ?? d?.items ?? []);
   });
 
   const stats = useMemo(() => {
     const now = Date.now();
     const inWeek = (d?: string) => !!d && now - new Date(d).getTime() <= WEEK;
-    const n = notes.data ?? [];
-    const e = entities.data ?? [];
+    const n = Array.isArray(notes.data) ? notes.data : [];
+    const e = Array.isArray(entities.data) ? entities.data : [];
     const habits = e.filter(x => x.type === "ACTIVITY").reduce((s, x) => s + (x.trackingDates ?? []).filter(inWeek).length, 0);
     const projects = e.filter(x => x.type === "PROJECT" && (x.trackingDates ?? []).some(inWeek));
     const forgotten = n
