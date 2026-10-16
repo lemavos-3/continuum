@@ -38,7 +38,7 @@ interface RelatedNote { id: string; title: string; createdAt: string; updatedAt:
 
 function DetailStat({ label, value, icon: Icon }: { label: string; value: string | number; icon: typeof Calendar }) {
   return (
-    <div className="flex min-w-0 items-start gap-2 rounded-md bg-secondary/60 px-3 py-2.5 sm:gap-2.5 sm:px-4">
+    <div className="flex min-w-0 items-start gap-2 rounded-xl bg-secondary/60 px-3 py-2.5 sm:gap-2.5 sm:px-4">
       <Icon className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
       <span className="min-w-0">
         <span className="block whitespace-normal break-words text-[9px] font-medium uppercase leading-snug tracking-[0.12em] text-muted-foreground sm:text-[10px] sm:tracking-[0.16em]">{label}</span>
@@ -330,7 +330,7 @@ export default function EntityDetail() {
   if (loading)
     return (
       <AppLayout>
-        <div className="mx-auto w-full max-w-5xl animate-fade-in px-4 py-8 sm:px-6">
+        <div className="mx-auto w-full max-w-6xl animate-fade-in px-4 py-8 sm:px-6">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="mt-4 h-10 w-2/3 max-w-sm" />
           <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -362,7 +362,7 @@ export default function EntityDetail() {
 
   return (
     <AppLayout>
-      <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-12">
+      <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-10 lg:py-12">
         <Button
           variant="quiet"
           size="sm"
@@ -521,7 +521,7 @@ export default function EntityDetail() {
                       <select
                         value={newType}
                         onChange={(e) => setNewType(e.target.value)}
-                        className="h-9 rounded-md border border-border/10 bg-background px-2 text-sm text-foreground"
+                        className="h-9 rounded-xl border border-border/10 bg-background px-2 text-sm text-foreground"
                       >
                         {entityTypeOptions.map((option) => (
                           <option key={option.value} value={option.value}>{option.label}</option>
@@ -577,7 +577,7 @@ export default function EntityDetail() {
                       key={note.id}
                       variant="ghost"
                       onClick={() => navigate(`/notes/${note.id}`)}
-                      className="flex h-auto w-full items-start justify-start gap-3 rounded-md border border-transparent px-3 py-3 text-left normal-case tracking-normal font-normal hover:bg-foreground/[0.035]"
+                      className="flex h-auto w-full items-start justify-start gap-3 rounded-xl border border-transparent px-3 py-3 text-left normal-case tracking-normal font-normal hover:bg-foreground/[0.035]"
                     >
                       <StickyNote className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <div className="min-w-0 flex-1">
@@ -610,7 +610,7 @@ export default function EntityDetail() {
                       key={ent.id}
                       variant="ghost"
                       onClick={() => navigate(`/entities/${ent.id}`)}
-                      className="flex h-auto w-full items-start justify-start gap-3 rounded-md border border-transparent px-3 py-3 text-left normal-case tracking-normal font-normal hover:bg-foreground/[0.035]"
+                      className="flex h-auto w-full items-start justify-start gap-3 rounded-xl border border-transparent px-3 py-3 text-left normal-case tracking-normal font-normal hover:bg-foreground/[0.035]"
                     >
                       <Network className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                       <div className="min-w-0 flex-1">
