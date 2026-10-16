@@ -115,6 +115,20 @@ public class ExportService {
                 writeEntry(zip, name, md.toString());
             }
 
+            // ── Mídias do Vault ──────────────────────────────────────────────
+            if (vaultId != null) {
+                Set<String> usedFileNames = new HashSet<>();
+                for (VaultStorageService.VaultFileDescriptor f : vaultStorageService.listFiles(vaultId)) {
+                    var bytes = vaultStorageService.loadFile(vaultId, f.fileId());
+                    if (bytes.isEmpty()) continue;
+                    String base = f.fileName() == null || f.fileName().isBlank() ? f.fileId() : f.fileName().replaceAll("[/\\\\]", "_");
+                    String folder = folderFor(f.contentType());
+                    zip.putNextEntry(new ZipEntry("media/" + folder + "/" + uniqueName(usedFileNames, base)));
+                    zip.write(bytes.get());
+                    zip.closeEntry();
+                }
+            }
+
             // ── Backup JSON completo ─────────────────────────────────────────
             writeEntry(zip, "backup.json", exportUserDataAsJson(userId));
         }
@@ -126,6 +140,15 @@ public class ExportService {
         zip.putNextEntry(new ZipEntry(name));
         zip.write(content.getBytes(StandardCharsets.UTF_8));
         zip.closeEntry();
+    }
+
+    private String folderFor(String contentType) {
+        if (contentType == null) return "files";
+        if (contentType.startsWith("image/")) return "images";
+        if (contentType.startsWith("audio/")) return "audio";
+        if (contentType.startsWith("video/")) return "video";
+        if (contentType.contains("pdf")) return "pdf";
+        return "files";
     }
 
     private String safeYaml(String value) {
