@@ -189,6 +189,7 @@ export default function KnowledgeGraph() {
   const [legendOpen, setLegendOpen] = useState(false);
   const [optionsOpen, setOptionsOpen] = useState(false);
   const [focusMode, setFocusMode] = useState(false);
+  const [focusDepth, setFocusDepth] = useState<1 | 2>(1);
   // Default false para formação orgânica estilo Obsidian
   const [clusterByPeriod, setClusterByPeriod] = useState(false);
   const [show3D, setShow3D] = useState(false);
@@ -273,11 +274,17 @@ export default function KnowledgeGraph() {
 
   const neighborIds = useMemo(() => {
     if (!selectedNode) return new Set<string>();
-    const n = adjRef.current.get(selectedNode.id) || new Set<string>();
-    const out = new Set<string>(n);
-    out.add(selectedNode.id);
+    const out = new Set<string>([selectedNode.id]);
+    let frontier = [selectedNode.id];
+    for (let d = 0; d < focusDepth; d++) {
+      const next: string[] = [];
+      for (const id of frontier) {
+        adjRef.current.get(id)?.forEach(n => { if (!out.has(n)) { out.add(n); next.push(n); } });
+      }
+      frontier = next;
+    }
     return out;
-  }, [selectedNode]);
+  }, [selectedNode, focusDepth]);
 
   const brainNodes = useMemo<BrainNode[]>(() => {
     const visible = nodesRef.current.filter(node => {
@@ -1223,6 +1230,20 @@ export default function KnowledgeGraph() {
                         onChange={() => setFocusMode(v => !v)}
                         label={focusMode ? t("gr_focus_on") : t("gr_focus_off")}
                       />
+                      {focusMode && (
+                        <div className="flex gap-2">
+                          {([1, 2] as const).map(d => (
+                            <button
+                              key={d}
+                              type="button"
+                              onClick={() => setFocusDepth(d)}
+                              className={`rounded-full px-3 py-1 text-xs transition-colors ${focusDepth === d ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:text-foreground"}`}
+                            >
+                              {d}º
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </Card>
                 </div>
