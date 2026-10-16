@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { CommandPalette } from "@/components/CommandPalette";
+import { QuickCapture } from "@/components/QuickCapture";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
@@ -53,6 +54,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background text-foreground">
       <CommandPalette />
+      {!isNoteEditor && !isGraphPage && <QuickCapture />}
       <VaultPicker />
       {/* Desktop hover-expand sidebar */}
       <SessionNavBar />
