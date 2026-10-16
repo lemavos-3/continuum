@@ -65,7 +65,7 @@ export default function Trash() {
             <p className="mt-2 text-sm text-muted-foreground">{s.sub}</p>
           </div>
           {!!items.length && (
-            <Button variant="outline" size="sm" onClick={() => setEmptyOpen(true)} className="shrink-0 rounded-xl border-border/10 bg-white/[0.03] text-foreground/80 hover:bg-white/[0.06] hover:text-red-300">
+            <Button variant="outline" size="sm" onClick={() => setEmptyOpen(true)} className="shrink-0 rounded-xl border-border/10 bg-foreground/[0.03] text-foreground/80 hover:bg-foreground/[0.03] hover:text-red-300">
               <TrashIcon className="mr-2 h-4 w-4" />{s.emptyTrash}
             </Button>
           )}
@@ -107,7 +107,7 @@ export default function Trash() {
               const kindLabel = category === "notes" ? s.note : category === "entities" ? s.entity : s.file;
               const days = Math.max(0, Math.ceil((new Date(item.expiresAt).getTime() - Date.now()) / 864e5));
               return (
-                <li key={item.id} className="group flex flex-wrap items-center gap-x-3 gap-y-3 py-4 transition-colors hover:bg-white/[0.01] sm:gap-x-4">
+                <li key={item.id} className="group flex flex-wrap items-center gap-x-3 gap-y-3 py-4 transition-colors hover:bg-foreground/[0.03] sm:gap-x-4">
                   <ItemIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-serif text-sm text-foreground/80 transition-colors group-hover:text-white">{item.title || "—"}</p>
