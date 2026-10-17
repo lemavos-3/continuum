@@ -60,7 +60,7 @@ public class ExportService {
 
     /**
      * Exporta TODO o vault do usuário como um arquivo .zip contendo:
-     *  - notes/*.md           → cada nota como Markdown (com front-matter)
+     *  - notes/*.md           → título como nome, somente conteúdo Markdown
      *  - entities/*.md        → cada entidade como Markdown
      *  - backup.json          → backup completo em JSON (notas + entidades)
      */
@@ -82,18 +82,8 @@ public class ExportService {
                     content = vaultStorageService.loadNoteContent(vaultId, note.getId()).orElse("");
                 }
 
-                StringBuilder md = new StringBuilder();
-                md.append("---\n");
-                md.append("title: ").append(safeYaml(note.getTitle())).append("\n");
-                md.append("id: ").append(note.getId()).append("\n");
-                if (note.getCreatedAt() != null) md.append("created: ").append(note.getCreatedAt()).append("\n");
-                if (note.getUpdatedAt() != null) md.append("updated: ").append(note.getUpdatedAt()).append("\n");
-                if (note.getType() != null) md.append("type: ").append(note.getType()).append("\n");
-                md.append("---\n\n");
-                md.append(content == null ? "" : content);
-
-                String name = "notes/" + uniqueName(usedNames, slugify(note.getTitle(), note.getId())) + ".md";
-                writeEntry(zip, name, md.toString());
+                String name = "notes/" + uniqueName(usedNames, NoteMarkdownExporter.filename(note.getTitle(), note.getId())) + ".md";
+                writeEntry(zip, name, NoteMarkdownExporter.content(content, objectMapper));
             }
 
             // ── Entidades como Markdown ──────────────────────────────────────
