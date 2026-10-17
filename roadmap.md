@@ -10,6 +10,7 @@
 - [ ] Verify layout, geometry tests and browser interaction.
 
 # Capture and export corrections
+- [ ] Fix exported note filenames and convert note bodies to Markdown without frontmatter; run focused export tests.
 - [x] Remove weekly review and limit quick capture to the Notes search toolbar.
 - [x] Add a visible ZIP download action to Settings, retaining existing export entitlement.
 - [x] Validate capture saving and removed weekly shortcut in tests; build OK.
