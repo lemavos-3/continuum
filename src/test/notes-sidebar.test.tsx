@@ -29,6 +29,8 @@ vi.mock("@/components/ui/smooth-drawer", () => ({
 vi.mock("@/components/ui/confirm-dialog", () => ({ ConfirmDialog: () => null }));
 vi.mock("@/components/ui/fit-text", () => ({ FitText: ({ children }: { children: React.ReactNode }) => <span>{children}</span> }));
 
+vi.mock("@/components/QuickCapture", () => ({ QuickCapture: () => null }));
+
 import Notes from "@/pages/Notes";
 
 afterEach(() => {

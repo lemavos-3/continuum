@@ -7,3 +7,4 @@
 - Use a deterministic procedural brain-shaped network scaffold, separate from real knowledge nodes and links, so sparse graphs retain a recognizable silhouette without inventing user data.
 - Batch graph spheres and connections using instanced meshes and buffer geometry to keep draw calls independent of graph size.
 - Keep graph resolution and pointer events stable during interactions; animate node pulses with shared GPU uniforms and respect reduced motion to avoid per-frame instance rebuilds.
+- Mount quick capture in the Notes search toolbar, not the shared app layout, so it cannot overlap floating creation actions or appear on other pages.
