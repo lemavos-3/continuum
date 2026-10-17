@@ -12,4 +12,5 @@
 # Capture and export corrections
 - [x] Remove weekly review and limit quick capture to the Notes search toolbar.
 - [x] Add a visible ZIP download action to Settings, retaining existing export entitlement.
-- [ ] Validate capture and ZIP download corrections.
+- [x] Validate capture saving and removed weekly shortcut in tests; build OK.
+- [ ] Verify ZIP download and Notes placement with a signed-in account (blocked: preview redirects to the public page).
